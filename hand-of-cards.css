@@ -1,9 +1,12 @@
+:root {
+    --selection-color: #BBFFBB;
+}
+
 html, body { 
     height: 100%;
     margin: 0; 
     font-family: Arial, Helvetica, sans-serif;
     background-image: linear-gradient(180deg, #102010, #404060);
-    
 }
 
 .app-container {
@@ -65,7 +68,7 @@ html, body {
 }
 
 .card-item-selected {
-    filter: drop-shadow(0 0 0.8rem crimson);
+    filter: drop-shadow(0 0 0.8rem var(--selection-color));
 
     /** This supposedly helps performance on phones ... not seeing it though*/
     -webkit-transform: translateZ(0);
@@ -77,19 +80,38 @@ html, body {
     will-change: transform;
 }
 
-
 .indicators {
     display: flex;
-    justify-content: center;
+    justify-content: center;  
 }
 
 .indicators > button {
     margin: 5px;
+    border-radius: 50%;
 }
 
 .indicators > button.active {
     background-color: green;
     color: white;
+}
+
+.indicator {
+    margin: 5px;
+    border-radius: 50%;
+    min-width: 10px;
+    min-height: 10px;
+    max-width: 10px;
+    max-height: 10px;
+    background-color: rgba(255,255,255,0);
+    border: 2px solid rgba(155,155,155,1);
+}
+
+.indicator-active {
+    background-color: rgba(255,255,255,1);
+}
+
+.indicator-selected {
+    border: 2px solid var(--selection-color);
 }
 
 .platform-context {

@@ -1,5 +1,9 @@
 'use strict';
 
+/**
+ * Class implementing a Sprite (or texture) atlas. See https://en.wikipedia.org/wiki/Texture_atlas.
+ */
+
 export class SpriteAtlas {
     constructor(url, offset, grid) {
         this.url = url;

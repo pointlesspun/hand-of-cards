@@ -1,10 +1,9 @@
-# hand-of-cards (v0.1)
-This is simple and limited React front-end carousel imitating a hand of cards. To start the app run a webserver in the directory containing the index.html file. Latest demo can be found on the [github pages](https://pointlesspun.github.io/hand-of-cards/).
+# hand-of-cards (v0.2)
+This is simple and limited React front-end carousel imitating holding and browsing through a hand of cards. To start the app, run a webserver in the directory containing the index.html file. Latest demo can be found on the [github pages](https://pointlesspun.github.io/hand-of-cards/).
 
 <center>
     <img src="./data/screenshot.png" width="640" height="480"/>
 </center>
-
 
 ## Controls:
 * On a laptop/desktop: 
@@ -30,7 +29,6 @@ This project was created while learning React and is currently very much under d
 * Refactor & add documentation.
 * Add jsx (or htm) variation.
 * Add locked mode in which all cards are visible on screen.
-* Replace indicators by dots and remove next, previous buttons.
 * Add mouse support.
 * Add 'playing' cards and getting random new ones.
 * Try some optimization(s) for less powerful devices (aka phones).

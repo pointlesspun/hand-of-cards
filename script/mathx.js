@@ -1,9 +1,13 @@
 'use strict';
 
-/**
+/*
  * Math utilties and datastructures.
  */
 
+
+/**
+ * Class capturing all elements of a transformation (translation, scale and rotation).
+ */
 export class Transform {
 
     constructor({translation = {x : 0, y : 0, z: 0}, scale = {x : 1, y : 1}, rotation = 0}) {

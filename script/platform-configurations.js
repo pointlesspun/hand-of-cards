@@ -1,8 +1,7 @@
-
 'use strict';
 
-/**
- * Configurations used in the demo.
+/*
+ * Configurations used in the demo to adapt to different screen sizes.
  */
 
 import { PlatformConfiguration, ORIENTATION_NAMES } from "./media-configuration.js"

@@ -1,6 +1,6 @@
 'use strict';
 
-/**
+/*
  * Configuration definitions for a given media and its dimensions.
  */
 

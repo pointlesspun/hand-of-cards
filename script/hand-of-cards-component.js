@@ -55,9 +55,9 @@ export class HandOfCardsComponent extends React.Component {
     if (!this.state.cards) {
       return React.createElement(ELEMENT_TYPES.div, properties, "no items to display in the carousel...");
     }
-
     
-    // need to know the width of the component to do a proper layout
+    // Need to know the width of the component to do a proper layout, so until we have a reference,
+    // we skip this render.
     if (this.ref.current) {
       const config = this.props.getLayoutConfiguration(this.ref);
       const statusText = `${config.name} ${config.screenSize.width}x${config.screenSize.height}`;
@@ -74,7 +74,9 @@ export class HandOfCardsComponent extends React.Component {
     }
   }
 
-  
+  /**
+   * Callback after the component was added to the dom. Use this opportunity to hook up the listeners.
+   */
   componentDidMount() {
     document.addEventListener('swiped', this.swipeHandler);
     document.addEventListener('keyup', this.keyHandler);
@@ -82,6 +84,7 @@ export class HandOfCardsComponent extends React.Component {
     window.addEventListener('touchstart', this.touchHandler);
     window.addEventListener('touchend', this.touchHandler);
 
+    // have we got the initial reference ?
     if (!this.isRefInitialized) {
       this.isRefInitialized = true;
       // now we have a dom element, we can render the component
@@ -89,6 +92,9 @@ export class HandOfCardsComponent extends React.Component {
     }
   }
 
+  /**
+   * Callback for when the componet is about to be removed from the dom. Remove the listeners.
+   */
   componentWillUnmount() {
     document.removeEventListener('swiped', this.swipeHandler);
     document.removeEventListener('keyup', this.keyHandler);
@@ -214,43 +220,37 @@ export class HandOfCardsComponent extends React.Component {
     const innerChildren = [ React.createElement(ELEMENT_TYPES.div, childProperties, children)];
 
     return React.createElement(ELEMENT_TYPES.div, carouselProperties, innerChildren);
-};
+}
 
-
-  /**
+ /**
    * 
    * @private
    * @param {*} keyPrefix 
    * @param {*} callback 
    * @param {*} activeIndex 
-   * @param {*} items 
+   * @param {*} cards 
    * @returns 
    */
-  createIndicatorItems = (keyPrefix, callback, activeIndex, items) =>
-  items.map((child, index) =>
-      createButton(
-        keyPrefix + index,
-        () => callback(index),
-        (index + 1).toString(),
-        index === activeIndex ? "active" : ""
-      )
+  createIndicatorItems = (keyPrefix, callback, activeIndex, cards) =>
+    cards.map((card, index) => 
+      React.createElement(ELEMENT_TYPES.div, { 
+        key: `indicator-${index}`,
+        className : `indicator ${card.index === activeIndex ? "indicator-active" : ""} ${card.isSelected ? "indicator-selected" : ""}`,
+        onClick : () => callback(index)
+      })
     );
 
     /**
      * @private
      * @returns 
      */
-  createIndicators(items) {
+  createIndicators(cards) {
     const properties = {
       key: "indicators",
       className: "indicators",
     };
 
-    const children = [
-        createButton("prev", () => this.previousItem(), "Prev"),
-        ...this.createIndicatorItems("indicator-item-", (idx) => this.setActiveIndex(idx),this.state.activeIndex, items),
-        createButton("next",() => this.nextItem(),"Next")
-    ];
+    const children = this.createIndicatorItems("indicator-item-", (idx) => this.setActiveIndex(idx),this.state.activeIndex, cards);
 
     return React.createElement(ELEMENT_TYPES.div, properties, children);
   }
