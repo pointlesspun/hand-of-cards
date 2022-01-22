@@ -1,0 +1,108 @@
+html, body { 
+    height: 100%;
+    margin: 0; 
+    font-family: Arial, Helvetica, sans-serif;
+    background-image: linear-gradient(180deg, #102010, #404060);
+    
+}
+
+.app-container {
+    height: 100%;
+}
+
+.card-app {
+    height: 100%;
+}
+
+.carousel {
+    overflow: hidden;
+    height: 90%;
+}
+
+.inner {
+    white-space: nowrap;
+    transition: transform 0.3s;
+    height: 100%;
+    /** 
+     * used to make sure the z index is preserved 
+     * see https://stackoverflow.com/questions/20851452/z-index-is-canceled-by-setting-transformrotatecss (comment by GYTO)
+     */
+    transform-style: preserve-3d;
+}
+
+.card-item {
+    display: inline-flex;
+    align-items: stretch;
+    transition: transform 0.3s;
+    justify-content: center;   
+    color: white;
+    border-radius: 32px;
+}
+
+.heart-1 {
+    background: url('../../data/Heart-1.png');
+    background-size: cover;
+    background-repeat: no-repeat;
+}
+
+.card-overlay-active {
+    background-image: linear-gradient(180deg, rgba(0,0,0,0), rgba(40,42,44,0.2));
+    width: 100%;
+    border-radius: 32px;
+}
+
+.card-overlay {
+    background-image: linear-gradient(180deg, rgba(0,0,0,0.1), rgba(40,42,44,0.4));
+    width: 100%;
+    border-radius: 32px;
+}
+
+.card-item-active {
+    filter: drop-shadow(0 0 0.75rem rgb(88, 88, 88));
+
+    /** This supposedly helps performance on phones ... not seeing it though*/
+    -webkit-transform: translateZ(0);
+    -webkit-perspective: 1000;
+    -webkit-backface-visibility: hidden;
+    transform: translateZ(0);
+    perspective: 1000;
+    backface-visibility: hidden;
+    will-change: transform;
+}
+
+.card-item-selected {
+    filter: drop-shadow(0 0 0.75rem crimson);
+
+    /** This supposedly helps performance on phones ... not seeing it though*/
+    -webkit-transform: translateZ(0);
+    -webkit-perspective: 1000;
+    -webkit-backface-visibility: hidden;
+    transform: translateZ(0);
+    perspective: 1000;
+    backface-visibility: hidden;
+    will-change: transform;
+}
+
+
+.indicators {
+    display: flex;
+    justify-content: center;
+}
+
+.indicators > button {
+    margin: 5px;
+}
+
+.indicators > button.active {
+    background-color: green;
+    color: white;
+}
+
+.platform-context {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    padding: 4px;
+    font-size: xx-large;
+    color: white;
+}
