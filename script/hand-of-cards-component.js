@@ -7,8 +7,9 @@
 
 import { mathx } from "./mathx.js";
 import { createButton, ELEMENT_TYPES } from "./element-types.js";
-import { Card } from "./card.js";
+import { Card, CARD_KEY_PREFIX } from "./card.js";
 import { pickRandomCards } from "./deck.js";
+import { PlatformConfiguration } from "./media-configuration.js";
 
 const SWIPE_DIRECTIONS = {
   UP : 'up',
@@ -32,7 +33,8 @@ export class HandOfCardsComponent extends React.Component {
     this.state = {
       activeIndex: props.initialIndex || 0,
       isLocked: props.isLocked,
-      cards: props.hand ? props.hand.map( (definition, idx) => new Card(definition, idx, false)) : null
+      cardKeyCounter: props.hand ? props.hand.length : 0,
+      cards: props.hand ? props.hand.map( (definition, idx) => new Card(CARD_KEY_PREFIX + idx, definition, idx, false)) : null
     };
 
     this.swipeHandler = (evt) => this.handleSwipe(evt.detail.dir);
@@ -191,7 +193,7 @@ export class HandOfCardsComponent extends React.Component {
       const newCards = [...this.state.cards];
       const oldCard = this.state.cards[idx];
       
-      newCards[idx] = new Card(oldCard.definition, oldCard.index, isItemSelected);
+      newCards[idx] = new Card(oldCard.key, oldCard.definition, oldCard.index, isItemSelected);
 
       this.setState({
         ...this.state,
@@ -202,7 +204,7 @@ export class HandOfCardsComponent extends React.Component {
 
   removeSelectedItems() {  
     const cards = this.state.cards.filter( card => !card.isSelected);
-    const activeIndex = Math.min(cards.length-1, this.state.activeIndex);
+    const activeIndex = Math.min(Math.max(0, cards.length-1), this.state.activeIndex);
 
     cards.forEach( (card, idx) => card.index = idx);   
 
@@ -210,18 +212,20 @@ export class HandOfCardsComponent extends React.Component {
       ...this.state,
       activeIndex,
       cards
-    });
+    });     
   }
 
   refill() {
     if (this.state.cards.length < this.props.maxCards) {
-      const cardDefinitions = pickRandomCards(this.props.deck, this.props.maxCards - this.state.cards.length);
-      const cards = [...this.state.cards, ...cardDefinitions.map( (definition, idx) => new Card(definition, idx, false))];
+      const newCardCount = this.props.maxCards - this.state.cards.length;
+      const cardDefinitions = pickRandomCards(this.props.deck, newCardCount);
+      const cards = [...this.state.cards, ...cardDefinitions.map( (definition, idx) => new Card(CARD_KEY_PREFIX + (idx + this.state.cardKeyCounter), definition, idx, false))];
       
       cards.forEach( (card, idx) => card.index = idx);   
 
       this.setState({
         ...this.state,
+        cardKeyCounter: this.state.cardKeyCounter + newCardCount,
         cards
       });
     }
@@ -241,7 +245,11 @@ export class HandOfCardsComponent extends React.Component {
     return result;
   }
 
-  
+  /**
+   * 
+   * @param {PlatformConfiguration} config used to layout the cards appropriate for the current platform/medium (laptop/desktop/tablet/phone...)
+   * @returns 
+   */
   createCarousel(config) {
     
     const carouselProperties = {
@@ -251,7 +259,7 @@ export class HandOfCardsComponent extends React.Component {
 
     // center the active card
     const offset = (config.clientSize.width - config.values.cardWidth) / 2;
-    const centerCard = this.state.isLocked ? Math.floor(this.state.cards.length / 2) : this.state.activeIndex;
+    const centerCard = this.state.isLocked ? this.state.cards.length / 2 : this.state.activeIndex;
 
     const innerId = `${carouselProperties.key}-inner`;
     const childProperties = {
@@ -264,9 +272,9 @@ export class HandOfCardsComponent extends React.Component {
     };
     
     const children = this.state.cards.map((card, idx) => 
-      card.createElement(config, `${carouselProperties.key}-item-${idx}`, this.state.cards.length, this.state.activeIndex, centerCard));
+      card.createElement(config, card.key, this.state.cards.length, this.state.activeIndex, centerCard));
 
-    const innerChildren = [ React.createElement(ELEMENT_TYPES.div, childProperties, children)];
+    const innerChildren = React.createElement(ELEMENT_TYPES.div, childProperties, children);
 
     return React.createElement(ELEMENT_TYPES.div, carouselProperties, innerChildren);
 }

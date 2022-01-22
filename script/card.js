@@ -7,15 +7,21 @@
 import { Transform } from "./mathx.js";
 import { ELEMENT_TYPES } from "./element-types.js";
 
+export const CARD_KEY_PREFIX = "hoc-card";
 export class Card {
-    constructor(definition, index, isSelected) {
+    constructor(key, definition, index, isSelected) {
+        this.key = key;
         this.definition = definition;
         this.index = index;
         this.isSelected = isSelected;
     }
     
     createElement(config, key, cardCount, activeIndex, centerCard) {
-   
+
+        if (this.index < 0) {
+            return React.createElement(ELEMENT_TYPES.div, {key, visibility: "collapse", className: "card-item"});    
+        }
+
         // notes
         // top/left of the card is the translation origin (0,0)
         // translation is applied before scaling, so the position has to be calculated as if
@@ -50,7 +56,8 @@ export class Card {
         });
         
         const properties = {
-            key: key,
+            key,
+            id: key,
             className : `card-item ${isActive ? "card-item-active" : ""} ${this.isSelected ? "card-item-selected" : ""}`,
             style : {
                 width : config.values.cardWidth + "px",

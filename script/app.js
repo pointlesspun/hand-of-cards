@@ -25,4 +25,6 @@ const properties = {
     getLayoutConfiguration: (elementRef) => new MediaConfiguration(elementRef,PLATFORM_CONFIGURATIONS)            
 };
 
-ReactDOM.render(React.createElement(HandOfCardsComponent, properties), element);
+ReactDOM.render(
+    React.createElement(React.StrictMode, {},
+    React.createElement(HandOfCardsComponent, properties)), element);

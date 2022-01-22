@@ -6,16 +6,18 @@
     
     <!--
       Use during development (seems obvious but...)
+    -->
     <script crossorigin src="https://unpkg.com/react@17/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
-    -->
+    
 
     <!--
       Use during not-development (which is presumably just a demo)
     -->
+    <!--
     <script crossorigin src="https://unpkg.com/react@17/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js"></script>
-
+    -->
 
     <script crossorigin src="https://unpkg.com/keycode-js@3.1.0/dist/keycode.min.js"></script>
     
@@ -24,8 +26,9 @@
 
   </head>
   <body>  
-    <div id="card-container" class="app-container" maxCards="9" maxSelectedCards="3" isLocked="false"></div>
     
-    <script src="./script/app.js" type="module"></script>
+      <div id="card-container" class="app-container" maxCards="9" maxSelectedCards="1" isLocked="false"></div>   
+      <script src="./script/app.js" type="module"></script>
+  
   </body>
 </html>

@@ -24,7 +24,7 @@ html, body {
 
 .inner {
     white-space: nowrap;
-    transition: transform 0.3s;
+    transition: transform 0.2s;
     height: 100%;
     /** 
      * used to make sure the z index is preserved 
@@ -36,7 +36,7 @@ html, body {
 .card-item {
     display: inline-flex;
     align-items: stretch;
-    transition: transform 0.25s;
+    transition: transform 0.2s;
     justify-content: center;   
     color: white;
     border-radius: 32px;

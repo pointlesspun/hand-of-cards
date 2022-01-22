@@ -43,7 +43,7 @@ This project was created while learning React and is currently very much under d
 
 * Refactor & add documentation.
 * Add jsx (or htm) variation.
-* Keep keys the same don't reassign when deleting cards.
+* Problem with animation of cards on the right side of deleted cards. Probably needs a complete rewrite of the inner carousel and some absolute positioning :-\.
 * Add mouse support.
 * Try some optimization(s) for less powerful devices (aka phones).
 * Show warning if max selection is reached.
