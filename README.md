@@ -7,7 +7,9 @@ This is simple and limited React front-end carousel imitating holding and browsi
 
 ## Controls:
 * On a laptop/desktop: 
-    * Use left / right arrows to select the next / previous card. Up and down to put a card in a 'selected' state.
+    * Use _left_ / _right_ arrows to select the next / previous card. _Up_ and _down_ to put a card in a 'selected' state.
+    * Press the _Delete_ key to remove the selected cards.
+    * Hit _Enter_ to replace the deleted cards with new random cards.
     * Refresh the page to get a new set of random cards.
 
 * On a device with a touch display:
@@ -41,10 +43,12 @@ This project was created while learning React and is currently very much under d
 
 * Refactor & add documentation.
 * Add jsx (or htm) variation.
+* Keep keys the same don't reassign when deleting cards.
 * Add mouse support.
-* Add 'playing' cards and getting random new ones.
 * Try some optimization(s) for less powerful devices (aka phones).
 * Show warning if max selection is reached.
+* Add play cards animation.
+* Add play / refresh buttons for mobile.
 * Deal truly random cards or one from a deck of 52 cards.
 * Be able to switch between locked and unlocked mode via a button.
 
@@ -55,3 +59,5 @@ Carousel Demonstration based on [this example](https://medium.com/tinyso/how-to-
 Swiping provided by [john-doherty/swiped-events](https://github.com/john-doherty/swiped-events).
 
 Deck of cards [by Дмитрий Фомин (Dmitry Fomin) on Wiki](https://en.wikipedia.org/wiki/File:Atlasnye_playing_cards_deck.svg.) 
+
+Keycode constants [Kabir Baidhya, Saugat Acharya](https://github.com/kabirbaidhya/keycode-js#usage)

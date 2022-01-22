@@ -8,6 +8,7 @@
 import { mathx } from "./mathx.js";
 import { createButton, ELEMENT_TYPES } from "./element-types.js";
 import { Card } from "./card.js";
+import { pickRandomCards } from "./deck.js";
 
 const SWIPE_DIRECTIONS = {
   UP : 'up',
@@ -130,18 +131,24 @@ export class HandOfCardsComponent extends React.Component {
 
   handleKeyEvent(keyCode) {
     switch (keyCode) {
-      case 37:
+      case KeyCode.KEY_LEFT:
         this.previousItem();
         break;
-      case 39:
+      case KeyCode.KEY_RIGHT:
         this.nextItem();
         break;
-      case 38:
+      case KeyCode.KEY_UP:
         this.selectItem(true);
         break;
-      case 40:
+      case KeyCode.KEY_DOWN:
         this.selectItem(false);
         break;  
+      case KeyCode.KEY_DELETE:
+        this.removeSelectedItems();
+        break;
+      case KeyCode.KEY_RETURN:
+        this.refill();
+        break;
     }
   }
 
@@ -189,6 +196,33 @@ export class HandOfCardsComponent extends React.Component {
       this.setState({
         ...this.state,
         cards: newCards
+      });
+    }
+  }
+
+  removeSelectedItems() {  
+    const cards = this.state.cards.filter( card => !card.isSelected);
+    const activeIndex = Math.min(cards.length-1, this.state.activeIndex);
+
+    cards.forEach( (card, idx) => card.index = idx);   
+
+    this.setState({
+      ...this.state,
+      activeIndex,
+      cards
+    });
+  }
+
+  refill() {
+    if (this.state.cards.length < this.props.maxCards) {
+      const cardDefinitions = pickRandomCards(this.props.deck, this.props.maxCards - this.state.cards.length);
+      const cards = [...this.state.cards, ...cardDefinitions.map( (definition, idx) => new Card(definition, idx, false))];
+      
+      cards.forEach( (card, idx) => card.index = idx);   
+
+      this.setState({
+        ...this.state,
+        cards
       });
     }
   }

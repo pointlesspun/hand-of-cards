@@ -58,7 +58,6 @@ export class Card {
                 transformOrigin: "center bottom",
                 transform: transform ? transform.toCss({}) : "",
                 background: this.definition.atlas.toCss(this.definition.row, this.definition.column),
-                backgroundRepeat: "no-repeat",
             }   
         };
         
