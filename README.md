@@ -8,9 +8,11 @@ This is simple and limited React front-end carousel imitating holding and browsi
 ## Controls:
 * On a laptop/desktop: 
     * Use left / right arrows to select the next / previous card. Up and down to put a card in a 'selected' state.
+    * Refresh the page to get a new set of random cards.
 
 * On a device with a touch display:
     * Swipe left/right to select the next / previous card. Tap to toggle a card in a 'selected' state.
+    * Refresh the page to get a new set of random cards.
 
 
 ## 'Design'

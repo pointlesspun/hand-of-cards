@@ -178,21 +178,34 @@ export class HandOfCardsComponent extends React.Component {
 
   selectItem(isItemSelected) {
     
-    const idx = this.state.activeIndex;
-    const newCards = [...this.state.cards];
-    const oldCard = this.state.cards[idx];
-    
-    newCards[idx] = new Card(oldCard.definition, oldCard.index, isItemSelected);
+    if (!isItemSelected || this.props.maxSelectedCards < 0 || this.countSelected() < this.props.maxSelectedCards) {
+      const idx = this.state.activeIndex;
+      const newCards = [...this.state.cards];
+      const oldCard = this.state.cards[idx];
+      
+      newCards[idx] = new Card(oldCard.definition, oldCard.index, isItemSelected);
 
-    this.setState({
-      ...this.state,
-      cards: newCards
-    });
+      this.setState({
+        ...this.state,
+        cards: newCards
+      });
+    }
   }
 
   toggleActiveItemSelected() {   
     this.selectItem(!this.state.cards[this.state.activeIndex].isSelected);
   }
+
+  countSelected() {
+    let result = 0;
+    for (let i = 0; i < this.state.cards.length; ++i) {
+      if (this.state.cards[i].isSelected) {
+        result++;
+      }
+    }
+    return result;
+  }
+
   
   createCarousel(config) {
     

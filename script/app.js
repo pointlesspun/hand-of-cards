@@ -14,8 +14,9 @@ console.log("starting card component");
 const element = document.querySelector('#card-container');
 
 const properties = {
-    deck : pickRandomCards(DEFAULT_DECK, element.attributes?.cardcount?.value ?? 7),
+    deck : pickRandomCards(DEFAULT_DECK, element.attributes?.cardCount?.value ?? 7),
     initialIndex: 0,   
+    maxSelectedCards: element.attributes?.maxSelectedCards?.value ?? -1,
     getLayoutConfiguration: (elementRef) => new MediaConfiguration(elementRef,PLATFORM_CONFIGURATIONS)            
 };
 
