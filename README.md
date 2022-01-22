@@ -23,15 +23,12 @@ The design (such as it is) of the element consists of the following:
     * Carsousel (cards-carousel.js): maintains the active cards and contains the cards
         * Card (card.js): layout of the actual card.
 
-
-
 ## Status
 
 This project was created while learning React and is currently very much under development. Clean-up and refactoring are very much in order. Outstanding features (in no particular order):
 
 * Refactor & add documentation.
 * Add jsx (or htm) variation.
-* Randomize cards in hand.
 * Add locked mode in which all cards are visible on screen.
 * Replace indicators by dots and remove next, previous buttons.
 * Add mouse support.

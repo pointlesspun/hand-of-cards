@@ -6,8 +6,8 @@
  */
 
 import { mathx } from "./mathx.js";
-import { createCarousel  } from "./card-carousel.js";
-import { createButton, elementTypes } from "./element-types.js";
+import { createButton, ELEMENT_TYPES } from "./element-types.js";
+import { Card } from "./card.js";
 
 const SWIPE_DIRECTIONS = {
   UP : 'up',
@@ -30,11 +30,7 @@ export class HandOfCardsComponent extends React.Component {
 
     this.state = {
       activeIndex: props.initialIndex || 0,
-      items: props.initialItems ? props.initialItems.map( (item, idx) => ({
-        item,
-        index : idx,
-        isSelected : false
-      })) : null,
+      cards: props.deck ? props.deck.map( (definition, idx) => new Card(definition, idx, false)) : null
     };
 
     this.swipeHandler = (evt) => this.handleSwipe(evt.detail.dir);
@@ -42,7 +38,6 @@ export class HandOfCardsComponent extends React.Component {
     this.resizeHandler = (evt) => this.handleResize();
     this.touchHandler = (evt) => this.handleTouch(evt);
     
-
     this.ref = React.createRef();
     this.isRefInitialized = false;
   }
@@ -50,18 +45,17 @@ export class HandOfCardsComponent extends React.Component {
   render() {
 
     const properties = {
-      className: "card-app",
+      className: "hand-of-cards",
       ref: this.ref,
       onKeyUp : (evt) => {
         this.handleKeyEvent(evt.keyCode);
       }
     };
 
-    if (!this.state.items) {
-      return React.createElement(elementTypes.div, properties, "no items to display in the carousel...");
+    if (!this.state.cards) {
+      return React.createElement(ELEMENT_TYPES.div, properties, "no items to display in the carousel...");
     }
 
-    const carouselKey = "main-carousel";
     
     // need to know the width of the component to do a proper layout
     if (this.ref.current) {
@@ -69,14 +63,14 @@ export class HandOfCardsComponent extends React.Component {
       const statusText = `${config.name} ${config.screenSize.width}x${config.screenSize.height}`;
 
       const children = [
-        createCarousel(carouselKey, this.state.activeIndex, this.state.items, config),
-        this.createIndicators(this.state.items),
-        React.createElement(elementTypes.div, {key: "device-description", className: "platform-context"}, statusText)
+        this.createCarousel(config),
+        this.createIndicators(this.state.cards),
+        React.createElement(ELEMENT_TYPES.div, {key: "device-description", className: "platform-context"}, statusText)
       ];
 
-      return React.createElement(elementTypes.div, properties, children);
+      return React.createElement(ELEMENT_TYPES.div, properties, children);
     } else {
-      return React.createElement(elementTypes.div, properties);
+      return React.createElement(ELEMENT_TYPES.div, properties);
     }
   }
 
@@ -90,6 +84,7 @@ export class HandOfCardsComponent extends React.Component {
 
     if (!this.isRefInitialized) {
       this.isRefInitialized = true;
+      // now we have a dom element, we can render the component
       this.forceUpdate();
     }
   }
@@ -107,7 +102,7 @@ export class HandOfCardsComponent extends React.Component {
 
     switch (direction) {
       case SWIPE_DIRECTIONS.UP:
-          this.lockItem(true);
+          this.selectItem(true);
           break;
 
       case SWIPE_DIRECTIONS.RIGHT:
@@ -135,10 +130,10 @@ export class HandOfCardsComponent extends React.Component {
         this.nextItem();
         break;
       case 38:
-        this.lockItem(true);
+        this.selectItem(true);
         break;
       case 40:
-        this.lockItem(false);
+        this.selectItem(false);
         break;  
     }
   }
@@ -155,7 +150,7 @@ export class HandOfCardsComponent extends React.Component {
 
       if (Math.abs(delta.x) + Math.abs(delta.x) < TAP_THRESHOLD) {
         // tap happened
-        this.toggleActiveItem();
+        this.toggleActiveItemSelected();
       }
     }
   }
@@ -163,7 +158,7 @@ export class HandOfCardsComponent extends React.Component {
   setActiveIndex(idx) {
     this.setState({
         ...this.state,
-        activeIndex: mathx.clamp(idx, 0, this.state.items.length),
+        activeIndex: mathx.clamp(idx, 0, this.state.cards.length),
     });
   }
 
@@ -175,38 +170,53 @@ export class HandOfCardsComponent extends React.Component {
     this.setActiveIndex(this.state.activeIndex + 1);
   }
 
-  lockItem(isItemLocked) {
+  selectItem(isItemSelected) {
     
     const idx = this.state.activeIndex;
-    const newItems = [...this.state.items];
+    const newCards = [...this.state.cards];
+    const oldCard = this.state.cards[idx];
     
-    newItems[idx] = {
-      ...this.state.items[idx],
-      isSelected : isItemLocked
-    };
+    newCards[idx] = new Card(oldCard.definition, oldCard.index, isItemSelected);
 
     this.setState({
       ...this.state,
-      items: newItems
+      cards: newCards
     });
   }
 
-  toggleActiveItem() {
-    
-    const idx = this.state.activeIndex;
-    const newItems = [...this.state.items];
-    
-    newItems[idx] = {
-      ...this.state.items[idx],
-      isSelected : !this.state.items[idx].isSelected
-    };
-
-    this.setState({
-      ...this.state,
-      items: newItems
-    });
+  toggleActiveItemSelected() {   
+    this.selectItem(!this.state.cards[this.state.activeIndex].isSelected);
   }
   
+  createCarousel(config) {
+    
+    const carouselProperties = {
+        key: "main-carousel",
+        className : "carousel"
+    };
+
+    // center the active card
+    const offset = (config.clientSize.width - config.values.cardWidth) / 2;
+
+    const innerId = `${carouselProperties.key}-inner`;
+    const childProperties = {
+        className:"inner",
+        key: innerId,
+        id: innerId,
+        style : {
+            transform: `translate(${(-this.state.activeIndex* config.values.cardWidth)+offset}px, 0px)`
+        }
+    };
+    
+    const children = this.state.cards.map((card, idx) => 
+      card.createElement(config, `${carouselProperties.key}-item-${idx}`, this.state.cards.length, this.state.activeIndex));
+
+    const innerChildren = [ React.createElement(ELEMENT_TYPES.div, childProperties, children)];
+
+    return React.createElement(ELEMENT_TYPES.div, carouselProperties, innerChildren);
+};
+
+
   /**
    * 
    * @private
@@ -242,6 +252,6 @@ export class HandOfCardsComponent extends React.Component {
         createButton("next",() => this.nextItem(),"Next")
     ];
 
-    return React.createElement(elementTypes.div, properties, children);
+    return React.createElement(ELEMENT_TYPES.div, properties, children);
   }
 }

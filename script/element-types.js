@@ -1,10 +1,10 @@
 'use strict';
 
 /**
- * Definition of React element types which can be used in ReactCreateElement
+ * Definition of React element types which can be used in ReactCreateElement (limited to the ones used in this demo).
  */
 
-export const elementTypes = {
+export const ELEMENT_TYPES = {
     button : 'button',
     div: 'div'
 };
@@ -18,7 +18,7 @@ export const elementTypes = {
  * @returns ReactElement
  */
 export const createButton = (key, onClickCallback, text, className) =>
-    React.createElement(elementTypes.button, {
+    React.createElement(ELEMENT_TYPES.button, {
         onClick : onClickCallback,
         key,
         className : className || ""

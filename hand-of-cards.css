@@ -10,7 +10,7 @@ html, body {
     height: 100%;
 }
 
-.card-app {
+.hand-of-cards {
     height: 100%;
 }
 
@@ -33,15 +33,10 @@ html, body {
 .card-item {
     display: inline-flex;
     align-items: stretch;
-    transition: transform 0.3s;
+    transition: transform 0.25s;
     justify-content: center;   
     color: white;
     border-radius: 32px;
-}
-
-.heart-1 {
-    background: url('./data/Atlasnye_playing_cards_deck.png') -420px -600px;
-    background-repeat: no-repeat;
 }
 
 .card-overlay-active {
@@ -51,7 +46,7 @@ html, body {
 }
 
 .card-overlay {
-    background-image: linear-gradient(180deg, rgba(0,0,0,0.1), rgba(40,42,44,0.4));
+    background-image: linear-gradient(180deg, rgba(0,0,0,0.1), rgba(40,42,44,0.45));
     width: 100%;
     border-radius: 32px;
 }
@@ -70,7 +65,7 @@ html, body {
 }
 
 .card-item-selected {
-    filter: drop-shadow(0 0 0.75rem crimson);
+    filter: drop-shadow(0 0 0.8rem crimson);
 
     /** This supposedly helps performance on phones ... not seeing it though*/
     -webkit-transform: translateZ(0);
