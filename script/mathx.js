@@ -1,3 +1,8 @@
+'use strict';
+
+/**
+ * Math utilties and datastructures.
+ */
 
 export class Transform {
 

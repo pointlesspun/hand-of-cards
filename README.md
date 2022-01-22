@@ -1,17 +1,29 @@
 # hand-of-cards (v0.1)
-This is simple and limited React front-end carousel imitating a hand of cards. To start the app run a webserver in the directory containing the index.html file. 
+This is simple and limited React front-end carousel imitating a hand of cards. To start the app run a webserver in the directory containing the index.html file. Latest demo can be found on the [github pages](https://pointlesspun.github.io/hand-of-cards/).
 
 <center>
     <img src="./data/screenshot.png" width="640" height="480"/>
 </center>
 
 
-Controls:
+## Controls:
 * On a laptop/desktop: 
     * Use left / right arrows to select the next / previous card. Up and down to put a card in a 'selected' state.
 
 * On a device with a touch display:
     * Swipe left/right to select the next / previous card. Tap to toggle a card in a 'selected' state.
+
+
+## 'Design'
+
+The design (such as it is) of the element consists of the following:
+
+* App (app.js): entry point and configuration of the application.
+  * HandOfCardsComponent (hand-of-cards-component.js): contains the event handlers and the carousel.
+    * Carsousel (cards-carousel.js): maintains the active cards and contains the cards
+        * Card (card.js): layout of the actual card.
+
+
 
 ## Status
 

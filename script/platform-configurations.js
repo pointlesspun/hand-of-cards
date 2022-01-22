@@ -1,16 +1,13 @@
 
-import { elementTypes } from "../element-types.js";
-import { MediaConfiguration, ORIENTATION_NAMES, PlatformConfiguration } from "../media-configuration.js";
-import { CarouselComponent } from "./carousel-component.js";
+'use strict';
 
-console.log("starting card component");
+/**
+ * Configurations used in the demo.
+ */
 
-const CARD_NAMES = {
-    HEARTS_1 : "heart-1",
-    HEARTS_2 : "heart-2",
-}
+import { PlatformConfiguration, ORIENTATION_NAMES } from "./media-configuration.js"
 
-const configurations = [
+export const PLATFORM_CONFIGURATIONS = [
     new PlatformConfiguration("phone-landscape", ORIENTATION_NAMES.LANDSCAPE, 900, 480, {
         baseScale: 0.75,
         dynamicScale: 0.25,
@@ -78,16 +75,3 @@ const configurations = [
     })
 ]
 
-const properties = {
-    initialItems : [
-        CARD_NAMES.HEARTS_1,
-        CARD_NAMES.HEARTS_1,
-        CARD_NAMES.HEARTS_1,
-        CARD_NAMES.HEARTS_1,
-        CARD_NAMES.HEARTS_1,
-    ],
-    initialIndex: 0,
-    getLayoutConfiguration: (elementRef) => new MediaConfiguration(elementRef,configurations)            
-};
-
-ReactDOM.render(React.createElement(CarouselComponent, properties), document.querySelector('#card-container'));

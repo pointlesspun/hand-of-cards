@@ -1,3 +1,9 @@
+'use strict';
+
+/**
+ * Configuration definitions for a given media and its dimensions.
+ */
+
 import { Size } from "./mathx.js";
 
 export const ORIENTATION_NAMES = {

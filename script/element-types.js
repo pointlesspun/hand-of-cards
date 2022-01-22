@@ -1,3 +1,9 @@
+'use strict';
+
+/**
+ * Definition of React element types which can be used in ReactCreateElement
+ */
+
 export const elementTypes = {
     button : 'button',
     div: 'div'

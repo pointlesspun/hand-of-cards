@@ -1,6 +1,13 @@
-import { mathx, Transform } from "../mathx.js";
-import { carousel, cardItem } from "./cards.js";
-import { createButton, elementTypes } from "../element-types.js";
+'use strict';
+
+/**
+ * Main component which takes a number of cards and implements the interactions with those 
+ * cards using a carousel.
+ */
+
+import { mathx } from "./mathx.js";
+import { createCarousel  } from "./card-carousel.js";
+import { createButton, elementTypes } from "./element-types.js";
 
 const SWIPE_DIRECTIONS = {
   UP : 'up',
@@ -12,7 +19,7 @@ const SWIPE_DIRECTIONS = {
 // number of pixels of movement allowed before a tap becomes a swipe
 const TAP_THRESHOLD = 10;
 
-export class CarouselComponent extends React.Component {
+export class HandOfCardsComponent extends React.Component {
   /**
    *
    * @param {*} props
@@ -62,7 +69,7 @@ export class CarouselComponent extends React.Component {
       const statusText = `${config.name} ${config.screenSize.width}x${config.screenSize.height}`;
 
       const children = [
-        carousel(carouselKey, this.state.activeIndex, this.state.items, config),
+        createCarousel(carouselKey, this.state.activeIndex, this.state.items, config),
         this.createIndicators(this.state.items),
         React.createElement(elementTypes.div, {key: "device-description", className: "platform-context"}, statusText)
       ];
