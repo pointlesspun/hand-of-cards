@@ -7,6 +7,15 @@
 import { Transform } from "./mathx.js";
 import { elementTypes } from "./element-types.js";
 
+export class CardDefinition {
+    constructor(name, atlas, row, column) {
+        this.name = name;
+        this.atlas = atlas;
+        this.row = row;
+        this.column = column;
+    }
+}
+
 export const createCard = (config, key, itemProperties, itemsLength, activeIndex, idx) => {
    
     // notes
@@ -43,7 +52,12 @@ export const createCard = (config, key, itemProperties, itemsLength, activeIndex
       }
     });
 
-    const className = `${itemProperties.item} card-item ${isActive ? "card-item-active" : ""} ${itemProperties.isSelected ? "card-item-selected" : ""}`
+    const cardDefinition = itemProperties.item;
+    const atlas = cardDefinition.atlas;
+    const atlasX = atlas.spriteGridOffset.width + cardDefinition.column * atlas.spriteGrid.width;
+    const atlasY = atlas.spriteGridOffset.height + cardDefinition.row * atlas.spriteGrid.height;
+
+    const className = `card-item ${isActive ? "card-item-active" : ""} ${itemProperties.isSelected ? "card-item-selected" : ""}`
   
     const properties = {
         key: key,
@@ -53,6 +67,8 @@ export const createCard = (config, key, itemProperties, itemsLength, activeIndex
             height : config.values.cardHeight + "px",
             transformOrigin: "center bottom",
             transform: transform ? transform.toCss({}) : "",
+            background: `url(${atlas.url}) ${atlasX}px ${atlasY}px`,
+            backgroundRepeat: "no-repeat",
         }   
     };
     

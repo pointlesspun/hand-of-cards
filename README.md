@@ -31,7 +31,6 @@ This project was created while learning React and is currently very much under d
 
 * Refactor & add documentation.
 * Add jsx (or htm) variation.
-* Create a sprite Atlas.
 * Randomize cards in hand.
 * Add locked mode in which all cards are visible on screen.
 * Replace indicators by dots and remove next, previous buttons.

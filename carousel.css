@@ -40,8 +40,7 @@ html, body {
 }
 
 .heart-1 {
-    background: url('../../data/Heart-1.png');
-    background-size: cover;
+    background: url('./data/Atlasnye_playing_cards_deck.png') -420px -600px;
     background-repeat: no-repeat;
 }
 
