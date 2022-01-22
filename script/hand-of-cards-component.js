@@ -30,7 +30,8 @@ export class HandOfCardsComponent extends React.Component {
 
     this.state = {
       activeIndex: props.initialIndex || 0,
-      cards: props.deck ? props.deck.map( (definition, idx) => new Card(definition, idx, false)) : null
+      isLocked: props.isLocked,
+      cards: props.hand ? props.hand.map( (definition, idx) => new Card(definition, idx, false)) : null
     };
 
     this.swipeHandler = (evt) => this.handleSwipe(evt.detail.dir);
@@ -216,6 +217,7 @@ export class HandOfCardsComponent extends React.Component {
 
     // center the active card
     const offset = (config.clientSize.width - config.values.cardWidth) / 2;
+    const centerCard = this.state.isLocked ? Math.floor(this.state.cards.length / 2) : this.state.activeIndex;
 
     const innerId = `${carouselProperties.key}-inner`;
     const childProperties = {
@@ -223,12 +225,12 @@ export class HandOfCardsComponent extends React.Component {
         key: innerId,
         id: innerId,
         style : {
-            transform: `translate(${(-this.state.activeIndex* config.values.cardWidth)+offset}px, 0px)`
+            transform: `translate(${(-centerCard * config.values.cardWidth)+offset}px, 0px)`
         }
     };
     
     const children = this.state.cards.map((card, idx) => 
-      card.createElement(config, `${carouselProperties.key}-item-${idx}`, this.state.cards.length, this.state.activeIndex));
+      card.createElement(config, `${carouselProperties.key}-item-${idx}`, this.state.cards.length, this.state.activeIndex, centerCard));
 
     const innerChildren = [ React.createElement(ELEMENT_TYPES.div, childProperties, children)];
 

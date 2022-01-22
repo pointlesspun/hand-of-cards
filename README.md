@@ -1,4 +1,4 @@
-# hand-of-cards (v0.2)
+# hand-of-cards (v0.3)
 This is simple and limited React front-end carousel imitating holding and browsing through a hand of cards. To start the app, run a webserver in the directory containing the index.html file. Latest demo can be found on the [github pages](https://pointlesspun.github.io/hand-of-cards/).
 
 <center>
@@ -14,6 +14,17 @@ This is simple and limited React front-end carousel imitating holding and browsi
     * Swipe left/right to select the next / previous card. Tap to toggle a card in a 'selected' state.
     * Refresh the page to get a new set of random cards.
 
+## Configurable Attributes
+In the top level element one can currently set the following attributes:
+
+* "maxCards", maxium number of cards in the hand and initial set of cards
+* "maxSelectedCards", maximum number of cards which can be selected. After that the user cannot select any more cards
+* "isLocked", if set to true, the cards will not scroll but stay in place.
+
+Example:
+```html
+  <div id="card-container" class="app-container" maxCards="9" maxSelectedCards="3" isLocked="false"></div>
+```
 
 ## 'Design'
 
@@ -30,10 +41,12 @@ This project was created while learning React and is currently very much under d
 
 * Refactor & add documentation.
 * Add jsx (or htm) variation.
-* Add locked mode in which all cards are visible on screen.
 * Add mouse support.
 * Add 'playing' cards and getting random new ones.
 * Try some optimization(s) for less powerful devices (aka phones).
+* Show warning if max selection is reached.
+* Deal truly random cards or one from a deck of 52 cards.
+* Be able to switch between locked and unlocked mode via a button.
 
 ## Credits
 
@@ -42,6 +55,3 @@ Carousel Demonstration based on [this example](https://medium.com/tinyso/how-to-
 Swiping provided by [john-doherty/swiped-events](https://github.com/john-doherty/swiped-events).
 
 Deck of cards [by Дмитрий Фомин (Dmitry Fomin) on Wiki](https://en.wikipedia.org/wiki/File:Atlasnye_playing_cards_deck.svg.) 
-
-
-

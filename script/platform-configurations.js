@@ -51,7 +51,7 @@ export const PLATFORM_CONFIGURATIONS = [
         cardHeight : 540
     }),
 
-    new PlatformConfiguration("laptop/desktop-x", ORIENTATION_NAMES.LANDSCAPE, 999999, 999999, {
+    new PlatformConfiguration("laptop/desktop", ORIENTATION_NAMES.LANDSCAPE, 999999, 999999, {
         baseScale: 0.75,
         dynamicScale: 0.25,
         rotation: 4,

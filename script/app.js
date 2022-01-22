@@ -9,13 +9,17 @@ import { HandOfCardsComponent } from "./hand-of-cards-component.js";
 import { PLATFORM_CONFIGURATIONS } from "./platform-configurations.js";
 import { DEFAULT_DECK, pickRandomCards } from "./deck.js";
 
+
 console.log("starting card component");
 
 const element = document.querySelector('#card-container');
 
+const hand = pickRandomCards(DEFAULT_DECK, element.attributes?.maxCards?.value ?? 7);
+
 const properties = {
-    deck : pickRandomCards(DEFAULT_DECK, element.attributes?.cardCount?.value ?? 7),
-    initialIndex: 0,   
+    hand,
+    initialIndex: Math.floor(hand.length / 2),   
+    isLocked: element.attributes?.isLocked?.value === "true" ?? false,
     maxSelectedCards: element.attributes?.maxSelectedCards?.value ?? -1,
     getLayoutConfiguration: (elementRef) => new MediaConfiguration(elementRef,PLATFORM_CONFIGURATIONS)            
 };
