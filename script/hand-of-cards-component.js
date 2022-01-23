@@ -10,6 +10,7 @@ import { createButton, ELEMENT_TYPES } from "./element-types.js";
 import { Card, CARD_KEY_PREFIX } from "./card.js";
 import { pickRandomCards } from "./deck.js";
 import { PlatformConfiguration } from "./media-configuration.js";
+import { ANIMATIONS, ANIMATION_EVENT } from "./animations.js";
 
 const SWIPE_DIRECTIONS = {
   UP : 'up',
@@ -34,16 +35,18 @@ export class HandOfCardsComponent extends React.Component {
       activeIndex: props.initialIndex || 0,
       isLocked: props.isLocked,
       cardKeyCounter: props.hand ? props.hand.length : 0,
-      cards: props.hand ? props.hand.map( (definition, idx) => new Card(CARD_KEY_PREFIX + idx, definition, idx, false)) : null
+      cards: props.hand ? props.hand.map( (definition, idx) => new Card(CARD_KEY_PREFIX + idx, definition, idx, false)) : null,
     };
 
     this.swipeHandler = (evt) => this.handleSwipe(evt.detail.dir);
     this.keyHandler = (evt) => this.handleKeyEvent(evt.keyCode);
     this.resizeHandler = (evt) => this.handleResize();
     this.touchHandler = (evt) => this.handleTouch(evt);
+    this.animationHandler = (evt) => this.handleAnimation(evt);
     
     this.ref = React.createRef();
     this.isRefInitialized = false;
+    this.animationCount = 0;
   }
   
   render() {
@@ -110,47 +113,64 @@ export class HandOfCardsComponent extends React.Component {
 
   handleSwipe( direction ) {
 
-    switch (direction) {
-      case SWIPE_DIRECTIONS.UP:
-          this.selectItem(true);
+    // wait for the animations to finish
+    if (this.animationCount === 0) {
+      switch (direction) {
+        case SWIPE_DIRECTIONS.UP:
+            // are there any cards in hand ?
+            if (this.state.cards.length > 0) {             
+              //If the card was already selected, and the user swipes up again play the cards
+              if (this.state.cards[this.state.activeIndex].isSelected) {
+                this.playSelectedCards();
+              } else {
+                this.selectItem(true);
+              }
+            }
+            break;
+
+        case SWIPE_DIRECTIONS.RIGHT:
+          this.previousItem();
           break;
+    
+        /** This is not a good idea on a phone as it may reload the page :-\ */
+        /*case SWIPE_DIRECTIONS.DOWN:
+          this.lockItem(false);
+          break;
+        */
 
-      case SWIPE_DIRECTIONS.RIGHT:
-        this.previousItem();
-        break;
-  
-      /** This is not a good idea on a phone as it may reload the page :-\ */
-      /*case SWIPE_DIRECTIONS.DOWN:
-        this.lockItem(false);
-        break;
-      */
-
-      case SWIPE_DIRECTIONS.LEFT:
-        this.nextItem();
-        break;
+        case SWIPE_DIRECTIONS.LEFT:
+          this.nextItem();
+          break;
+      }
     }
   }
 
   handleKeyEvent(keyCode) {
-    switch (keyCode) {
-      case KeyCode.KEY_LEFT:
-        this.previousItem();
-        break;
-      case KeyCode.KEY_RIGHT:
-        this.nextItem();
-        break;
-      case KeyCode.KEY_UP:
-        this.selectItem(true);
-        break;
-      case KeyCode.KEY_DOWN:
-        this.selectItem(false);
-        break;  
-      case KeyCode.KEY_DELETE:
-        this.removeSelectedItems();
-        break;
-      case KeyCode.KEY_RETURN:
-        this.refill();
-        break;
+    // wait for the animations to finish
+    if (this.animationCount === 0) {
+      switch (keyCode) {
+        case KeyCode.KEY_LEFT:
+          this.previousItem();
+          break;
+        case KeyCode.KEY_RIGHT:
+          this.nextItem();
+          break;
+        case KeyCode.KEY_UP:
+          this.selectItem(true);
+          break;
+        case KeyCode.KEY_DOWN:
+          this.selectItem(false);
+          break;  
+        case KeyCode.KEY_DELETE:
+          this.removeSelectedItems();
+          break;
+        case KeyCode.KEY_RETURN:
+          this.refill();
+          break;
+        case KeyCode.KEY_SPACE:
+          this.playSelectedCards();
+          break;
+      }
     }
   }
 
@@ -159,18 +179,31 @@ export class HandOfCardsComponent extends React.Component {
   }
 
   handleTouch(evt) {
-    if (evt.type === 'touchstart') {
-      this.touchStart = {x: evt.changedTouches[0].clientX, y: evt.changedTouches[0].clientY};
-    } else {
-      const delta = {x: evt.changedTouches[0].clientX  - this.touchStart.x, y: evt.changedTouches[0].clientY - this.touchStart.y};
-
-      if (Math.abs(delta.x) + Math.abs(delta.x) < TAP_THRESHOLD) {
-        // tap happened
-        this.toggleActiveItemSelected();
+    // wait for the animations to finish
+    if (this.animationCount === 0) {
+      if (evt.type === 'touchstart') {
+        this.touchStart = {x: evt.changedTouches[0].clientX, y: evt.changedTouches[0].clientY};
+      } else {
+        const delta = {x: evt.changedTouches[0].clientX  - this.touchStart.x, y: evt.changedTouches[0].clientY - this.touchStart.y};
+        const sumDelta = Math.abs(delta.x) + Math.abs(delta.y);
+        if (sumDelta < TAP_THRESHOLD) {
+          // tap happened
+          this.toggleActiveItemSelected();
+        }
       }
     }
   }
   
+  handleAnimation(evt) {
+    if (evt.type === ANIMATION_EVENT.END) {
+      this.animationCount--;
+
+      if (this.animationCount === 0) {
+        this.removeSelectedItems();
+      }
+    }
+  }
+
   setActiveIndex(idx) {
     this.setState({
         ...this.state,
@@ -203,7 +236,7 @@ export class HandOfCardsComponent extends React.Component {
   }
 
   removeSelectedItems() {  
-    const cards = this.state.cards.filter( card => !card.isSelected);
+    const cards = this.state.cards.filter(card => !card.isSelected);
     const activeIndex = Math.min(Math.max(0, cards.length-1), this.state.activeIndex);
 
     cards.forEach( (card, idx) => card.index = idx);   
@@ -211,6 +244,25 @@ export class HandOfCardsComponent extends React.Component {
     this.setState({
       ...this.state,
       activeIndex,
+      cards
+    });     
+  }
+
+  playSelectedCards() {  
+    this.animationCount = 0;
+
+    const cards = this.state.cards.map(card => {
+      if (card.isSelected) {
+        card.animation = ANIMATIONS.playCard;
+        card.animationCallback = this.animationHandler;
+        this.animationCount++;
+      }
+
+      return card;
+    });
+
+    this.setState({
+      ...this.state,
       cards
     });     
   }
@@ -232,7 +284,9 @@ export class HandOfCardsComponent extends React.Component {
   }
 
   toggleActiveItemSelected() {   
-    this.selectItem(!this.state.cards[this.state.activeIndex].isSelected);
+    if (this.state.activeIndex < this.state.cards.length) {
+      this.selectItem(!this.state.cards[this.state.activeIndex].isSelected);
+    }
   }
 
   countSelected() {

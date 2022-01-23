@@ -36,7 +36,8 @@ html, body {
 .card-item {
     display: inline-flex;
     align-items: stretch;
-    transition: transform 0.2s;
+    transition: transform 0.25s;
+    transition-timing-function: ease-in-out;
     justify-content: center;   
     color: white;
     border-radius: 32px;

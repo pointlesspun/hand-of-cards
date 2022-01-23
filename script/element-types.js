@@ -6,7 +6,8 @@
 
 export const ELEMENT_TYPES = {
     button : 'button',
-    div: 'div'
+    div: 'div',
+    style: 'style'
 };
 
 /**

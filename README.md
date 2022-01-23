@@ -1,4 +1,4 @@
-# hand-of-cards (v0.31)
+# hand-of-cards (v0.32)
 This is simple and limited React front-end carousel imitating holding and browsing through a hand of cards. To start the app, run a webserver in the directory containing the index.html file. Latest demo can be found on the [github pages](https://pointlesspun.github.io/hand-of-cards/).
 
 <center>
@@ -11,10 +11,13 @@ This is simple and limited React front-end carousel imitating holding and browsi
     * Press the _Delete_ key to remove the selected cards.
     * Hit _Enter_ to replace the deleted cards with new random cards.
     * Refresh the page to get a new set of random cards.
+    * Press _Space_ to play the current selected cards (and remove them afterwards)
 
 * On a device with a touch display:
     * Swipe left/right to select the next / previous card. Tap to toggle a card in a 'selected' state.
     * Refresh the page to get a new set of random cards.
+    * Swipe up to select the current card
+    * Swipe up again on an already selected card to play all the selected cards.
 
 ## Configurable Attributes
 In the top level element one can currently set the following attributes:
@@ -45,11 +48,9 @@ This project was created while learning React and is currently very much under d
 * Add mouse support.
 * Try some optimization(s) for less powerful devices (aka phones).
 * Show warning if max selection is reached.
-* Add play cards animation.
 * Add play / refresh buttons for mobile.
 * Deal truly random cards or one from a deck of 52 cards.
 * Be able to switch between locked and unlocked mode via a button.
-* Correctly center hand in locked mode
 
 ## Credits
 

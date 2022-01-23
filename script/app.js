@@ -8,11 +8,12 @@ import { MediaConfiguration} from "./media-configuration.js";
 import { HandOfCardsComponent } from "./hand-of-cards-component.js";
 import { PLATFORM_CONFIGURATIONS } from "./platform-configurations.js";
 import { DEFAULT_DECK, pickRandomCards } from "./deck.js";
+import { allocAnimations, ANIMATIONS } from "./animations.js";
 
 console.log("starting card component");
 
 const element = document.querySelector('#card-container');
-const maxCards = element.attributes?.maxCards?.value ?? 7;
+const maxCards = element.attributes?.maxCards?.value ? parseInt(element.attributes.maxCards.value) : 7;
 const hand = pickRandomCards(DEFAULT_DECK, maxCards);
 
 const properties = {
@@ -24,6 +25,8 @@ const properties = {
     maxSelectedCards: element.attributes?.maxSelectedCards?.value ?? -1,
     getLayoutConfiguration: (elementRef) => new MediaConfiguration(elementRef,PLATFORM_CONFIGURATIONS)            
 };
+
+allocAnimations([ANIMATIONS.playCard.name], maxCards);
 
 ReactDOM.render(
     React.createElement(React.StrictMode, {},
