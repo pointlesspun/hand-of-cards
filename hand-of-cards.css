@@ -40,6 +40,7 @@ html, body {
     justify-content: center;   
     color: white;
     border-radius: 32px;
+    position: absolute;
 }
 
 .card-overlay-active {

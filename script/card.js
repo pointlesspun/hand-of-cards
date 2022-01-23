@@ -6,9 +6,20 @@
 
 import { Transform } from "./mathx.js";
 import { ELEMENT_TYPES } from "./element-types.js";
+import { PlatformConfiguration } from "./media-configuration.js";
+import { CardDefinition } from "./card-definition.js";
 
+/** Prefix to generate React cards */
 export const CARD_KEY_PREFIX = "hoc-card";
+
 export class Card {
+    /**
+     * 
+     * @param {*} key a unique React key
+     * @param {CardDefinition} definition containing immutable properties (graphics, name) of the card 
+     * @param {number} index index of the card in the hand
+     * @param {boolean} isSelected indicates if the card is selected by the player
+     */
     constructor(key, definition, index, isSelected) {
         this.key = key;
         this.definition = definition;
@@ -16,48 +27,27 @@ export class Card {
         this.isSelected = isSelected;
     }
     
-    createElement(config, key, cardCount, activeIndex, centerCard) {
+    /**
+     * Creates React Element for this card
+     * 
+     * @param {PlatformConfiguration} config contains the settings relevant to the current media/device 
+     * @param {number} cardCount represents to the total number of cards in hand
+     * @param {number} activeIndex index of the card the player is currently looking at
+     * @param {number} centerCardIndex index of the card which is the center of the hand
+     * @returns {react.element}
+     */
+    createElement(config,  cardCount, activeIndex, centerCardIndex) {
 
         if (this.index < 0) {
-            return React.createElement(ELEMENT_TYPES.div, {key, visibility: "collapse", className: "card-item"});    
+            return React.createElement(ELEMENT_TYPES.div, {key: this.key, visibility: "collapse", className: "card-item"});    
         }
 
-        // notes
-        // top/left of the card is the translation origin (0,0)
-        // translation is applied before scaling, so the position has to be calculated as if
-        // the scale = (1,1)
-
-        // Hack: we know the inner takes 90% of the clientheight based on that we can calculate
-        // the relative y offset
-        const values = config.values;
-        const innerHeight = config.clientSize.height * 0.9;
-
-        const distanceToActiveIndex = centerCard - this.index;
-        const relativeDistance = Math.abs(distanceToActiveIndex) / (cardCount * 0.5);
-        const itemScale = values.baseScale + values.dynamicScale * (1-relativeDistance);
-
-        const itemSelectedOffset = this.isSelected ? values.ySelectedOffset : 0;
         const isActive = this.index === activeIndex;
-        const itemActiveOffset = isActive ? values.yActiveOffset : 0;
-        const yOffset =  (innerHeight - values.cardHeight) + values.yBaseOffset;
-        const yOffsetWrtActive = isActive ? 0 : Math.abs(distanceToActiveIndex) * Math.abs(distanceToActiveIndex) * values.yTranslation;
-        
-        const transform = new Transform({
-            rotation : isActive ? 0 :  -values.rotation * distanceToActiveIndex,
-            scale : {
-                x: itemScale,
-                y: itemScale
-            },
-            translation: {
-                x : distanceToActiveIndex * values.xTranslation,
-                y: yOffset + itemSelectedOffset + itemActiveOffset + yOffsetWrtActive,
-                z: isActive ? 200 : 100 - Math.abs(distanceToActiveIndex)
-            }
-        });
+        const transform = this.calculateTransform(config, cardCount, activeIndex, centerCardIndex);
         
         const properties = {
-            key,
-            id: key,
+            key: this.key,
+            id: this.key,
             className : `card-item ${isActive ? "card-item-active" : ""} ${this.isSelected ? "card-item-selected" : ""}`,
             style : {
                 width : config.values.cardWidth + "px",
@@ -72,5 +62,65 @@ export class Card {
         const overlay = React.createElement(ELEMENT_TYPES.div, { className : `card-overlay${isActive ? "-active" : ""}`});
 
         return React.createElement(ELEMENT_TYPES.div, properties, overlay);
+    }
+
+    /**
+     * Calculates the transformation (translation, rotation, scale) of the card on screen
+     * @private
+     * @param {PlatformConfiguration} config contains the settings relevant to the current media/device 
+     * @param {number} cardCount represents to the total number of cards in hand
+     * @param {number} activeIndex index of the card the player is currently looking at
+     * @param {number} centerCardIndex index of the card which is the center of the hand
+     * @returns {Transform}
+     */
+    calculateTransform(config, cardCount, activeIndex, centerCardIndex) {
+        
+        // short hand reference
+        const values = config.values;
+
+        // size of the div containing these cards
+        const parentHeight = config.clientSize.height * values.innerHeight;
+
+        // is the current card active (the one in the center which the user is working with) ?
+        const isActive = this.index === activeIndex;
+
+        // center of the parent x axis
+        const parentCenterX = config.clientSize.width / 2;
+
+        // how far is this card from the center cards ?
+        const deltaCenterIdx = this.index - centerCardIndex;
+
+        const maxDeltaIdx = Math.abs(deltaCenterIdx) / (cardCount - 1);
+
+        // try to scale down items further away from the center somewhat more
+        const itemScale = values.baseScale + values.dynamicScale * (1-maxDeltaIdx);
+
+        // if the item is selected raise the y position
+        const itemSelectedOffset = this.isSelected ? values.ySelectedOffset : 0;
+        
+        // if the item is active raise the y position
+        const itemActiveOffset = isActive ? values.yActiveOffset : 0;
+        
+        // move the card to the bottom of the parent
+        const yOffset =  (parentHeight - values.cardHeight) + values.yBaseOffset;
+        
+        // move the card further down, the further it is from the center card to produce a curved hand illusion
+        const yOffsetWrtActive = isActive ? 0 : Math.abs(deltaCenterIdx) * Math.abs(deltaCenterIdx) * values.yTranslation;
+
+        const cardCenterX = values.cardWidth / 2;
+
+        return new Transform({
+            rotation : isActive ? 0 :  values.rotation * deltaCenterIdx,
+            scale : {
+                x: itemScale,
+                y: itemScale
+            },
+            translation: {
+                x : parentCenterX - cardCenterX + deltaCenterIdx * values.xTranslation,
+                y: yOffset + itemSelectedOffset + itemActiveOffset + yOffsetWrtActive,
+                // make sure the cards closer to the center overlap cards further away
+                z: isActive ? 200 : 100 - Math.abs(deltaCenterIdx)
+            }
+        });        
     }
 }

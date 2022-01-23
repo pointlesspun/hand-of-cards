@@ -1,4 +1,4 @@
-# hand-of-cards (v0.3)
+# hand-of-cards (v0.31)
 This is simple and limited React front-end carousel imitating holding and browsing through a hand of cards. To start the app, run a webserver in the directory containing the index.html file. Latest demo can be found on the [github pages](https://pointlesspun.github.io/hand-of-cards/).
 
 <center>
@@ -34,8 +34,7 @@ The design (such as it is) of the element consists of the following:
 
 * App (app.js): entry point and configuration of the application.
   * HandOfCardsComponent (hand-of-cards-component.js): contains the event handlers and the carousel.
-    * Carsousel (cards-carousel.js): maintains the active cards and contains the cards
-        * Card (card.js): layout of the actual card.
+    * Card (card.js): layout / transform of the actual card.
 
 ## Status
 
@@ -43,7 +42,6 @@ This project was created while learning React and is currently very much under d
 
 * Refactor & add documentation.
 * Add jsx (or htm) variation.
-* Problem with animation of cards on the right side of deleted cards. Probably needs a complete rewrite of the inner carousel and some absolute positioning :-\.
 * Add mouse support.
 * Try some optimization(s) for less powerful devices (aka phones).
 * Show warning if max selection is reached.
@@ -51,6 +49,7 @@ This project was created while learning React and is currently very much under d
 * Add play / refresh buttons for mobile.
 * Deal truly random cards or one from a deck of 52 cards.
 * Be able to switch between locked and unlocked mode via a button.
+* Correctly center hand in locked mode
 
 ## Credits
 

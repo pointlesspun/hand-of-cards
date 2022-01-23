@@ -258,21 +258,17 @@ export class HandOfCardsComponent extends React.Component {
     };
 
     // center the active card
-    const offset = (config.clientSize.width - config.values.cardWidth) / 2;
-    const centerCard = this.state.isLocked ? this.state.cards.length / 2 : this.state.activeIndex;
+    const centerCard = this.state.isLocked ? Math.floor(this.state.cards.length / 2) : this.state.activeIndex;
 
     const innerId = `${carouselProperties.key}-inner`;
     const childProperties = {
         className:"inner",
         key: innerId,
         id: innerId,
-        style : {
-            transform: `translate(${(-centerCard * config.values.cardWidth)+offset}px, 0px)`
-        }
     };
     
     const children = this.state.cards.map((card, idx) => 
-      card.createElement(config, card.key, this.state.cards.length, this.state.activeIndex, centerCard));
+      card.createElement(config, this.state.cards.length, this.state.activeIndex, centerCard));
 
     const innerChildren = React.createElement(ELEMENT_TYPES.div, childProperties, children);
 
