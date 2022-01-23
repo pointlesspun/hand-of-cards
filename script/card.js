@@ -4,15 +4,18 @@
  * Implements a card and its tranformation given its position and state in the hand.
  */
 
-import { Transform } from "./mathx.js";
+import { Transform } from "./transform.js";
 import { ELEMENT_TYPES } from "./element-types.js";
 import { PlatformConfiguration } from "./media-configuration.js";
 import { CardDefinition } from "./card-definition.js";
-import { ANIMATIONS, ANIMATION_EVENT, createAnimationId, updateKeyframes } from "./animations.js";
+import { ANIMATION_EVENT_TYPE, AnimationEvent } from "./animations.js";
+import { Vector3 } from "./vector3.js";
 
-/** Prefix to generate React cards */
-export const CARD_KEY_PREFIX = "hoc-card";
+/** Prefix to generate React cards */export const CARD_KEY_PREFIX = "hoc-card";
 
+/**
+ * Implements the logic, state and element creation of a single card.
+ */
 export class Card {
     /**
      * 
@@ -43,7 +46,7 @@ export class Card {
     createElement(config,  cardCount, activeIndex, centerCardIndex) {
 
         if (this.index < 0) {
-            return React.createElement(ELEMENT_TYPES.div, {key: this.key, visibility: "collapse", className: "card-item"});    
+            return React.createElement(ELEMENT_TYPES.DIV, {key: this.key, visibility: "collapse", className: "card-item"});    
         }
 
         const isActive = this.index === activeIndex;
@@ -62,7 +65,7 @@ export class Card {
             } ,
             onAnimationEnd: () => { 
                 if(this.animationCallback) {
-                    this.animationCallback({card: this, animationName: this.activeAnimation, type: ANIMATION_EVENT.END});
+                    this.animationCallback(new AnimationEvent(this, this.activeAnimation, ANIMATION_EVENT_TYPE.END));
                 } 
             }
         };
@@ -73,17 +76,17 @@ export class Card {
                 ...this.playCardAnimation(this.animation, config.values, transform)
             }; 
 
-            this.activeAnimation = properties.animationName;
+            this.activeAnimation = properties.style.animationName;
 
             if (this.animationCallback) {
-                this.animationCallback({card: this, animationName: this.activeAnimation, type: ANIMATION_EVENT.START});
+                this.animationCallback(new AnimationEvent(this, this.activeAnimation, ANIMATION_EVENT_TYPE.START));
             }
         }
 
         // color overlay giving the card some shadow depending on its state
-        const overlay = React.createElement(ELEMENT_TYPES.div, { className : `card-overlay${isActive ? "-active" : ""}`});
+        const overlay = React.createElement(ELEMENT_TYPES.DIV, { className : `card-overlay${isActive ? "-active" : ""}`});
 
-        return React.createElement(ELEMENT_TYPES.div, properties, overlay);
+        return React.createElement(ELEMENT_TYPES.DIV, properties, overlay);
     }
 
     /**
@@ -131,19 +134,16 @@ export class Card {
 
         const cardCenterX = values.cardWidth / 2;
 
-        return new Transform({
-            rotation : isActive ? 0 :  values.rotation * deltaCenterIdx,
-            scale : {
-                x: itemScale,
-                y: itemScale
-            },
-            translation: {
-                x : parentCenterX - cardCenterX + deltaCenterIdx * values.xTranslation,
-                y:  yOffset + itemSelectedOffset + itemActiveOffset + yOffsetWrtActive,
+        return new Transform(
+            new Vector3(
+                parentCenterX - cardCenterX + deltaCenterIdx * values.xTranslation,
+                yOffset + itemSelectedOffset + itemActiveOffset + yOffsetWrtActive,
                 // make sure the cards closer to the center overlap cards further away
-                z: isActive ? 200 : 100 - Math.abs(deltaCenterIdx)
-            }
-        });        
+                isActive ? 200 : 100 - Math.abs(deltaCenterIdx)
+            ),
+            new Vector3(itemScale, itemScale),
+            isActive ? 0 :  values.rotation * deltaCenterIdx,
+        );        
     }
 
     createClassName(isActive) {

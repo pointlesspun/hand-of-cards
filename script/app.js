@@ -29,5 +29,4 @@ const properties = {
 allocAnimations([ANIMATIONS.playCard.name], maxCards);
 
 ReactDOM.render(
-    React.createElement(React.StrictMode, {},
-    React.createElement(HandOfCardsComponent, properties)), element);
+    React.createElement(React.StrictMode, {}, React.createElement(HandOfCardsComponent, properties)), element);

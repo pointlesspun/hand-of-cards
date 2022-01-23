@@ -30,9 +30,20 @@ export const ANIMATIONS = {
 /**
  * Type of animation events
  */
-export const ANIMATION_EVENT = {
+export const ANIMATION_EVENT_TYPE = {
     START: "start",
     END: "end"
+}
+
+/**
+ * Event emitted when an animation is started or stopped
+ */
+export class AnimationEvent {
+    constructor( source, name, eventType) {
+        this.source = source;
+        this.name = name;
+        this.type = eventType;
+    }
 }
 
 /** Cached styles each containing an animation. */
@@ -52,7 +63,7 @@ export function allocAnimations(names, count) {
     for (let i = 0; i < count; i++) {
         
         for (let j = 0; j < names.length; j++) {
-            let animationStyle = document.createElement(ELEMENT_TYPES.style);
+            let animationStyle = document.createElement(ELEMENT_TYPES.STYLE);
             animationStyle.id = createAnimationId(names[j], i);
             const keyFrameText = `@keyframes ${animationStyle.id} {}`;
             animationStyle.innerHTML = keyFrameText + "\n";

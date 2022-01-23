@@ -2,10 +2,13 @@
 
 import { SpriteAtlas } from "./sprite-atlas.js";
 
+/**
+ * Defines a immutable properties of a card: the graphics and name.
+ */
 export class CardDefinition {
     /**
      * 
-     * @param {string} name 
+     * @param {string} name Name of the card
      * @param {SpriteAtlas} atlas 
      * @param {number} row 
      * @param {number} column 

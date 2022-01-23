@@ -6,11 +6,12 @@
  */
 
 import { mathx } from "./mathx.js";
-import { createButton, ELEMENT_TYPES } from "./element-types.js";
+import { ELEMENT_TYPES } from "./element-types.js";
 import { Card, CARD_KEY_PREFIX } from "./card.js";
 import { pickRandomCards } from "./deck.js";
 import { PlatformConfiguration } from "./media-configuration.js";
-import { ANIMATIONS, ANIMATION_EVENT } from "./animations.js";
+import { ANIMATIONS, ANIMATION_EVENT_TYPE } from "./animations.js";
+import { Vector3 } from "./vector3.js";
 
 const SWIPE_DIRECTIONS = {
   UP : 'up',
@@ -38,17 +39,23 @@ export class HandOfCardsComponent extends React.Component {
       cards: props.hand ? props.hand.map( (definition, idx) => new Card(CARD_KEY_PREFIX + idx, definition, idx, false)) : null,
     };
 
+    // event handlers
     this.swipeHandler = (evt) => this.handleSwipe(evt.detail.dir);
     this.keyHandler = (evt) => this.handleKeyEvent(evt.keyCode);
     this.resizeHandler = (evt) => this.handleResize();
     this.touchHandler = (evt) => this.handleTouch(evt);
     this.animationHandler = (evt) => this.handleAnimation(evt);
     
+    // transient properties
     this.ref = React.createRef();
     this.isRefInitialized = false;
     this.animationCount = 0;
   }
   
+  /**
+   * React-render component
+   * @returns a react.element
+   */
   render() {
 
     const properties = {
@@ -60,7 +67,7 @@ export class HandOfCardsComponent extends React.Component {
     };
 
     if (!this.state.cards) {
-      return React.createElement(ELEMENT_TYPES.div, properties, "no items to display in the carousel...");
+      return React.createElement(ELEMENT_TYPES.DIV, properties, "no items to display in the carousel...");
     }
     
     // Need to know the width of the component to do a proper layout, so until we have a reference,
@@ -72,12 +79,12 @@ export class HandOfCardsComponent extends React.Component {
       const children = [
         this.createCarousel(config),
         this.createIndicators(this.state.cards),
-        React.createElement(ELEMENT_TYPES.div, {key: "device-description", className: "platform-context"}, statusText)
+        React.createElement(ELEMENT_TYPES.DIV, {key: "device-description", className: "platform-context"}, statusText)
       ];
 
-      return React.createElement(ELEMENT_TYPES.div, properties, children);
+      return React.createElement(ELEMENT_TYPES.DIV, properties, children);
     } else {
-      return React.createElement(ELEMENT_TYPES.div, properties);
+      return React.createElement(ELEMENT_TYPES.DIV, properties);
     }
   }
 
@@ -87,6 +94,7 @@ export class HandOfCardsComponent extends React.Component {
   componentDidMount() {
     document.addEventListener('swiped', this.swipeHandler);
     document.addEventListener('keyup', this.keyHandler);
+
     window.addEventListener('resize', this.resizeHandler);
     window.addEventListener('touchstart', this.touchHandler);
     window.addEventListener('touchend', this.touchHandler);
@@ -111,6 +119,10 @@ export class HandOfCardsComponent extends React.Component {
     window.addEventListener('touchend', this.touchHandler);
   }
 
+  /**
+   * Deal with swipes generated with a touch device
+   * @param {*} direction 
+   */
   handleSwipe( direction ) {
 
     // wait for the animations to finish
@@ -145,6 +157,10 @@ export class HandOfCardsComponent extends React.Component {
     }
   }
 
+  /**
+   * Deal with keyboard input
+   * @param {number} keyCode 
+   */
   handleKeyEvent(keyCode) {
     // wait for the animations to finish
     if (this.animationCount === 0) {
@@ -174,6 +190,9 @@ export class HandOfCardsComponent extends React.Component {
     }
   }
 
+  /**
+   * Callback from when the window resizes and we have to re render
+   */
   handleResize() {
     this.forceUpdate();
   }
@@ -182,11 +201,11 @@ export class HandOfCardsComponent extends React.Component {
     // wait for the animations to finish
     if (this.animationCount === 0) {
       if (evt.type === 'touchstart') {
-        this.touchStart = {x: evt.changedTouches[0].clientX, y: evt.changedTouches[0].clientY};
+        this.touchStart = new Vector3(evt.changedTouches[0].clientX, evt.changedTouches[0].clientY);
       } else {
-        const delta = {x: evt.changedTouches[0].clientX  - this.touchStart.x, y: evt.changedTouches[0].clientY - this.touchStart.y};
-        const sumDelta = Math.abs(delta.x) + Math.abs(delta.y);
-        if (sumDelta < TAP_THRESHOLD) {
+        const delta = new Vector3(evt.changedTouches[0].clientX  - this.touchStart.x, evt.changedTouches[0].clientY - this.touchStart.y);
+        
+        if (delta.length() < TAP_THRESHOLD) {
           // tap happened
           this.toggleActiveItemSelected();
         }
@@ -194,10 +213,15 @@ export class HandOfCardsComponent extends React.Component {
     }
   }
   
+  /**
+   * Handle animation start / end events
+   * @param {*} evt 
+   */
   handleAnimation(evt) {
-    if (evt.type === ANIMATION_EVENT.END) {
+    if (evt.type === ANIMATION_EVENT_TYPE.END) {
       this.animationCount--;
 
+      // no more outstanding animations ?
       if (this.animationCount === 0) {
         this.removeSelectedItems();
       }
@@ -220,53 +244,62 @@ export class HandOfCardsComponent extends React.Component {
   }
 
   selectItem(isItemSelected) {
-    
-    if (!isItemSelected || this.props.maxSelectedCards < 0 || this.countSelected() < this.props.maxSelectedCards) {
-      const idx = this.state.activeIndex;
-      const newCards = [...this.state.cards];
-      const oldCard = this.state.cards[idx];
-      
-      newCards[idx] = new Card(oldCard.key, oldCard.definition, oldCard.index, isItemSelected);
+  
+    if (this.state.cards.length > 0) {
+      if (!isItemSelected || this.props.maxSelectedCards < 0 || this.countSelected() < this.props.maxSelectedCards) {
+        const idx = this.state.activeIndex;
+        const newCards = [...this.state.cards];
+        const oldCard = this.state.cards[idx];
+        
+        newCards[idx] = new Card(oldCard.key, oldCard.definition, oldCard.index, isItemSelected);
 
-      this.setState({
-        ...this.state,
-        cards: newCards
-      });
+        this.setState({
+          ...this.state,
+          cards: newCards
+        });
+      }
     }
   }
 
   removeSelectedItems() {  
-    const cards = this.state.cards.filter(card => !card.isSelected);
-    const activeIndex = Math.min(Math.max(0, cards.length-1), this.state.activeIndex);
+    if (this.state.cards.length > 0) {
+      const cards = this.state.cards.filter(card => !card.isSelected);
+      const activeIndex = Math.min(Math.max(0, cards.length-1), this.state.activeIndex);
 
-    cards.forEach( (card, idx) => card.index = idx);   
+      cards.forEach( (card, idx) => card.index = idx);   
 
-    this.setState({
-      ...this.state,
-      activeIndex,
-      cards
-    });     
+      this.setState({
+        ...this.state,
+        activeIndex,
+        cards
+      });     
+    }
   }
 
   playSelectedCards() {  
-    this.animationCount = 0;
+    if (this.state.cards.length > 0) {
+      this.animationCount = 0;
 
-    const cards = this.state.cards.map(card => {
-      if (card.isSelected) {
-        card.animation = ANIMATIONS.playCard;
-        card.animationCallback = this.animationHandler;
-        this.animationCount++;
-      }
+      const cards = this.state.cards.map(card => {
+        if (card.isSelected) {
+          card.animation = ANIMATIONS.playCard;
+          card.animationCallback = this.animationHandler;
+          this.animationCount++;
+        }
 
-      return card;
-    });
+        return card;
+      });
 
-    this.setState({
-      ...this.state,
-      cards
-    });     
+      this.setState({
+        ...this.state,
+        cards
+      });    
+    }
   }
 
+  /**
+   * Refill the hand with new cards until the max number of cards has been reached
+   */
   refill() {
     if (this.state.cards.length < this.props.maxCards) {
       const newCardCount = this.props.maxCards - this.state.cards.length;
@@ -289,6 +322,10 @@ export class HandOfCardsComponent extends React.Component {
     }
   }
 
+  /**
+   * Count the number of cards that have been selected.
+   * @returns number
+   */
   countSelected() {
     let result = 0;
     for (let i = 0; i < this.state.cards.length; ++i) {
@@ -324,9 +361,9 @@ export class HandOfCardsComponent extends React.Component {
     const children = this.state.cards.map((card, idx) => 
       card.createElement(config, this.state.cards.length, this.state.activeIndex, centerCard));
 
-    const innerChildren = React.createElement(ELEMENT_TYPES.div, childProperties, children);
+    const innerChildren = React.createElement(ELEMENT_TYPES.DIV, childProperties, children);
 
-    return React.createElement(ELEMENT_TYPES.div, carouselProperties, innerChildren);
+    return React.createElement(ELEMENT_TYPES.DIV, carouselProperties, innerChildren);
 }
 
  /**
@@ -340,7 +377,7 @@ export class HandOfCardsComponent extends React.Component {
    */
   createIndicatorItems = (keyPrefix, callback, activeIndex, cards) =>
     cards.map((card, index) => 
-      React.createElement(ELEMENT_TYPES.div, { 
+      React.createElement(ELEMENT_TYPES.DIV, { 
         key: `indicator-${index}`,
         className : `indicator ${card.index === activeIndex ? "indicator-active" : ""} ${card.isSelected ? "indicator-selected" : ""}`,
         onClick : () => callback(index)
@@ -359,6 +396,6 @@ export class HandOfCardsComponent extends React.Component {
 
     const children = this.createIndicatorItems("indicator-item-", (idx) => this.setActiveIndex(idx),this.state.activeIndex, cards);
 
-    return React.createElement(ELEMENT_TYPES.div, properties, children);
+    return React.createElement(ELEMENT_TYPES.DIV, properties, children);
   }
 }

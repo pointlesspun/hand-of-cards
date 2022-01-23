@@ -11,6 +11,12 @@ export class SpriteAtlas {
         this.grid = grid;
     }
 
+    /**
+     * Creates a css string which can be used after a background image property
+     * @param {number} row 
+     * @param {number} column 
+     * @returns {string} stating the url and offset in pixels
+     */
     toCss(row, column) {
         const x = this.offset.width + column * this.grid.width;
         const y = this.offset.height + row * this.grid.height;

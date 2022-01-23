@@ -5,21 +5,21 @@
  */
 
 export const ELEMENT_TYPES = {
-    button : 'button',
-    div: 'div',
-    style: 'style'
+    BUTTON : 'button',
+    DIV: 'div',
+    STYLE: 'style'
 };
 
 /**
- * 
- * @param {*} key 
- * @param {*} onClickCallback 
- * @param {string} text 
- * @param {string} className 
+ * Utility function to create a standard button
+ * @param {*} key React key to identify this button
+ * @param {*} onClickCallback function that will be called when the button is clicked.
+ * @param {string} text text of the button
+ * @param {string} [className] className of the button's style
  * @returns ReactElement
  */
 export const createButton = (key, onClickCallback, text, className) =>
-    React.createElement(ELEMENT_TYPES.button, {
+    React.createElement(ELEMENT_TYPES.BUTTON, {
         onClick : onClickCallback,
         key,
         className : className || ""
