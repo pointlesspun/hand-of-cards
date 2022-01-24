@@ -46,7 +46,6 @@ The design (such as it is) of the element consists of the following:
 This project was created while learning React and is currently very much under development. Clean-up and refactoring are very much in order. Outstanding features (in no particular order):
 
 * [bug] See if the blocking of events can also be used to avoid side effects of swipes (ie swipedown)
-* [bug] Avoid scrollbars
 * Add play button as well
 * Add option When selecting a card and the max is reached unselect the oldest selected card
 * Show warning if max selection is reached.

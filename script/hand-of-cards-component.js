@@ -75,13 +75,10 @@ export class HandOfCardsComponent extends React.Component {
     // we skip this render.
     if (this.ref.current) {
       const config = this.props.getLayoutConfiguration(this.ref);
-      const statusText = `${config.name} ${config.screenSize.width}x${config.screenSize.height}`;
-
+      
       const children = [
         this.createCarousel(config),
-        this.createIndicators(this.state.cards),
-        this.createButtons(),
-        React.createElement(ELEMENT_TYPES.DIV, {key: "device-description", className: "platform-context"}, statusText)
+        this.createControlBar(config),        
       ];
 
       return React.createElement(ELEMENT_TYPES.DIV, properties, children);
@@ -102,7 +99,7 @@ export class HandOfCardsComponent extends React.Component {
       passive: false   
     };
 
-    window.addEventListener('keyup', this.keyHandler, keyhandlerOptions);
+    window.addEventListener('keyup', this.keyHandler);
     window.addEventListener('keydown', this.keyHandler, keyhandlerOptions);
 
     window.addEventListener('resize', this.resizeHandler);
@@ -175,34 +172,51 @@ export class HandOfCardsComponent extends React.Component {
   handleKeyEvent(evt) {
     const keyCode = evt.keyCode;
     
-    evt.preventDefault();
-
     if (evt.type === 'keyup') {
       // wait for the animations to finish
       if (this.animationCount === 0) {
         switch (keyCode) {
           case KeyCode.KEY_LEFT:
             this.previousItem();
+            evt.preventDefault();
             break;
           case KeyCode.KEY_RIGHT:
             this.nextItem();
+            evt.preventDefault();
             break;
           case KeyCode.KEY_UP:
             this.selectItem(true);
+            evt.preventDefault();
             break;
           case KeyCode.KEY_DOWN:
             this.selectItem(false);
+            evt.preventDefault();
             break;  
           case KeyCode.KEY_DELETE:
             this.removeSelectedItems();
+            evt.preventDefault();
             break;
           case KeyCode.KEY_RETURN:
             this.refill();
+            evt.preventDefault();
             break;
           case KeyCode.KEY_SPACE:
             this.playSelectedCards();
+            evt.preventDefault();
             break;
         }
+      } 
+    } else if (evt.type === 'keydown') {
+      switch (keyCode) {
+        case KeyCode.KEY_LEFT:
+        case KeyCode.KEY_RIGHT:
+        case KeyCode.KEY_UP:
+        case KeyCode.KEY_DOWN:
+        case KeyCode.KEY_DELETE:
+        case KeyCode.KEY_RETURN:
+        case KeyCode.KEY_SPACE:
+          evt.preventDefault();
+          break;
       }
     }
   }
@@ -404,6 +418,26 @@ export class HandOfCardsComponent extends React.Component {
     const innerChildren = React.createElement(ELEMENT_TYPES.DIV, childProperties, children);
 
     return React.createElement(ELEMENT_TYPES.DIV, carouselProperties, innerChildren);
+}
+
+createControlBar(config) {
+  
+  const properties = {
+    key: "controlbar",
+    style: {
+      width : "100%",
+      height: `${(1.0 - config.values.innerHeight) * 100}%`,
+      overflow: "hidden"
+    }
+  };
+
+  const statusText = `${config.name} ${config.screenSize.width}x${config.screenSize.height}`;
+
+  return React.createElement(ELEMENT_TYPES.DIV, properties, [
+    this.createIndicators(this.state.cards),
+    this.createButtons(),
+    React.createElement(ELEMENT_TYPES.DIV, {key: "device-description", className: "platform-context"}, statusText)
+  ]);
 }
 
  /**

@@ -84,6 +84,7 @@ html, body {
     will-change: transform;
 }
 
+
 .indicators {
     display: flex;
     justify-content: center;  
