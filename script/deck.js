@@ -4,7 +4,7 @@
  * Utility functions to build a deck of cards based on the sprite atlas in ../data.
  */
 
-import { Size } from "./mathx.js";
+import { Size } from "./size.js";
 import { CardDefinition } from "./card-definition.js";
 import { SpriteAtlas } from "./sprite-atlas.js";
 

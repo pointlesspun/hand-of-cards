@@ -5,12 +5,13 @@
  * cards using a carousel.
  */
 
-import { mathx } from "./mathx.js";
+import "./mathx.js";
 import { ELEMENT_TYPES } from "./element-types.js";
 import { Card, CARD_KEY_PREFIX } from "./card.js";
 import { pickRandomCards } from "./deck.js";
 import { PlatformConfiguration } from "./media-configuration.js";
-import { ANIMATIONS, ANIMATION_EVENT_TYPE } from "./animations.js";
+import { ANIMATION_EVENT_TYPE } from "./animation-utilities.js";
+import { ANIMATIONS } from "./animations.js";
 import { Vector3 } from "./vector3.js";
 
 const SWIPE_DIRECTIONS = {
@@ -245,7 +246,7 @@ export class HandOfCardsComponent extends React.Component {
   setActiveIndex(idx) {
     this.setState({
         ...this.state,
-        activeIndex: mathx.clamp(idx, 0, this.state.cards.length),
+        activeIndex: Math.clamp(idx, 0, this.state.cards.length),
     });
   }
 

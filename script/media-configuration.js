@@ -4,7 +4,7 @@
  * Configuration definitions for a given media and its dimensions.
  */
 
-import { Size } from "./mathx.js";
+import { Size } from "./size.js";
 
 export const ORIENTATION_NAMES = {
     PORTRAIT: "portrait",

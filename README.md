@@ -48,13 +48,15 @@ This project was created while learning React and is currently very much under d
 * [bug] Block the browser from scrolling when pressing keydown
 * [bug] See if the blocking of events can also be used to avoid side effects of swipes (ie swipedown)
 * [bug] Avoid scrollbars
+* Add play button as well
+* Add option When selecting a card and the max is reached unselect the oldest selected card
+* Show warning if max selection is reached.
 * Create class for config.values
 * When tapping on phone, activate the card on which was tapped. 
 * Refactor & add documentation.
 * Add jsx (or htm) variation.
 * Add mouse support.
 * Try some optimization(s) for less powerful devices (aka phones).
-* Show warning if max selection is reached.
 * Deal truly random cards or one from a deck of 52 cards.
 * When adding new cards, add them equally to the left and right so the active card stays in the center.
 * Landscape orientation on the phone needs a whole different approach/layout to address the layout issues of buttons falling off the screen at the bottom.

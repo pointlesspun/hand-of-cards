@@ -8,7 +8,7 @@ import { Transform } from "./transform.js";
 import { ELEMENT_TYPES } from "./element-types.js";
 import { PlatformConfiguration } from "./media-configuration.js";
 import { CardDefinition } from "./card-definition.js";
-import { ANIMATION_EVENT_TYPE, AnimationEvent } from "./animations.js";
+import { ANIMATION_EVENT_TYPE, AnimationEvent } from "./animation-utilities.js";
 import { Vector3 } from "./vector3.js";
 
 /** Prefix to generate React cards */export const CARD_KEY_PREFIX = "hoc-card";

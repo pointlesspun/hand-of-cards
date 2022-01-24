@@ -8,7 +8,8 @@ import { MediaConfiguration} from "./media-configuration.js";
 import { HandOfCardsComponent } from "./hand-of-cards-component.js";
 import { PLATFORM_CONFIGURATIONS } from "./platform-configurations.js";
 import { DEFAULT_DECK, pickRandomCards } from "./deck.js";
-import { allocAnimations, ANIMATIONS } from "./animations.js";
+import { allocAnimations } from "./animation-utilities.js";
+import { ANIMATIONS } from "./animations.js";
 
 console.log("starting card component");
 
