@@ -1,5 +1,8 @@
 :root {
     --selection-color: #BBFFBB;
+    --button-color: white;
+    --button-size: 64px;
+    --button-margin: 24px;
 }
 
 html, body { 
@@ -19,7 +22,6 @@ html, body {
 
 .carousel {
     overflow: hidden;
-    height: 90%;
 }
 
 .inner {
@@ -123,4 +125,58 @@ html, body {
     padding: 4px;
     font-size: xx-large;
     color: white;
+}
+
+.button-panel {
+    display: flex;
+    justify-content: center;
+    margin: 12px;
+}
+
+.button-panel-button {
+    background-color: var(--button-color);
+
+    mask-size: contain;
+    -webkit-mask-size: contain;
+
+    mask-repeat: no-repeat;
+    -webkit-mask-repeat: no-repeat;
+
+    transition: transform 0.2s;
+    transform: scale(1.0, 1.0);
+
+     width: var(--button-size);
+    height: var(--button-size);
+    margin-left: var(--button-margin);
+    margin-right: var(--button-margin);
+}
+
+.button-panel-button.sync-button {
+    -webkit-mask-image: url('./data/font-awesome/sync-alt.svg');
+    mask-image: url('./data/font-awesome/sync-alt.svg');  
+}
+
+.sync-button:active {
+    background-color: var(--selection-color);
+    transform: scale(0.9, 0.9);
+}
+
+.button-panel-button.lock-button {
+    -webkit-mask-image: url('./data/font-awesome/lock.svg');
+    mask-image: url('./data/font-awesome/lock.svg');
+}
+
+.lock-button:active {
+    background-color: var(--selection-color);
+    transform: scale(0.9, 0.9);
+}
+
+.button-panel-button.lock-button-open {
+    -webkit-mask-image: url('./data/font-awesome/lock-open.svg');
+    mask-image: url('./data/font-awesome/lock-open.svg');
+}
+
+.lock-button-open:active {
+    background-color: var(--selection-color);
+    transform: scale(0.9, 0.9);
 }

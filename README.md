@@ -43,14 +43,18 @@ The design (such as it is) of the element consists of the following:
 
 This project was created while learning React and is currently very much under development. Clean-up and refactoring are very much in order. Outstanding features (in no particular order):
 
+* [bug] Block the browser from scrolling when pressing keydown
+* [bug] See if the blocking of events can also be used to avoid side effects of swipes (ie swipedown)
+* [bug] Avoid scrollbars
+* When tapping on phone, activate the card on which was tapped. 
 * Refactor & add documentation.
 * Add jsx (or htm) variation.
 * Add mouse support.
 * Try some optimization(s) for less powerful devices (aka phones).
 * Show warning if max selection is reached.
-* Add play / refresh buttons for mobile.
 * Deal truly random cards or one from a deck of 52 cards.
-* Be able to switch between locked and unlocked mode via a button.
+* When adding new cards, add them equally to the left and right so the active card stays in the center.
+* Landscape orientation on the phone needs a whole different approach/layout to address the layout issues of buttons falling off the screen at the bottom.
 
 ## Credits
 
@@ -61,3 +65,5 @@ Swiping provided by [john-doherty/swiped-events](https://github.com/john-doherty
 Deck of cards [by Дмитрий Фомин (Dmitry Fomin) on Wiki](https://en.wikipedia.org/wiki/File:Atlasnye_playing_cards_deck.svg.) 
 
 Keycode constants [Kabir Baidhya, Saugat Acharya](https://github.com/kabirbaidhya/keycode-js#usage)
+
+[Font awesome](https://fontawesome.com/) for the icons.

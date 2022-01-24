@@ -41,7 +41,7 @@ export class HandOfCardsComponent extends React.Component {
 
     // event handlers
     this.swipeHandler = (evt) => this.handleSwipe(evt.detail.dir);
-    this.keyHandler = (evt) => this.handleKeyEvent(evt.keyCode);
+    this.keyHandler = (evt) => this.handleKeyEvent(evt);
     this.resizeHandler = (evt) => this.handleResize();
     this.touchHandler = (evt) => this.handleTouch(evt);
     this.animationHandler = (evt) => this.handleAnimation(evt);
@@ -79,6 +79,7 @@ export class HandOfCardsComponent extends React.Component {
       const children = [
         this.createCarousel(config),
         this.createIndicators(this.state.cards),
+        this.createButtons(),
         React.createElement(ELEMENT_TYPES.DIV, {key: "device-description", className: "platform-context"}, statusText)
       ];
 
@@ -93,7 +94,12 @@ export class HandOfCardsComponent extends React.Component {
    */
   componentDidMount() {
     document.addEventListener('swiped', this.swipeHandler);
-    document.addEventListener('keyup', this.keyHandler);
+
+    // ref https://stackoverflow.com/questions/8916620/disable-arrow-key-scrolling-in-users-browser/8916697
+    window.addEventListener('keyup', this.keyHandler, {
+      capture: true,   // this disables arrow key scrolling in modern Chrome
+      passive: false   // this is optional, my code works without it
+    });
 
     window.addEventListener('resize', this.resizeHandler);
     window.addEventListener('touchstart', this.touchHandler);
@@ -161,7 +167,11 @@ export class HandOfCardsComponent extends React.Component {
    * Deal with keyboard input
    * @param {number} keyCode 
    */
-  handleKeyEvent(keyCode) {
+  handleKeyEvent(evt) {
+    const keyCode = evt.keyCode;
+    
+    evt.preventDefault();
+
     // wait for the animations to finish
     if (this.animationCount === 0) {
       switch (keyCode) {
@@ -322,6 +332,13 @@ export class HandOfCardsComponent extends React.Component {
     }
   }
 
+  toggleLock() {   
+    this.setState({
+      ...this.state,
+      isLocked: !this.state.isLocked
+    })
+  }
+
   /**
    * Count the number of cards that have been selected.
    * @returns number
@@ -345,7 +362,11 @@ export class HandOfCardsComponent extends React.Component {
     
     const carouselProperties = {
         key: "main-carousel",
-        className : "carousel"
+        className : "carousel",
+        style: {
+          // take the height from the platform specific settings
+          height: `${config.values.innerHeight*100}%` 
+        }
     };
 
     // center the active card
@@ -397,5 +418,29 @@ export class HandOfCardsComponent extends React.Component {
     const children = this.createIndicatorItems("indicator-item-", (idx) => this.setActiveIndex(idx),this.state.activeIndex, cards);
 
     return React.createElement(ELEMENT_TYPES.DIV, properties, children);
+  }
+
+  createButtons() {
+
+    const refreshButton = React.createElement(ELEMENT_TYPES.DIV, {
+      key: "refresh-button",
+      className: "button-panel-button sync-button",
+      onClick: () => {
+        this.refill();
+      }
+    });
+
+    const lockButton = React.createElement(ELEMENT_TYPES.DIV, {
+      key: "lock-button",
+      className: `button-panel-button ${this.state.isLocked ? "lock-button" : "lock-button-open"}`,
+      onClick: () => {
+        this.toggleLock();
+      }
+    });
+
+    return React.createElement(ELEMENT_TYPES.DIV, {
+      key: "button-panel",
+      className: "button-panel"
+    }, [refreshButton, lockButton]);
   }
 }

@@ -8,8 +8,9 @@ import { PlatformConfiguration, ORIENTATION_NAMES } from "./media-configuration.
 
 export const PLATFORM_CONFIGURATIONS = [
     new PlatformConfiguration("phone-landscape", ORIENTATION_NAMES.LANDSCAPE, 900, 480, {
-        // Inner takes up 90% of the client height
-        innerHeight: 0.9,
+
+        // Inner takes up 80% of the client height
+        innerHeight: 0.8,
 
         baseScale: 0.4125,
         dynamicScale: 0.25,
@@ -33,10 +34,10 @@ export const PLATFORM_CONFIGURATIONS = [
     }),
 
     new PlatformConfiguration("phone-portrait", ORIENTATION_NAMES.PORTRAIT, 480, 900, {
-        // Inner takes up 90% of the client height
+        // Inner takes up % of the client height
         innerHeight: 0.9,
 
-        baseScale: 1.75,
+        baseScale: 1.9,
         dynamicScale: 0.25,
         rotation: 4,
         
@@ -58,8 +59,8 @@ export const PLATFORM_CONFIGURATIONS = [
     }),
 
     new PlatformConfiguration("laptop/desktop", ORIENTATION_NAMES.LANDSCAPE, 999999, 999999, {
-        // Inner takes up 90% of the client height
-        innerHeight: 0.9,
+        // Inner takes up % of the client height
+        innerHeight: 0.845,
         baseScale: 0.75,
         dynamicScale: 0.25,
         rotation: 4,

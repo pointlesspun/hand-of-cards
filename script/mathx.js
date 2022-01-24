@@ -11,7 +11,6 @@ export class Size {
     }
 }
 
-
 export const mathx = {
 
     clamp : (value, min, max) => Math.max(Math.min(value, max - 1), min),

@@ -99,7 +99,7 @@ function createPlayCardAnimation({idx, cardHeight, transform0} = {}) {
     const transform2 = transform0.clone();
     const style = {};
 
-    transform1.translation.y += 30;
+    transform1.translation.y += 30 + Math.random() * 15;
     transform1.scale.x += 0.1;
     transform1.scale.y -= 0.1;
     transform2.translation.y = -2 * cardHeight;
@@ -115,8 +115,8 @@ function createPlayCardAnimation({idx, cardHeight, transform0} = {}) {
     const animationId = createAnimationId(ANIMATIONS.playCard.name, idx); 
 
     style.animationName = animationId;
-    style.animationDuration = `0.3s`;
-    style.animationDelay = `${Math.random() * 0.2}s`;
+    style.animationDuration = `${Math.random() * 0.2 + 0.2}s`;
+    style.animationDelay = `${Math.random() * 0.3}s`;
     style.animationFillMode = 'forwards';
     style.WebkitAnimationFillMode = 'forwards';
 
