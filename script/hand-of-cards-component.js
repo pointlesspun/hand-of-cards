@@ -233,7 +233,11 @@ export class HandOfCardsComponent extends React.Component {
 
       // no more outstanding animations ?
       if (this.animationCount === 0) {
-        this.removeSelectedItems();
+        if (evt.source.animation.name === ANIMATIONS.playCard.name) {
+          this.removeSelectedItems();
+        } 
+        // force update to reset the animation transforms
+        this.forceUpdate();
       }
     }
   }
@@ -314,7 +318,15 @@ export class HandOfCardsComponent extends React.Component {
     if (this.state.cards.length < this.props.maxCards) {
       const newCardCount = this.props.maxCards - this.state.cards.length;
       const cardDefinitions = pickRandomCards(this.props.deck, newCardCount);
-      const cards = [...this.state.cards, ...cardDefinitions.map( (definition, idx) => new Card(CARD_KEY_PREFIX + (idx + this.state.cardKeyCounter), definition, idx, false))];
+      const cards = [
+        ...this.state.cards, 
+        ...cardDefinitions.map( (definition, idx) => {
+          const updatedCard = new Card(CARD_KEY_PREFIX + (idx + this.state.cardKeyCounter), definition, idx, false);
+          updatedCard.animation = ANIMATIONS.drawCard;
+          updatedCard.animationCallback = this.animationHandler;
+          this.animationCount++;
+          return updatedCard;
+        })];
       
       cards.forEach( (card, idx) => card.index = idx);   
 

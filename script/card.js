@@ -60,20 +60,23 @@ export class Card {
                 width : config.values.cardWidth + "px",
                 height : config.values.cardHeight + "px",
                 transformOrigin: "center bottom",
-                transform: transform ? transform.toCss({}) : "",
+                transform:  transform ? transform.toCss({}) : "",
                 background: this.definition.atlas.toCss(this.definition.row, this.definition.column),
             } ,
             onAnimationEnd: () => { 
                 if(this.animationCallback) {
                     this.animationCallback(new AnimationEvent(this, this.activeAnimation, ANIMATION_EVENT_TYPE.END));
                 } 
+
+                this.activeAnimation = null;
+                this.animation = null;               
             }
         };
         
         if (this.animation) {
             properties.style = {
                 ...properties.style,
-                ...this.playCardAnimation(this.animation, config.values, transform)
+                ...this.playAnimation(this.animation, config, transform)
             }; 
 
             this.activeAnimation = properties.style.animationName;
@@ -162,11 +165,13 @@ export class Card {
         return className;
     }
 
-    playCardAnimation(animation, values, transform) {        
+    playAnimation(animation, config, targetTransform) {        
+
+        
         return animation.createAnimation({
             idx: this.index,
-            cardHeight: values.cardHeight,
-            transform0: transform
+            config,
+            targetTransform
         });
     }
 }

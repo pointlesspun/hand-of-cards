@@ -15,6 +15,8 @@
  */
 
 import { ELEMENT_TYPES } from "./element-types.js";
+import { Transform } from "./transform.js";
+import { Vector3 } from "./vector3.js";
 
 /**
  * All the animations used in the application
@@ -24,6 +26,11 @@ export const ANIMATIONS = {
         name: "playCard",
         // function which creates a play card animation
         createAnimation: createPlayCardAnimation
+    },
+    drawCard: {
+        name: "drawCard",
+        // function which creates a draw card animation
+        createAnimation: createDrawCardAnimation
     }
 };
 
@@ -94,18 +101,18 @@ export const createAnimationId = (name, idx) => `animations-${idx}-${name}`;
  * @param {*} param0 
  * @returns 
  */
-function createPlayCardAnimation({idx, cardHeight, transform0} = {}) {
-    const transform1 = transform0.clone();
-    const transform2 = transform0.clone();
+function createPlayCardAnimation({idx, config, targetTransform} = {}) {
+    const transform1 = targetTransform.clone();
+    const transform2 = targetTransform.clone();
     const style = {};
 
     transform1.translation.y += 30 + Math.random() * 15;
     transform1.scale.x += 0.1;
     transform1.scale.y -= 0.1;
-    transform2.translation.y = -2 * cardHeight;
+    transform2.translation.y = -2 * config.values.cardHeight;
 
     const text = `
-        0% {transform: ${transform0.toCss()}}
+        0% {transform: ${targetTransform.toCss()}}
         15% {transform: ${transform1.toCss()}}
         100% {transform: ${transform2.toCss()}}
     `;
@@ -117,6 +124,51 @@ function createPlayCardAnimation({idx, cardHeight, transform0} = {}) {
     style.animationName = animationId;
     style.animationDuration = `${Math.random() * 0.2 + 0.2}s`;
     style.animationDelay = `${Math.random() * 0.3}s`;
+
+    // maintain the last frame of the animation
+    style.animationFillMode = 'forwards';
+    style.WebkitAnimationFillMode = 'forwards';
+    style.transform = targetTransform.toCss();
+
+    return style;
+}
+
+function createDrawCardAnimation({idx, config, targetTransform} = {}) {
+    const transform0 = new Transform(new Vector3(-2000, -19), new Vector3(1,1), -90);
+    const transform1 = targetTransform.clone();
+    const transform2 = targetTransform.clone();
+    const style = {};
+
+    transform1.translation.x += 155;
+    transform1.translation.y = config.clientSize.height * 0.1;
+    transform1.scale.x -= 0.2;
+    transform1.scale.y += 0.2;
+    transform1.rotation = 45;
+
+    transform2.translation.x = targetTransform.translation.x;
+    transform2.translation.y = transform1.translation.y;
+    
+    const text = `
+        0% {transform: ${transform0.toCss()}}
+        35% {transform: ${transform1.toCss()}}
+        55% {transform: ${transform2.toCss()}}
+        75% {transform: ${transform2.toCss()}}
+        100% {transform: ${targetTransform.toCss()}}
+    `;
+
+    updateKeyframes(ANIMATIONS.drawCard.name, idx, text);      
+
+    const animationId = createAnimationId(ANIMATIONS.drawCard.name, idx); 
+
+    style.animationName = animationId;
+    style.animationDuration = `${Math.random() * 0.2 + 0.7}s`;
+    style.animationDelay = `${Math.random() * 0.3}s`;
+    
+    // set the initial transform to be off screen otherwise we will have one frame
+    // where the card is in the hand
+    style.transform = transform0.toCss();
+
+    // maintain the last frame of the animation
     style.animationFillMode = 'forwards';
     style.WebkitAnimationFillMode = 'forwards';
 

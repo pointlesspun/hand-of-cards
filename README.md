@@ -1,5 +1,7 @@
-# hand-of-cards (v0.32)
+# hand-of-cards (v0.33)
 This is simple and limited React front-end carousel imitating holding and browsing through a hand of cards. To start the app, run a webserver in the directory containing the index.html file. Latest demo can be found on the [github pages](https://pointlesspun.github.io/hand-of-cards/).
+
+For bugs and outstanding features see ['status'](#Status) below.
 
 <center>
     <img src="./data/screenshot.png" width="640" height="480"/>
@@ -46,6 +48,7 @@ This project was created while learning React and is currently very much under d
 * [bug] Block the browser from scrolling when pressing keydown
 * [bug] See if the blocking of events can also be used to avoid side effects of swipes (ie swipedown)
 * [bug] Avoid scrollbars
+* Create class for config.values
 * When tapping on phone, activate the card on which was tapped. 
 * Refactor & add documentation.
 * Add jsx (or htm) variation.

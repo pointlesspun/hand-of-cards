@@ -26,7 +26,7 @@ const properties = {
     getLayoutConfiguration: (elementRef) => new MediaConfiguration(elementRef,PLATFORM_CONFIGURATIONS)            
 };
 
-allocAnimations([ANIMATIONS.playCard.name], maxCards);
+allocAnimations([ANIMATIONS.playCard.name,ANIMATIONS.drawCard.name], maxCards);
 
 ReactDOM.render(
     React.createElement(React.StrictMode, {}, React.createElement(HandOfCardsComponent, properties)), element);
