@@ -97,10 +97,13 @@ export class HandOfCardsComponent extends React.Component {
     document.addEventListener('swiped', this.swipeHandler);
 
     // ref https://stackoverflow.com/questions/8916620/disable-arrow-key-scrolling-in-users-browser/8916697
-    window.addEventListener('keyup', this.keyHandler, {
-      capture: true,   // this disables arrow key scrolling in modern Chrome
-      passive: false   // this is optional, my code works without it
-    });
+    const keyhandlerOptions = {
+      capture: true,   
+      passive: false   
+    };
+
+    window.addEventListener('keyup', this.keyHandler, keyhandlerOptions);
+    window.addEventListener('keydown', this.keyHandler, keyhandlerOptions);
 
     window.addEventListener('resize', this.resizeHandler);
     window.addEventListener('touchstart', this.touchHandler);
@@ -118,8 +121,9 @@ export class HandOfCardsComponent extends React.Component {
    * Callback for when the componet is about to be removed from the dom. Remove the listeners.
    */
   componentWillUnmount() {
-    document.removeEventListener('swiped', this.swipeHandler);
-    document.removeEventListener('keyup', this.keyHandler);
+    window.removeEventListener('swiped', this.swipeHandler);
+    window.removeEventListener('keyup', this.keyHandler);
+    window.removeEventListener('keydown', this.keyHandler);
 
     window.removeEventListener('resize', this.resizeHandler);
     window.addEventListener('touchstart', this.touchHandler);
@@ -173,30 +177,32 @@ export class HandOfCardsComponent extends React.Component {
     
     evt.preventDefault();
 
-    // wait for the animations to finish
-    if (this.animationCount === 0) {
-      switch (keyCode) {
-        case KeyCode.KEY_LEFT:
-          this.previousItem();
-          break;
-        case KeyCode.KEY_RIGHT:
-          this.nextItem();
-          break;
-        case KeyCode.KEY_UP:
-          this.selectItem(true);
-          break;
-        case KeyCode.KEY_DOWN:
-          this.selectItem(false);
-          break;  
-        case KeyCode.KEY_DELETE:
-          this.removeSelectedItems();
-          break;
-        case KeyCode.KEY_RETURN:
-          this.refill();
-          break;
-        case KeyCode.KEY_SPACE:
-          this.playSelectedCards();
-          break;
+    if (evt.type === 'keyup') {
+      // wait for the animations to finish
+      if (this.animationCount === 0) {
+        switch (keyCode) {
+          case KeyCode.KEY_LEFT:
+            this.previousItem();
+            break;
+          case KeyCode.KEY_RIGHT:
+            this.nextItem();
+            break;
+          case KeyCode.KEY_UP:
+            this.selectItem(true);
+            break;
+          case KeyCode.KEY_DOWN:
+            this.selectItem(false);
+            break;  
+          case KeyCode.KEY_DELETE:
+            this.removeSelectedItems();
+            break;
+          case KeyCode.KEY_RETURN:
+            this.refill();
+            break;
+          case KeyCode.KEY_SPACE:
+            this.playSelectedCards();
+            break;
+        }
       }
     }
   }
