@@ -12,12 +12,12 @@ export const PLATFORM_CONFIGURATIONS = [
         // Inner takes up 80% of the client height
         innerHeight: 0.8,
 
-        baseScale: 0.4125,
+        baseScale: 0.35,
         dynamicScale: 0.25,
         rotation: 4,
         
         // closer to the active card from the base position
-        xTranslation: 360 / 2,
+        xTranslation: 360 / 2.25,
 
         yBaseOffset: 80,
 

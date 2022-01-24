@@ -50,14 +50,14 @@ This project was created while learning React and is currently very much under d
 * Add option When selecting a card and the max is reached unselect the oldest selected card
 * Show warning if max selection is reached.
 * Create class for config.values
-* When tapping on phone, activate the card on which was tapped. 
+* When swipe up on phone,swipe the card which was swiped. 
 * Refactor & add documentation.
 * Add jsx (or htm) variation.
 * Add mouse support.
 * Try some optimization(s) for less powerful devices (aka phones).
 * Deal truly random cards or one from a deck of 52 cards.
-* When adding new cards, add them equally to the left and right so the active card stays in the center.
 * Landscape orientation on the phone needs a whole different approach/layout to address the layout issues of buttons falling off the screen at the bottom.
+* [bug?] clean up deleted cards, not sure if all event handlers are properly removed from a card. Move card to a component regardless.
 
 ## Credits
 

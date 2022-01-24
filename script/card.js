@@ -11,7 +11,11 @@ import { CardDefinition } from "./card-definition.js";
 import { ANIMATION_EVENT_TYPE, AnimationEvent } from "./animation-utilities.js";
 import { Vector3 } from "./vector3.js";
 
-/** Prefix to generate React cards */export const CARD_KEY_PREFIX = "hoc-card";
+// number of pixels of movement allowed before a tap becomes a swipe
+const TAP_THRESHOLD = 10;
+
+/** Prefix to generate React cards */
+export const CARD_KEY_PREFIX = "hoc-card";
 
 /**
  * Implements the logic, state and element creation of a single card.
@@ -24,7 +28,7 @@ export class Card {
      * @param {number} index index of the card in the hand
      * @param {boolean} isSelected indicates if the card is selected by the player
      */
-    constructor(key, definition, index, isSelected, animationCallback) {
+    constructor(key, definition, index, isSelected, animationCallback, tapCallback) {
         this.key = key;
         this.definition = definition;
         this.index = index;
@@ -32,6 +36,7 @@ export class Card {
         this.animation = "";
         this.activeAnimation = "";
         this.animationCallback = animationCallback;
+        this.tappedCallback = tapCallback;
     }
     
     /**
@@ -70,7 +75,9 @@ export class Card {
 
                 this.activeAnimation = null;
                 this.animation = null;               
-            }
+            },
+            onTouchStart: (evt) => this.handleTouch(evt),
+            onTouchEnd: (evt) => this.handleTouch(evt)
         };
         
         if (this.animation) {
@@ -174,4 +181,18 @@ export class Card {
             targetTransform
         });
     }
+
+    handleTouch(evt) {
+        // wait for the animations to finish
+        if (evt.type === 'touchstart') {
+            this.touchStart = new Vector3(evt.changedTouches[0].clientX, evt.changedTouches[0].clientY);
+            } else {
+            const delta = new Vector3(evt.changedTouches[0].clientX  - this.touchStart.x, evt.changedTouches[0].clientY - this.touchStart.y);
+            
+            if (delta.length() < TAP_THRESHOLD && this.tappedCallback) {
+                // tap happened
+                this.tappedCallback(this);      
+            }
+        }
+      }  
 }
