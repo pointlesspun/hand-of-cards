@@ -1,13 +1,17 @@
 'use strict';
 
 import { ANIMATION_EVENT_TYPE, AnimationEvent } from "./animation-utilities.js";
-import { CardEvent, CARD_EVENT_TYPES } from "./card.js";
+import { CardEvent, CARD_EVENT_TYPES } from "./card-event.js";
 import { ELEMENT_TYPES } from "./element-types.js";
 import { Transform } from "./transform.js";
 import { Vector3 } from "./vector3.js";
 
 // number of pixels of movement allowed before a tap becomes a swipe
 const TAP_THRESHOLD = 10;
+
+/** Prefix to generate React cards */
+export const CARD_KEY_PREFIX = "hoc-card";
+
 
 export class CardComponent extends React.Component {
     constructor(props) {
@@ -28,6 +32,11 @@ export class CardComponent extends React.Component {
         // transient properties
         this.animation = props.animation;
         this.activeAnimation = null;
+        this.swipeListener = (evt) => {
+            if (this.state.eventHandler) {
+                this.state.eventHandler(new CardEvent(this, CARD_EVENT_TYPES.SWIPE, evt));
+            }
+        };
     }
 
     updateContext(context) {
@@ -70,6 +79,7 @@ export class CardComponent extends React.Component {
         const properties = {
             id: this.props.keyReference,
             className : this.createClassName(isActive),
+            ref: this.ref,
             style : {
                 width : config.values.cardWidth + "px",
                 height : config.values.cardHeight + "px",
@@ -78,7 +88,7 @@ export class CardComponent extends React.Component {
                 background: this.props.definition.toCss(),
             } ,
             onAnimationEnd: () => { 
-                const completedAnimation = this.animation;
+                const completedAnimation = this.activeAnimation;
 
                 this.activeAnimation = null;
                 this.animation = null; 
@@ -102,7 +112,7 @@ export class CardComponent extends React.Component {
                 })
             }; 
 
-            this.activeAnimation = properties.style.animationName;
+            this.activeAnimation = this.animation;
 
             if (this.state.eventHandler) {
                 this.state.eventHandler(new CardEvent(this, CARD_EVENT_TYPES.ANIMATION, new AnimationEvent(this, this.activeAnimation, ANIMATION_EVENT_TYPE.START)));
@@ -115,11 +125,15 @@ export class CardComponent extends React.Component {
         return React.createElement(ELEMENT_TYPES.DIV, properties, overlay);
     }
 
+    componentDidMount() {
+        this.ref.current.addEventListener('swiped', this.swipeListener);
+    }
+
+    componentWillUnmount() {
+        this.ref.current.removeEventListener('swiped', this.swipeListener);
+    }
+
     setAnimation(animation) {
-        /*this.setState({
-            ...this.state,
-            animation
-        });*/
         this.animation = animation;
         this.forceUpdate();
     }
@@ -189,7 +203,7 @@ export class CardComponent extends React.Component {
                 className += " card-item-active";
             }
 
-            if (this.isSelected) {
+            if (this.state.isSelected) {
                 className += " card-item-selected";
             }
         }

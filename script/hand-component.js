@@ -7,8 +7,8 @@
 
 import "./math-extensions.js";
 import { ELEMENT_TYPES } from "./element-types.js";
-import { Card, CARD_EVENT_TYPES, CARD_KEY_PREFIX } from "./card.js";
-import { CardComponent} from "./card-component.js";
+import { CARD_EVENT_TYPES } from "./card-event.js";
+import { CardComponent, CARD_KEY_PREFIX } from "./card-component.js";
 import { pickRandomCards } from "./deck.js";
 import { PlatformConfiguration } from "./media-configuration.js";
 import { ANIMATION_EVENT_TYPE } from "./animation-utilities.js";
@@ -34,7 +34,7 @@ export class HandOfCardsComponent extends React.Component {
     super(props);
 
     // event handlers
-    this.swipeHandler = (evt) => this.handleSwipe(evt.detail.dir, this.state.activeIndex);
+    //this.swipeHandler = (evt) => this.handleSwipe(evt.detail.dir);
     this.keyHandler = (evt) => this.handleKeyEvent(evt);
     this.resizeHandler = (evt) => this.handleResize();
     this.cardEventHandler = (evt) => this.handleCardEvent(evt);
@@ -58,27 +58,11 @@ export class HandOfCardsComponent extends React.Component {
       isLocked: props.isLocked,
       centerCardIndex: props.initialIndex || 0,
       cardKeyCounter: props.hand ? props.hand.length : 0,
-      //cards: props.hand ? props.hand.map( (definition, idx) => new Card(CARD_KEY_PREFIX + idx, definition, idx, false, this.cardEventHandler)) : null,
       cards: props.hand ? props.hand.map( (definition, idx) => 
         this.createCardComponent(React.createRef(), CARD_KEY_PREFIX + idx, idx, definition)
       ) : []
     };
   }
-  
-  createCardComponent = (ref, key, index, definition, isSelected = false, animation = null) => 
-    React.createElement(CardComponent, {
-      ref,
-      key, 
-      keyReference: key,
-      definition, 
-      index, 
-      isSelected, 
-      animation,
-      eventHandler: this.cardEventHandler,
-      context: this.cardContext,
-      mediaConfig: this.props.config
-    });
-
   /**
    * React-render component
    * @returns a react.element
@@ -117,8 +101,7 @@ export class HandOfCardsComponent extends React.Component {
    * Callback after the component was added to the dom. Use this opportunity to hook up the listeners.
    */
   componentDidMount() {
-    document.addEventListener('swiped', this.swipeHandler);
-
+  
     // ref https://stackoverflow.com/questions/8916620/disable-arrow-key-scrolling-in-users-browser/8916697
     const keyhandlerOptions = {
       capture: true,   
@@ -159,11 +142,14 @@ export class HandOfCardsComponent extends React.Component {
         case SWIPE_DIRECTIONS.UP:
             // are there any cards in hand ?
             if (this.state.cards.length > 0) {             
-              //If the card was already selected, and the user swipes up again play the cards
-              if (this.getCard(index).state.isSelected) {
-                this.playSelectedCards();
-              } else {
-                this.selectItem(index, true);
+              // which card was swiped
+              if (index !== undefined) {
+                //If the card was already selected, and the user swipes up again play the cards
+                if (this.getCard(index).state.isSelected) {
+                  this.playSelectedCards();
+                } else {
+                  this.selectItem(index, true);
+                }
               }
             }
             break;
@@ -172,11 +158,15 @@ export class HandOfCardsComponent extends React.Component {
           this.previousItem();
           break;
     
-        /** This is not a good idea on a phone as it may reload the page :-\ */
-        /*case SWIPE_DIRECTIONS.DOWN:
-          this.lockItem(false);
+        case SWIPE_DIRECTIONS.DOWN:
+          if (this.state.cards.length > 0) {             
+            // which card was swiped
+            if (index !== undefined) {
+              this.selectItem(index, false);
+            }
+          }
           break;
-        */
+        
 
         case SWIPE_DIRECTIONS.LEFT:
           this.nextItem();
@@ -258,7 +248,7 @@ export class HandOfCardsComponent extends React.Component {
         this.handleTap(evt.card);
         break;
       case CARD_EVENT_TYPES.SWIPE:
-        this.handleSwipe(evt.parameters, evt.source.index)
+        this.handleSwipe(evt.parameters.detail.dir, evt.card.state.index);
         break;
     }
   }
@@ -482,6 +472,23 @@ export class HandOfCardsComponent extends React.Component {
     return React.createElement(ELEMENT_TYPES.DIV, carouselProperties, innerChildren);
 }
 
+  
+createCardComponent = (ref, key, index, definition, isSelected = false, animation = null) => 
+  React.createElement(CardComponent, {
+    ref,
+    key, 
+    keyReference: key,
+    definition, 
+    index, 
+    isSelected, 
+    animation,
+    eventHandler: this.cardEventHandler,
+    context: this.cardContext,
+    mediaConfig: this.props.config
+  });
+
+
+
 createControlBar(config) {
   
   const properties = {
@@ -562,4 +569,5 @@ createControlBar(config) {
       className: "button-panel"
     }, [refreshButton, lockButton]);
   }
+
 }

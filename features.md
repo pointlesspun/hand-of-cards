@@ -16,4 +16,6 @@ The user can browse through the cards by
 
 Whereas normally cards are rotated away and positioned differently from the 'center' card. The center card itself is displayed in full without rotation and slightly hightlighted. 
 
-## Switching between orientation
+## Changes to the viewport
+
+Whenever the user changes viewport or the orientation (of platform via dev tools) the cards will rearrange themselves to fit the medium / viewport.

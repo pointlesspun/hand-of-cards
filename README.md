@@ -1,4 +1,4 @@
-# hand-of-cards (v0.33)
+# hand-of-cards (v0.4)
 This is simple and limited React front-end carousel imitating holding and browsing through a hand of cards. To start the app, run a webserver in the directory containing the index.html file. Latest demo can be found on the [github pages](https://pointlesspun.github.io/hand-of-cards/).
 
 For bugs and outstanding features see ['status'](#Status) below.
@@ -39,27 +39,24 @@ The design (such as it is) of the element consists of the following:
 
 * App (app.js): entry point and configuration of the application.
   * HandOfCardsComponent (hand-component.js): contains the event handlers and the carousel.
-    * Card (card.js): layout / transform of the actual card.
+    * Card (card-component.js): layout / transform of the actual card.
 
 ## Status
 
 This project was created while learning React and is currently very much under development. Clean-up and refactoring are very much in order. Outstanding features (in no particular order):
 
-* (in progress) Move card to a component regardless to support custom 'swipe' events. See https://stackoverflow.com/questions/36180414/reactjs-add-custom-event-listener-to-component 
-* [bug] See if the blocking of events can also be used to avoid side effects of swipes (ie swipedown)
 * Add play button as well
 * Add option When selecting a card and the max is reached unselect the oldest selected card
 * Show warning if max selection is reached.
 * Create class for config.values
-* When swipe up on phone,swipe the card which was swiped. 
 * Refactor & add documentation.
 * Add jsx (or htm) variation.
 * Add mouse support.
 * Try some optimization(s) for less powerful devices (aka phones).
 * Deal truly random cards or one from a deck of 52 cards.
 * Dynamic spacing and rotation as the number of cards increase (see hearthstone)
-* Landscape orientation on the phone needs a whole different approach/layout to address the layout issues of buttons falling off the screen at the bottom.
-* [bug?] clean up deleted cards, not sure if all event handlers are properly removed from a card. 
+* Landscape orientation on the phone needs a whole different approach/layout (some minor tweaks) to address the layout issues of buttons falling off the screen at the bottom.
+* Adjust animations on mobile device
 
 ## Credits
 
