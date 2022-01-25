@@ -5,9 +5,10 @@
  * cards using a carousel.
  */
 
-import "./mathx.js";
+import "./math-extensions.js";
 import { ELEMENT_TYPES } from "./element-types.js";
-import { Card, CARD_KEY_PREFIX } from "./card.js";
+import { Card, CARD_EVENT_TYPES, CARD_KEY_PREFIX } from "./card.js";
+import { CardComponent} from "./card-component.js";
 import { pickRandomCards } from "./deck.js";
 import { PlatformConfiguration } from "./media-configuration.js";
 import { ANIMATION_EVENT_TYPE } from "./animation-utilities.js";
@@ -33,26 +34,51 @@ export class HandOfCardsComponent extends React.Component {
     super(props);
 
     // event handlers
-    this.swipeHandler = (evt) => this.handleSwipe(evt.detail.dir);
+    this.swipeHandler = (evt) => this.handleSwipe(evt.detail.dir, this.state.activeIndex);
     this.keyHandler = (evt) => this.handleKeyEvent(evt);
     this.resizeHandler = (evt) => this.handleResize();
-    this.animationHandler = (evt) => this.handleAnimation(evt);
-    this.tappedHandler = (evt) => this.handleTap(evt);
+    this.cardEventHandler = (evt) => this.handleCardEvent(evt);
     
     // transient properties
     this.ref = React.createRef();
     this.isRefInitialized = false;
     this.animationCount = 0;
+    this.centerCardIndex = 0;
+    this.mediaConfig = null;
+
+    this.cardContext = {
+      getActiveIndex: () => this.state.activeIndex,
+      getCardCount: () => this.state.cards.length,
+      getCenterCardIndex: () => this.centerCardIndex,
+      getMediaConfig: () => this.mediaConfig
+    }
 
     this.state = {
       activeIndex: props.initialIndex || 0,
       isLocked: props.isLocked,
+      centerCardIndex: props.initialIndex || 0,
       cardKeyCounter: props.hand ? props.hand.length : 0,
-      cards: props.hand ? props.hand.map( (definition, idx) => new Card(CARD_KEY_PREFIX + idx, definition, idx, false, null, this.tappedHandler)) : null,
+      //cards: props.hand ? props.hand.map( (definition, idx) => new Card(CARD_KEY_PREFIX + idx, definition, idx, false, this.cardEventHandler)) : null,
+      cards: props.hand ? props.hand.map( (definition, idx) => 
+        this.createCardComponent(React.createRef(), CARD_KEY_PREFIX + idx, idx, definition)
+      ) : []
     };
-
   }
   
+  createCardComponent = (ref, key, index, definition, isSelected = false, animation = null) => 
+    React.createElement(CardComponent, {
+      ref,
+      key, 
+      keyReference: key,
+      definition, 
+      index, 
+      isSelected, 
+      animation,
+      eventHandler: this.cardEventHandler,
+      context: this.cardContext,
+      mediaConfig: this.props.config
+    });
+
   /**
    * React-render component
    * @returns a react.element
@@ -60,7 +86,7 @@ export class HandOfCardsComponent extends React.Component {
   render() {
 
     const properties = {
-      className: "hand-of-cards",
+      className: "hand",
       ref: this.ref,
       onKeyUp : (evt) => {
         this.handleKeyEvent(evt.keyCode);
@@ -74,11 +100,11 @@ export class HandOfCardsComponent extends React.Component {
     // Need to know the width of the component to do a proper layout, so until we have a reference,
     // we skip this render.
     if (this.ref.current) {
-      const config = this.props.getLayoutConfiguration(this.ref);
+      this.mediaConfig = this.props.getLayoutConfiguration(this.ref);
       
       const children = [
-        this.createCarousel(config),
-        this.createControlBar(config),        
+        this.createCarousel(this.mediaConfig),
+        this.createControlBar(this.mediaConfig),        
       ];
 
       return React.createElement(ELEMENT_TYPES.DIV, properties, children);
@@ -101,7 +127,6 @@ export class HandOfCardsComponent extends React.Component {
 
     window.addEventListener('keyup', this.keyHandler);
     window.addEventListener('keydown', this.keyHandler, keyhandlerOptions);
-
     window.addEventListener('resize', this.resizeHandler);
 
     // have we got the initial reference ?
@@ -119,7 +144,6 @@ export class HandOfCardsComponent extends React.Component {
     window.removeEventListener('swiped', this.swipeHandler);
     window.removeEventListener('keyup', this.keyHandler);
     window.removeEventListener('keydown', this.keyHandler);
-
     window.removeEventListener('resize', this.resizeHandler);
   }
 
@@ -127,7 +151,7 @@ export class HandOfCardsComponent extends React.Component {
    * Deal with swipes generated with a touch device
    * @param {*} direction 
    */
-  handleSwipe( direction ) {
+  handleSwipe( direction, index ) {
 
     // wait for the animations to finish
     if (this.animationCount === 0) {
@@ -136,10 +160,10 @@ export class HandOfCardsComponent extends React.Component {
             // are there any cards in hand ?
             if (this.state.cards.length > 0) {             
               //If the card was already selected, and the user swipes up again play the cards
-              if (this.state.cards[this.state.activeIndex].isSelected) {
+              if (this.getCard(index).state.isSelected) {
                 this.playSelectedCards();
               } else {
-                this.selectActiveItem(true);
+                this.selectItem(index, true);
               }
             }
             break;
@@ -222,14 +246,30 @@ export class HandOfCardsComponent extends React.Component {
    */
   handleResize() {
     this.forceUpdate();
+    this.updateCardContext();
+  }
+
+  handleCardEvent(evt) {
+    switch (evt.type) {
+      case CARD_EVENT_TYPES.ANIMATION: 
+        this.handleAnimation(evt.parameters);
+        break;
+      case CARD_EVENT_TYPES.TAP:
+        this.handleTap(evt.card);
+        break;
+      case CARD_EVENT_TYPES.SWIPE:
+        this.handleSwipe(evt.parameters, evt.source.index)
+        break;
+    }
   }
 
   handleTap(source) {
+    // don't interact when animating.
     if (!this.animationCount) {
-      if (source.index !== this.state.activeIndex) {
+      if (source.state.index !== this.state.activeIndex) {
         // needs to be in this order
-        this.toggleSelected(source.index);
-        this.setActiveIndex(source.index);
+        this.toggleSelected(source.state.index);
+        this.setActiveIndex(source.state.index);
       } else {
         this.toggleActiveItemSelected();
       }
@@ -247,9 +287,12 @@ export class HandOfCardsComponent extends React.Component {
 
       // no more outstanding animations ?
       if (this.animationCount === 0) {
-        if (evt.source.animation.name === ANIMATIONS.playCard.name) {
+        if (evt.animation.name === ANIMATIONS.playCard.name) {
           this.removeSelectedItems();
-        } 
+        } else {
+          this.updateCardContext();
+        }
+
         // force update to reset the animation transforms
         this.forceUpdate();
       }
@@ -263,6 +306,8 @@ export class HandOfCardsComponent extends React.Component {
     };
 
     this.setState(newState);
+
+    this.updateCardContext();
   }
 
   previousItem() {
@@ -277,29 +322,33 @@ export class HandOfCardsComponent extends React.Component {
     this.selectItem(this.state.activeIndex, isItemSelected);
   }
 
-  selectItem(idx, isItemSelected) {
+  selectItem(idx, isSelected) {
   
-    if (this.state.cards.length > 0) {
-      if (!isItemSelected || this.props.maxSelectedCards < 0 || this.countSelected() < this.props.maxSelectedCards) {
-        const newCards = [...this.state.cards];
-        const oldCard = this.state.cards[idx];
-        
-        newCards[idx] = new Card(oldCard.key, oldCard.definition, oldCard.index, isItemSelected, null, this.tappedHandler);
+    if (!isSelected || this.canSelectMoreCards()) {
+      const currentCard = this.getCard(idx);
 
-        this.setState({
-          ...this.state,
-          cards: newCards
-        });
+      // does the state change ?
+      if (currentCard.state.isSelected != isSelected) {
+        currentCard.setSelected(isSelected);
       }
     }
   }
 
+  canSelectMoreCards() {
+    // any cards to select ?
+    return this.state.cards.length > 0
+      // is there is a limit ?
+      && (this.props.maxSelectedCards < 0 
+          // can still select more cards ?
+          || this.countSelectedCards() < this.props.maxSelectedCards);
+  }
+
   removeSelectedItems() {  
     if (this.state.cards.length > 0) {
-      const cards = this.state.cards.filter(card => !card.isSelected);
+      const cards = this.state.cards.filter(card => !card.ref.current.state.isSelected);
       const activeIndex = Math.min(Math.max(0, cards.length-1), this.state.activeIndex);
 
-      cards.forEach( (card, idx) => card.index = idx);   
+      cards.forEach( (card, idx) => card.ref.current.setIndex(idx));   
 
       this.setState({
         ...this.state,
@@ -313,20 +362,13 @@ export class HandOfCardsComponent extends React.Component {
     if (this.state.cards.length > 0) {
       this.animationCount = 0;
 
-      const cards = this.state.cards.map(card => {
-        if (card.isSelected) {
-          card.animation = ANIMATIONS.playCard;
-          card.animationCallback = this.animationHandler;
+      this.state.cards.forEach(cardRef => {
+        const card = cardRef.ref.current;
+        if (card.state.isSelected) {
           this.animationCount++;
-        }
-
-        return card;
+          card.setAnimation(ANIMATIONS.playCard);
+        } 
       });
-
-      this.setState({
-        ...this.state,
-        cards
-      });    
     }
   }
 
@@ -340,15 +382,17 @@ export class HandOfCardsComponent extends React.Component {
       const cards = [
         ...this.state.cards, 
         ...cardDefinitions.map( (definition, idx) => {
-          const updatedCard = new Card(CARD_KEY_PREFIX + (idx + this.state.cardKeyCounter), definition, idx, false, null, this.tappedHandler);
-          updatedCard.animation = ANIMATIONS.drawCard;
-          updatedCard.animationCallback = this.animationHandler;
+          const updatedCard = this.createCardComponent(
+            React.createRef(), 
+            CARD_KEY_PREFIX + (idx + this.state.cardKeyCounter), 
+            idx + this.state.cards.length, definition, 
+            false, 
+            ANIMATIONS.drawCard
+          );
           this.animationCount++;
           return updatedCard;
         })];
       
-      cards.forEach( (card, idx) => card.index = idx);   
-
       this.setState({
         ...this.state,
         cardKeyCounter: this.state.cardKeyCounter + newCardCount,
@@ -359,13 +403,13 @@ export class HandOfCardsComponent extends React.Component {
 
   toggleActiveItemSelected() {   
     if (this.state.activeIndex < this.state.cards.length) {
-      this.selectActiveItem(!this.state.cards[this.state.activeIndex].isSelected);
+      this.selectActiveItem(!this.getActiveCard().state.isSelected);
     }
   }
 
   toggleSelected(idx) {   
     if (this.state.activeIndex < this.state.cards.length) {
-      this.selectItem(idx, !this.state.cards[idx].isSelected);
+      this.selectItem(idx, !this.getCard(idx).state.isSelected);
     }
   }
 
@@ -373,21 +417,38 @@ export class HandOfCardsComponent extends React.Component {
     this.setState({
       ...this.state,
       isLocked: !this.state.isLocked
-    })
+    });
+
+    this.updateCardContext();
+  }
+
+  getCard(idx) {
+    return this.state.cards[idx].ref.current;
+  }
+  
+  getActiveCard() {
+    return this.state.cards[this.state.activeIndex].ref.current;
   }
 
   /**
    * Count the number of cards that have been selected.
    * @returns number
    */
-  countSelected() {
+  countSelectedCards() {
     let result = 0;
     for (let i = 0; i < this.state.cards.length; ++i) {
-      if (this.state.cards[i].isSelected) {
+      if (this.getCard(i).state.isSelected) {
         result++;
       }
     }
     return result;
+  }
+
+  /**
+   * Soft forceUpdate on the cards
+   */
+  updateCardContext() {
+    this.state.cards.forEach(card => card.ref.current.updateContext(this.cardContext));
   }
 
   /**
@@ -407,7 +468,7 @@ export class HandOfCardsComponent extends React.Component {
     };
 
     // center the active card
-    const centerCard = this.state.isLocked ? Math.floor(this.state.cards.length / 2) : this.state.activeIndex;
+    this.centerCardIndex = this.state.isLocked ? Math.floor(this.state.cards.length / 2) : this.state.activeIndex;
 
     const innerId = `${carouselProperties.key}-inner`;
     const childProperties = {
@@ -416,10 +477,7 @@ export class HandOfCardsComponent extends React.Component {
         id: innerId,
     };
     
-    const children = this.state.cards.map((card, idx) => 
-      card.createElement(config, this.state.cards.length, this.state.activeIndex, centerCard));
-
-    const innerChildren = React.createElement(ELEMENT_TYPES.DIV, childProperties, children);
+    const innerChildren = React.createElement(ELEMENT_TYPES.DIV, childProperties, this.state.cards);
 
     return React.createElement(ELEMENT_TYPES.DIV, carouselProperties, innerChildren);
 }
@@ -453,13 +511,13 @@ createControlBar(config) {
    * @param {*} cards 
    * @returns 
    */
-  createIndicatorItems = (keyPrefix, callback, activeIndex, cards) =>
-    cards.map((card, index) => 
-      React.createElement(ELEMENT_TYPES.DIV, { 
-        key: `indicator-${index}`,
-        className : `indicator ${card.index === activeIndex ? "indicator-active" : ""} ${card.isSelected ? "indicator-selected" : ""}`,
-        onClick : () => callback(index)
-      })
+  createIndicatorItems = (callback, activeIndex, cards) =>
+    cards.map((card, index) =>     
+        React.createElement(ELEMENT_TYPES.DIV, { 
+          key: `indicator-${index}`,
+          className : `indicator ${index === activeIndex ? "indicator-active" : ""} ${card.ref.current?.state.isSelected ? "indicator-selected" : ""}`,
+          onClick : () => callback(index)
+        })
     );
 
     /**
@@ -472,7 +530,11 @@ createControlBar(config) {
       className: "indicators",
     };
 
-    const children = this.createIndicatorItems("indicator-item-", (idx) => this.setActiveIndex(idx),this.state.activeIndex, cards);
+    const children = this.createIndicatorItems(
+      (idx) => this.setActiveIndex(idx),
+      this.state.activeIndex, 
+      cards
+    );
 
     return React.createElement(ELEMENT_TYPES.DIV, properties, children);
   }

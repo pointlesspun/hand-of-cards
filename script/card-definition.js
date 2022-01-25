@@ -19,4 +19,8 @@ export class CardDefinition {
         this.row = row;
         this.column = column;
     }
+
+    toCss() {
+        return this.atlas.toCss(this.row, this.column);
+    }
 }

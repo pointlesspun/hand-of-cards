@@ -1,116 +1,111 @@
 'use strict';
 
-/*
- * Implements a card and its tranformation given its position and state in the hand.
- */
-
-import { Transform } from "./transform.js";
-import { ELEMENT_TYPES } from "./element-types.js";
-import { PlatformConfiguration } from "./media-configuration.js";
-import { CardDefinition } from "./card-definition.js";
 import { ANIMATION_EVENT_TYPE, AnimationEvent } from "./animation-utilities.js";
+import { CardEvent, CARD_EVENT_TYPES } from "./card.js";
+import { ELEMENT_TYPES } from "./element-types.js";
+import { Transform } from "./transform.js";
 import { Vector3 } from "./vector3.js";
 
 // number of pixels of movement allowed before a tap becomes a swipe
 const TAP_THRESHOLD = 10;
 
-/** Prefix to generate React cards */
-export const CARD_KEY_PREFIX = "hoc-card";
-
-export const CARD_EVENT_TYPES = {
-    ANIMATION : "animation",
-    TAP: "tapped",
-    SWIPE: "swipe"
-}
-
-export class CardEvent {
-    constructor(card, type, parameters) {
-        this.card = card;
-        this.type = type;
-        this.parameters = parameters;
-    }
-}
-
-/**
- * Implements the logic, state and element creation of a single card.
- */
-export class Card {
-    /**
-     * 
-     * @param {*} key a unique React key
-     * @param {CardDefinition} definition containing immutable properties (graphics, name) of the card 
-     * @param {number} index index of the card in the hand
-     * @param {boolean} isSelected indicates if the card is selected by the player
-     */
-    constructor(key, definition, index, isSelected, eventCallback) {
-        this.key = key;
-        this.definition = definition;
-        this.index = index;
-        this.isSelected = isSelected;
-        this.animation = "";
-        this.activeAnimation = "";
-        this.eventCallback = eventCallback;
-    }
+export class CardComponent extends React.Component {
+    constructor(props) {
+        super(props);   
+        
+        // transient properties
+        this.ref = React.createRef();
+        this.isRefInitialized = false;
+        this.animationCount = 0;
     
-    clone() {
-        const result = new Card(this.key, this.definition, this.index, this.isSelected, this.eventCallback);
-        result.animation = this.animation;
-        result.activeAnimation = this.activeAnimation;
-        return result;
+        this.state = {
+          index: props.index,
+          isSelected: props.isSelected,
+          context: this.props.context,
+          eventHandler: this.props.eventHandler
+        };       
+
+        // transient properties
+        this.animation = props.animation;
+        this.activeAnimation = null;
     }
 
-    /**
-     * Creates React Element for this card
-     * 
-     * @param {PlatformConfiguration} config contains the settings relevant to the current media/device 
-     * @param {number} cardCount represents to the total number of cards in hand
-     * @param {number} activeIndex index of the card the player is currently looking at
-     * @param {number} centerCardIndex index of the card which is the center of the hand
-     * @returns {react.element}
-     */
-    createElement(config,  cardCount, activeIndex, centerCardIndex) {
+    updateContext(context) {
+        this.setState({
+            ...this.state,
+            context
+        });
+    }
 
+    setSelected(isSelected) {
+        this.setState({
+            ...this.state,
+            isSelected
+        });
+    }
+
+    setIndex(index) {
+        this.setState({
+            ...this.state,
+            index
+        });
+    }
+
+    render() {
         if (this.index < 0) {
-            return React.createElement(ELEMENT_TYPES.DIV, {key: this.key, visibility: "collapse", className: "card-item"});    
+            return React.createElement(ELEMENT_TYPES.DIV, {visibility: "collapse", className: "card-item"});    
         }
 
-        const isActive = this.index === activeIndex;
-        const transform = this.calculateTransform(config, cardCount, activeIndex, centerCardIndex);
+        const cardContext = this.state.context;
+
+        const config = cardContext.getMediaConfig();
+        const activeIndex = cardContext.getActiveIndex();
+        const cardCount = cardContext.getCardCount();
+        const centerCardIndex = cardContext.getCenterCardIndex();
+        
+        const isActive = this.state.index === activeIndex;
+        
+        const transform = this.calculateTransform(config, cardCount, this.state.index, activeIndex, centerCardIndex, this.state.isSelected);
 
         const properties = {
-            key: this.key,
-            id: this.key,
+            id: this.props.keyReference,
             className : this.createClassName(isActive),
             style : {
                 width : config.values.cardWidth + "px",
                 height : config.values.cardHeight + "px",
                 transformOrigin: "center bottom",
                 transform:  transform ? transform.toCss({}) : "",
-                background: this.definition.atlas.toCss(this.definition.row, this.definition.column),
+                background: this.props.definition.toCss(),
             } ,
             onAnimationEnd: () => { 
-                if(this.eventCallback) {
-                    this.eventCallback(new CardEvent(this, CARD_EVENT_TYPES.ANIMATION, new AnimationEvent(this, this.activeAnimation, ANIMATION_EVENT_TYPE.END)));
-                } 
+                const completedAnimation = this.animation;
 
                 this.activeAnimation = null;
-                this.animation = null;               
+                this.animation = null; 
+
+                if(this.state.eventHandler) {
+                    this.state.eventHandler(new CardEvent(this, CARD_EVENT_TYPES.ANIMATION, new AnimationEvent(this, completedAnimation, ANIMATION_EVENT_TYPE.END)));
+                } 
             },
             onTouchStart: (evt) => this.handleTouch(evt),
             onTouchEnd: (evt) => this.handleTouch(evt),
-            swiped: (evt) => this.handleSwipe(evt)
         };
         
-        if (this.animation) {
+        // can only play one animation at the time
+        if (this.animation && !this.activeAnimation) {
             properties.style = {
                 ...properties.style,
-                ...this.playAnimation(this.animation, config, transform)
+                ...this.animation.createAnimation({
+                    idx: this.state.index,
+                    config,
+                    targetTransform: transform
+                })
             }; 
 
             this.activeAnimation = properties.style.animationName;
 
-            if (this.eventCallback) {
-                this.eventCallback(new CardEvent(this, CARD_EVENT_TYPES.ANIMATION, new AnimationEvent(this, this.activeAnimation, ANIMATION_EVENT_TYPE.START)));
+            if (this.state.eventHandler) {
+                this.state.eventHandler(new CardEvent(this, CARD_EVENT_TYPES.ANIMATION, new AnimationEvent(this, this.activeAnimation, ANIMATION_EVENT_TYPE.START)));
             }
         }
 
@@ -118,6 +113,15 @@ export class Card {
         const overlay = React.createElement(ELEMENT_TYPES.DIV, { className : `card-overlay${isActive ? "-active" : ""}`});
 
         return React.createElement(ELEMENT_TYPES.DIV, properties, overlay);
+    }
+
+    setAnimation(animation) {
+        /*this.setState({
+            ...this.state,
+            animation
+        });*/
+        this.animation = animation;
+        this.forceUpdate();
     }
 
     /**
@@ -129,7 +133,7 @@ export class Card {
      * @param {number} centerCardIndex index of the card which is the center of the hand
      * @returns {Transform}
      */
-    calculateTransform(config, cardCount, activeIndex, centerCardIndex) {
+     calculateTransform(config, cardCount, index, activeIndex, centerCardIndex, isSelected) {
         
         // short hand reference
         const values = config.values;
@@ -138,13 +142,13 @@ export class Card {
         const parentHeight = config.clientSize.height * values.innerHeight;
 
         // is the current card active (the one in the center which the user is working with) ?
-        const isActive = this.index === activeIndex;
+        const isActive = index === activeIndex;
 
         // center of the parent x axis
         const parentCenterX = config.clientSize.width / 2;
 
         // how far is this card from the center cards ?
-        const deltaCenterIdx = this.index - centerCardIndex;
+        const deltaCenterIdx = index - centerCardIndex;
 
         const maxDeltaIdx = Math.abs(deltaCenterIdx) / cardCount;
 
@@ -152,7 +156,7 @@ export class Card {
         const itemScale = values.baseScale + values.dynamicScale * (1-maxDeltaIdx);
 
         // if the item is selected raise the y position
-        const itemSelectedOffset = this.isSelected ? values.ySelectedOffset : 0;
+        const itemSelectedOffset = isSelected ? values.ySelectedOffset : 0;
         
         // if the item is active raise the y position
         const itemActiveOffset = isActive ? values.yActiveOffset : 0;
@@ -193,31 +197,24 @@ export class Card {
         return className;
     }
 
-    playAnimation(animation, config, targetTransform) {        
-        return animation.createAnimation({
-            idx: this.index,
-            config,
-            targetTransform
-        });
-    }
-
     handleTouch(evt) {
         // wait for the animations to finish
         if (evt.type === 'touchstart') {
+            
             this.touchStart = new Vector3(evt.changedTouches[0].clientX, evt.changedTouches[0].clientY);
             } else {
             const delta = new Vector3(evt.changedTouches[0].clientX  - this.touchStart.x, evt.changedTouches[0].clientY - this.touchStart.y);
             
-            if (delta.length() < TAP_THRESHOLD && this.eventCallback) {
+            if (delta.length() < TAP_THRESHOLD && this.state.eventHandler) {
                 // tap happened
-                this.eventCallback(new CardEvent(this, CARD_EVENT_TYPES.TAP));
+                this.state.eventHandler(new CardEvent(this, CARD_EVENT_TYPES.TAP));
             }
         }
       }  
 
       handleSwiped(evt) {
-          if (this.eventCallback) {
-              this.eventCallback(new CardEvent(this, CARD_EVENT_TYPES.SWIPE, evt.detail.dir));
+          if (this.state.eventHandler) {
+            this.state.eventHandler(new CardEvent(this, CARD_EVENT_TYPES.SWIPE, evt.detail.dir));
           }
       }
 }

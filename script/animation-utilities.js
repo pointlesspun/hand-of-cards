@@ -15,9 +15,6 @@
  */
 
 import { ELEMENT_TYPES } from "./element-types.js";
-import { Transform } from "./transform.js";
-import { Vector3 } from "./vector3.js";
-
 
 /**
  * Type of animation events
@@ -31,9 +28,9 @@ export const ANIMATION_EVENT_TYPE = {
  * Event emitted when an animation is started or stopped
  */
 export class AnimationEvent {
-    constructor( source, name, eventType) {
+    constructor( source, animation, eventType) {
         this.source = source;
-        this.name = name;
+        this.animation = animation;
         this.type = eventType;
     }
 }

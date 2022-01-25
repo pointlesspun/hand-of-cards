@@ -5,7 +5,7 @@
  */
 
 import { MediaConfiguration} from "./media-configuration.js";
-import { HandOfCardsComponent } from "./hand-of-cards-component.js";
+import { HandOfCardsComponent as HandComponent } from "./hand-component.js";
 import { PLATFORM_CONFIGURATIONS } from "./platform-configurations.js";
 import { DEFAULT_DECK, pickRandomCards } from "./deck.js";
 import { allocAnimations } from "./animation-utilities.js";
@@ -30,4 +30,4 @@ const properties = {
 allocAnimations([ANIMATIONS.playCard.name,ANIMATIONS.drawCard.name], maxCards);
 
 ReactDOM.render(
-    React.createElement(React.StrictMode, {}, React.createElement(HandOfCardsComponent, properties)), element);
+    React.createElement(React.StrictMode, {}, React.createElement(HandComponent, properties)), element);
