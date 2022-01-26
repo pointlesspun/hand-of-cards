@@ -4,8 +4,8 @@
  * Utility functions to build a deck of cards based on the sprite atlas in ../data.
  */
 
-import { Size } from "/src/framework/size.js";
-import { SpriteAtlas } from "/src/framework/sprite-atlas.js";
+import { Size } from "../framework/size.js";
+import { SpriteAtlas } from "../framework/sprite-atlas.js";
 
 import { CardDefinition } from "./card-definition.js";
 

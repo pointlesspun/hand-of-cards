@@ -1,9 +1,9 @@
 'use strict';
 
-import { Transform } from "/src/framework/transform.js";
-import { Vector3 } from "/src/framework/vector3.js";
-import { ELEMENT_TYPES } from "/src/framework/element-types.js";
-import { ANIMATION_EVENT_TYPE, AnimationEvent } from "/src/framework/animation-utilities.js";
+import { Transform } from "../framework/transform.js";
+import { Vector3 } from "../framework/vector3.js";
+import { ELEMENT_TYPES } from "../framework/element-types.js";
+import { ANIMATION_EVENT_TYPE, AnimationEvent } from "../framework/animation-utilities.js";
 
 import { CardEvent, CARD_EVENT_TYPES } from "./card-event.js";
 

@@ -5,10 +5,10 @@
  * cards using a carousel.
  */
 
-import "/src/framework/math-extensions.js";
-import { ELEMENT_TYPES } from "/src/framework/element-types.js";
-import { PlatformConfiguration } from "/src/framework/media-configuration.js";
-import { ANIMATION_EVENT_TYPE } from "/src/framework/animation-utilities.js";
+import "../framework/math-extensions.js";
+import { ELEMENT_TYPES } from "../framework/element-types.js";
+import { PlatformConfiguration } from "../framework/media-configuration.js";
+import { ANIMATION_EVENT_TYPE } from "../framework/animation-utilities.js";
 
 import { CARD_EVENT_TYPES } from "./card-event.js";
 import { CardComponent, CARD_KEY_PREFIX } from "./card-component.js";

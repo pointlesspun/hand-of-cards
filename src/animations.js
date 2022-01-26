@@ -14,9 +14,9 @@
  * (*) This assumes I'm not massively overlooking a more straightforward approach which is perfectly possible...
  */
 
-import { Transform } from "/src/framework/transform.js";
-import { Vector3 } from "/src/framework/vector3.js";
-import { updateKeyframes, createAnimationId } from "/src/framework/animation-utilities.js";
+import { Transform } from "./framework/transform.js";
+import { Vector3 } from "./framework/vector3.js";
+import { updateKeyframes, createAnimationId } from "./framework/animation-utilities.js";
 
 /**
  * All the animations used in the application
