@@ -5,14 +5,16 @@
  * cards using a carousel.
  */
 
-import "./math-extensions.js";
-import { ELEMENT_TYPES } from "./element-types.js";
+import "/src/framework/math-extensions.js";
+import { ELEMENT_TYPES } from "/src/framework/element-types.js";
+import { PlatformConfiguration } from "/src/framework/media-configuration.js";
+import { ANIMATION_EVENT_TYPE } from "/src/framework/animation-utilities.js";
+
 import { CARD_EVENT_TYPES } from "./card-event.js";
 import { CardComponent, CARD_KEY_PREFIX } from "./card-component.js";
 import { pickRandomCards } from "./deck.js";
-import { PlatformConfiguration } from "./media-configuration.js";
-import { ANIMATION_EVENT_TYPE } from "./animation-utilities.js";
-import { ANIMATIONS } from "./animations.js";
+// todo: fix this dependency
+import { ANIMATIONS } from "../animations.js";
 
 const SWIPE_DIRECTIONS = {
   UP : 'up',
@@ -24,7 +26,7 @@ const SWIPE_DIRECTIONS = {
 // number of pixels of movement allowed before a tap becomes a swipe
 const TAP_THRESHOLD = 10;
 
-export class HandOfCardsComponent extends React.Component {
+export class HandComponent extends React.Component {
   /**
    *
    * @param {*} props

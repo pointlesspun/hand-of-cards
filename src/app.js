@@ -4,11 +4,14 @@
  * Main application which configures a HandOfCardsComponent and renders the component.
  */
 
-import { MediaConfiguration} from "./media-configuration.js";
-import { HandOfCardsComponent as HandComponent } from "./hand-component.js";
+import { MediaConfiguration} from "./framework/media-configuration.js";
+import { allocAnimations } from "./framework/animation-utilities.js";
+
+import { HandComponent } from "./card-game/hand-component.js";
+import { DEFAULT_DECK, pickRandomCards } from "./card-game/deck.js";
+
+
 import { PLATFORM_CONFIGURATIONS } from "./platform-configurations.js";
-import { DEFAULT_DECK, pickRandomCards } from "./deck.js";
-import { allocAnimations } from "./animation-utilities.js";
 import { ANIMATIONS } from "./animations.js";
 
 console.log("starting card component");

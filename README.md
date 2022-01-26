@@ -57,6 +57,8 @@ This project was created while learning React and is currently very much under d
 * Dynamic spacing and rotation as the number of cards increase (see hearthstone)
 * Landscape orientation on the phone needs a whole different approach/layout (some minor tweaks) to address the layout issues of buttons falling off the screen at the bottom.
 * Adjust animations on mobile device
+* // todo: fix this dependency 
+    import { ANIMATIONS } from "../animations.js";
 
 ## Credits
 

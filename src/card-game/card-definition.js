@@ -1,6 +1,6 @@
 'use strict';
 
-import { SpriteAtlas } from "./sprite-atlas.js";
+import { SpriteAtlas } from "/src/framework/sprite-atlas.js";
 
 /**
  * Defines a immutable properties of a card: the graphics and name.

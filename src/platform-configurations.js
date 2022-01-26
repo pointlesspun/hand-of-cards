@@ -4,7 +4,7 @@
  * Configurations used in the demo to adapt to different screen sizes.
  */
 
-import { PlatformConfiguration, ORIENTATION_NAMES } from "./media-configuration.js"
+import { PlatformConfiguration, ORIENTATION_NAMES } from "/src/framework/media-configuration.js"
 
 export const PLATFORM_CONFIGURATIONS = [
     new PlatformConfiguration("phone-landscape", ORIENTATION_NAMES.LANDSCAPE, 900, 480, {
