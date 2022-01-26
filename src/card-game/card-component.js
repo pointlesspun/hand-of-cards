@@ -39,6 +39,15 @@ export class CardComponent extends React.Component {
                 this.state.eventHandler(new CardEvent(this, CARD_EVENT_TYPES.SWIPE, evt));
             }
         };
+        this.mouseListener = (evt) => {
+            if (evt.type === 'mouseover') {
+                if (this.state.eventHandler) {
+                    this.state.eventHandler(new CardEvent(this, CARD_EVENT_TYPES.FOCUS));
+                }
+            } else if (evt.type === 'mouseup') {
+                this.state.eventHandler(new CardEvent(this, CARD_EVENT_TYPES.TAP));
+            }
+        };
     }
 
     updateContext(context) {
@@ -130,10 +139,14 @@ export class CardComponent extends React.Component {
 
     componentDidMount() {
         this.ref.current.addEventListener('swiped', this.swipeListener);
+        this.ref.current.addEventListener('mouseover', this.mouseListener);
+        this.ref.current.addEventListener('mouseup', this.mouseListener);
     }
 
     componentWillUnmount() {
         this.ref.current.removeEventListener('swiped', this.swipeListener);
+        this.ref.current.removeEventListener('mouseover', this.mouseListener);
+        this.ref.current.removeEventListener('mouseup', this.mouseListener);
     }
 
     setAnimation(animation) {

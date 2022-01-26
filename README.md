@@ -1,5 +1,5 @@
-# hand-of-cards (v0.4)
-This is simple and limited React front-end carousel imitating holding and browsing through a hand of cards. To start the app, run a webserver in the directory containing the index.html file. Latest demo can be found on the [github pages](https://pointlesspun.github.io/hand-of-cards/).
+# hand-of-cards (v0.41)
+This is React front-end carousel imitating holding and browsing through a hand of cards. To start the app, run a webserver in the directory containing the index.html file. Latest demo can be found on the [github pages](https://pointlesspun.github.io/hand-of-cards/).
 
 For bugs and outstanding features see ['status'](#Status) below.
 
@@ -45,7 +45,6 @@ The design (such as it is) of the element consists of the following:
 
 This project was created while learning React and is currently very much under development. Clean-up and refactoring are very much in order. Outstanding features (in no particular order):
 
-* Add mouse support.
 * Show warning if max selection is reached.
 * Create class for config.values
 * Refactor & add documentation.

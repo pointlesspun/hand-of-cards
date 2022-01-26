@@ -56,20 +56,19 @@ export class HandComponent extends React.Component {
     this.ref = React.createRef();
     this.isRefInitialized = false;
     this.animationCount = 0;
-    this.centerCardIndex = 0;
     this.mediaConfig = null;
 
     this.cardContext = {
       getActiveIndex: () => this.state.activeIndex,
       getCardCount: () => this.state.cards.length,
-      getCenterCardIndex: () => this.centerCardIndex,
+      getCenterCardIndex: () => this.state.centerCardIndex,
       getMediaConfig: () => this.mediaConfig
     }
 
     this.state = {
       activeIndex: props.initialIndex || 0,
       isLocked: props.isLocked,
-      centerCardIndex: props.initialIndex || 0,
+      centerCardIndex: props.isLocked ? Math.floor(this.state.cards.length / 2) : props.initialIndex,
       cardKeyCounter: props.hand ? props.hand.length : 0,
       cards: props.hand ? props.hand.map( (definition, idx) => 
         this.createCardComponent(React.createRef(), CARD_KEY_PREFIX + idx, idx, definition)
@@ -270,6 +269,11 @@ export class HandComponent extends React.Component {
       case CARD_EVENT_TYPES.SWIPE:
         this.handleSwipe(evt.parameters.detail.dir, evt.card.state.index);
         break;
+      case CARD_EVENT_TYPES.FOCUS:
+        if (this.animationCount === 0) {
+          this.setActiveIndex(evt.card.state.index);
+        }
+        break;
     }
   }
 
@@ -316,16 +320,26 @@ export class HandComponent extends React.Component {
     };
 
     this.setState(newState);
+    this.updateCardContext();
+  }
 
+  moveActiveItem(delta) {
+    const newState = {
+      ...this.state,
+      activeIndex: Math.clamp(this.state.activeIndex + delta, 0, this.state.cards.length),
+      centerCardIndex: this.state.isLocked ? this.state.centerCardIndex : Math.clamp(this.state.centerCardIndex + delta, 0, this.state.cards.length),
+    };
+
+    this.setState(newState);
     this.updateCardContext();
   }
 
   previousItem() {
-    this.setActiveIndex(this.state.activeIndex - 1);
+    this.moveActiveItem(-1);
   }
 
   nextItem() {
-    this.setActiveIndex(this.state.activeIndex + 1);
+    this.moveActiveItem(1);
   }
 
   selectActiveItem(isItemSelected) {
@@ -439,7 +453,8 @@ export class HandComponent extends React.Component {
   toggleLock() {   
     this.setState({
       ...this.state,
-      isLocked: !this.state.isLocked
+      isLocked: !this.state.isLocked,
+      centerCardIndex: !this.state.isLocked ? Math.floor(this.state.cards.length / 2) : this.state.activeIndex,
     });
 
     this.updateCardContext();
@@ -489,9 +504,6 @@ export class HandComponent extends React.Component {
           height: `${config.values.innerHeight*100}%` 
         }
     };
-
-    // center the active card
-    this.centerCardIndex = this.state.isLocked ? Math.floor(this.state.cards.length / 2) : this.state.activeIndex;
 
     const innerId = `${carouselProperties.key}-inner`;
     const childProperties = {
