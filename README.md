@@ -45,16 +45,14 @@ The design (such as it is) of the element consists of the following:
 
 This project was created while learning React and is currently very much under development. Clean-up and refactoring are very much in order. Outstanding features (in no particular order):
 
-* Add option When selecting a card and the max is reached unselect the oldest selected card
+* Add mouse support.
 * Show warning if max selection is reached.
 * Create class for config.values
 * Refactor & add documentation.
 * Add jsx (or htm) variation.
-* Add mouse support.
 * Try some optimization(s) for less powerful devices (aka phones).
 * Deal truly random cards or one from a deck of 52 cards.
 * Dynamic spacing and rotation as the number of cards increase (see hearthstone)
-* Landscape orientation on the phone needs a whole different approach/layout (some minor tweaks) to address the layout issues of buttons falling off the screen at the bottom.
 * Adjust animations on mobile device
 * // todo: fix this dependency 
     import { ANIMATIONS } from "../animations.js";

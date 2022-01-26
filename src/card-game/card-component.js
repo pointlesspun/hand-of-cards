@@ -26,6 +26,7 @@ export class CardComponent extends React.Component {
         this.state = {
           index: props.index,
           isSelected: props.isSelected,
+          timeSelected: Date.now(),
           context: this.props.context,
           eventHandler: this.props.eventHandler
         };       
@@ -50,6 +51,7 @@ export class CardComponent extends React.Component {
     setSelected(isSelected) {
         this.setState({
             ...this.state,
+            timeSelected: Date.now(),
             isSelected
         });
     }

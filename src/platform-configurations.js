@@ -9,8 +9,8 @@ import { PlatformConfiguration, ORIENTATION_NAMES } from "/src/framework/media-c
 export const PLATFORM_CONFIGURATIONS = [
     new PlatformConfiguration("phone-landscape", ORIENTATION_NAMES.LANDSCAPE, 900, 480, {
 
-        // Inner takes up 80% of the client height
-        innerHeight: 0.8,
+        // Inner takes up % of the client height
+        innerHeight: 0.78,
 
         baseScale: 0.35,
         dynamicScale: 0.25,

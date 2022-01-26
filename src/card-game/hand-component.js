@@ -26,6 +26,17 @@ const SWIPE_DIRECTIONS = {
 // number of pixels of movement allowed before a tap becomes a swipe
 const TAP_THRESHOLD = 10;
 
+/**
+ * What happens when the user selects a card when the max cards have been reached
+ */
+export const MAX_SELECTION_REACHED_POLICY = {
+  /** prevent the user from selecting more cards (default) */
+  BLOCK: 'block',
+
+  /** de-select the card selected first, then select the current card */
+  CYCLE_OLDEST: 'cycle-oldest'
+};
+
 export class HandComponent extends React.Component {
   /**
    *
@@ -150,7 +161,7 @@ export class HandComponent extends React.Component {
                 if (this.getCard(index).state.isSelected) {
                   this.playSelectedCards();
                 } else {
-                  this.selectItem(index, true);
+                  this.toggleSelected(index);
                 }
               }
             }
@@ -197,11 +208,18 @@ export class HandComponent extends React.Component {
             evt.preventDefault();
             break;
           case KeyCode.KEY_UP:
-            this.selectActiveItem(true);
+            
+          if (!this.getActiveCard().state.isSelected) {
+              this.toggleActiveItemSelected();
+            }
+
             evt.preventDefault();
             break;
           case KeyCode.KEY_DOWN:
-            this.selectActiveItem(false);
+            if (this.getActiveCard().state.isSelected) {
+              this.selectActiveItem(false);
+            }
+            
             evt.preventDefault();
             break;  
           case KeyCode.KEY_DELETE:
@@ -330,8 +348,9 @@ export class HandComponent extends React.Component {
   canSelectMoreCards() {
     // any cards to select ?
     return this.state.cards.length > 0
-      // is there is a limit ?
-      && (this.props.maxSelectedCards < 0 
+      
+      && ( //if negative there is no limit  
+           this.props.maxSelectedCards < 0 
           // can still select more cards ?
           || this.countSelectedCards() < this.props.maxSelectedCards);
   }
@@ -395,14 +414,25 @@ export class HandComponent extends React.Component {
   }
 
   toggleActiveItemSelected() {   
-    if (this.state.activeIndex < this.state.cards.length) {
-      this.selectActiveItem(!this.getActiveCard().state.isSelected);
-    }
+      this.toggleSelected(this.state.activeIndex);
   }
 
   toggleSelected(idx) {   
     if (this.state.activeIndex < this.state.cards.length) {
-      this.selectItem(idx, !this.getCard(idx).state.isSelected);
+      const isSelected = this.getCard(idx).state.isSelected;
+      if (isSelected || this.canSelectMoreCards()) {
+        this.selectItem(idx, !isSelected);
+        // can we deselect the oldest ?
+      } else if ( this.props.maxCardsReachedPolicy === MAX_SELECTION_REACHED_POLICY.CYCLE_OLDEST) {
+        const firstSelectedCard = this.state.cards.filter(card => card.ref.current.state.isSelected).reduce( 
+            (card, prev) => prev.ref.current.state.timeSelected < card.ref.current.state.timeSelected ? prev : card);
+         
+        // deselect the oldest/first selected card
+        this.selectItem(firstSelectedCard.ref.current.state.index, false);
+
+        // select the current
+        this.selectItem(idx, true);    
+      }
     }
   }
 
