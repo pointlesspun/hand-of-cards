@@ -73,9 +73,6 @@ export class CardComponent extends React.Component {
     }
 
     render() {
-        if (this.index < 0) {
-            return React.createElement(ELEMENT_TYPES.DIV, {visibility: "collapse", className: "card-item"});    
-        }
 
         const cardContext = this.state.context;
 
@@ -96,7 +93,9 @@ export class CardComponent extends React.Component {
                 width : config.values.cardWidth + "px",
                 height : config.values.cardHeight + "px",
                 transformOrigin: "center bottom",
-                transform:  transform ? transform.toCss({}) : "",
+                // don't set the transform if an active animation is running as I'm not sure what
+                // the interaction will be
+                transform:  transform && !this.activeAnimation ? transform.toCss({}) : "",
                 background: this.props.definition.toCss(),
             } ,
             onAnimationEnd: () => { 
@@ -130,6 +129,7 @@ export class CardComponent extends React.Component {
                 this.state.eventHandler(new CardEvent(this, CARD_EVENT_TYPES.ANIMATION, new AnimationEvent(this, this.activeAnimation, ANIMATION_EVENT_TYPE.START)));
             }
         }
+        
 
         // color overlay giving the card some shadow depending on its state
         const overlay = React.createElement(ELEMENT_TYPES.DIV, { className : `card-overlay${isActive ? "-active" : ""}`});
@@ -164,7 +164,7 @@ export class CardComponent extends React.Component {
      * @returns {Transform}
      */
      calculateTransform(config, cardCount, index, activeIndex, centerCardIndex, isSelected) {
-        
+            
         // short hand reference
         const values = config.values;
 

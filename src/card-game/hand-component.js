@@ -303,7 +303,7 @@ export class HandComponent extends React.Component {
       if (this.animationCount === 0) {
         if (evt.animation.name === ANIMATIONS.playCard.name) {
           this.removeSelectedItems();
-        } else {
+        } else if (evt.animation.name === ANIMATIONS.drawCard.name) {          
           this.updateCardContext();
         }
 
@@ -374,13 +374,14 @@ export class HandComponent extends React.Component {
       const cards = this.state.cards.filter(card => !card.ref.current.state.isSelected);
       const activeIndex = Math.min(Math.max(0, cards.length-1), this.state.activeIndex);
 
-      cards.forEach( (card, idx) => card.ref.current.setIndex(idx));   
+      cards.forEach((card, idx) => card.ref.current.setIndex(idx));   
 
       this.setState({
         ...this.state,
         activeIndex,
+        centerCardIndex: this.state.isLocked ? Math.floor(cards.length / 2) : activeIndex,
         cards
-      });     
+      });           
     }
   }
 
@@ -403,15 +404,20 @@ export class HandComponent extends React.Component {
    */
   refill() {
     if (this.state.cards.length < this.props.maxCards) {
+      
       const newCardCount = this.props.maxCards - this.state.cards.length;
       const cardDefinitions = pickRandomCards(this.props.deck, newCardCount);
+      const oldCards = this.state.cards;
+
+      // create a new array of cards, consisting of old and new cards
       const cards = [
         ...this.state.cards, 
         ...cardDefinitions.map( (definition, idx) => {
           const updatedCard = this.createCardComponent(
             React.createRef(), 
             CARD_KEY_PREFIX + (idx + this.state.cardKeyCounter), 
-            idx + this.state.cards.length, definition, 
+            idx + this.state.cards.length, 
+            definition, 
             false, 
             ANIMATIONS.drawCard
           );
@@ -419,11 +425,22 @@ export class HandComponent extends React.Component {
           return updatedCard;
         })];
       
+      // at this point the new cards will be re-rendered and the state will
+      // be updated. Not sure why the updating of the state is not delayed unlike
+      // in other situations. I'm sure this is due to my lack
+      // of knowledge of React but I feel the rules around re-rendering
+      // components are inconsistent.
       this.setState({
         ...this.state,
         cardKeyCounter: this.state.cardKeyCounter + newCardCount,
+        centerCardIndex: this.state.isLocked ? Math.floor(cards.length / 2) : this.state.centerCardIndex,
         cards
       });
+
+
+      // only update the old cards otherwise the rerender will overwrite the current animation 
+      // of the new cards and the card will float mid air.
+      this.updateCardContext(oldCards);
     }
   }
 
@@ -485,8 +502,12 @@ export class HandComponent extends React.Component {
   /**
    * Soft forceUpdate on the cards
    */
-  updateCardContext() {
-    this.state.cards.forEach(card => card.ref.current.updateContext(this.cardContext));
+  updateCardContext(cards) {
+    if (cards) {
+        cards.forEach(card => card.ref.current.updateContext(this.cardContext));
+    } else {
+      this.state.cards.forEach(card => card.ref.current.updateContext(this.cardContext));
+    }
   }
 
   /**
@@ -532,10 +553,7 @@ createCardComponent = (ref, key, index, definition, isSelected = false, animatio
     mediaConfig: this.props.config
   });
 
-
-
-createControlBar(config) {
-  
+createControlBar(config) { 
   const properties = {
     key: "controlbar",
     style: {
