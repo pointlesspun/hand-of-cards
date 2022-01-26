@@ -322,6 +322,7 @@ export class HandComponent extends React.Component {
       // does the state change ?
       if (currentCard.state.isSelected != isSelected) {
         currentCard.setSelected(isSelected);
+        this.forceUpdate();
       }
     }
   }
@@ -429,7 +430,7 @@ export class HandComponent extends React.Component {
   countSelectedCards() {
     let result = 0;
     for (let i = 0; i < this.state.cards.length; ++i) {
-      if (this.getCard(i).state.isSelected) {
+      if (this.getCard(i)?.state.isSelected) {
         result++;
       }
     }
@@ -550,12 +551,12 @@ createControlBar(config) {
 
   createButtons() {
 
+    const refillButtonEnabled = this.ref.current && this.state.cards.length < this.props.maxCards;
+
     const refreshButton = React.createElement(ELEMENT_TYPES.DIV, {
       key: "refresh-button",
-      className: "button-panel-button sync-button",
-      onClick: () => {
-        this.refill();
-      }
+      className: `button-panel-button refill-button ${refillButtonEnabled ? ""  : "button-panel-button-disabled"}`,
+      onClick: () => this.refill()
     });
 
     const lockButton = React.createElement(ELEMENT_TYPES.DIV, {
@@ -566,10 +567,18 @@ createControlBar(config) {
       }
     });
 
+    const playButtonEnabled = this.ref.current && this.countSelectedCards() > 0;
+
+    const playButton = React.createElement(ELEMENT_TYPES.DIV, {
+      key: "play-button",
+      className: `button-panel-button play-button ${playButtonEnabled ? ""  : "button-panel-button-disabled"}`,
+      onClick: () => this.playSelectedCards()
+    });
+
     return React.createElement(ELEMENT_TYPES.DIV, {
       key: "button-panel",
       className: "button-panel"
-    }, [refreshButton, lockButton]);
+    }, [playButton, refreshButton, lockButton]);
   }
 
 }

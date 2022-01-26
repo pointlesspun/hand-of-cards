@@ -45,7 +45,6 @@ The design (such as it is) of the element consists of the following:
 
 This project was created while learning React and is currently very much under development. Clean-up and refactoring are very much in order. Outstanding features (in no particular order):
 
-* Add play button as well
 * Add option When selecting a card and the max is reached unselect the oldest selected card
 * Show warning if max selection is reached.
 * Create class for config.values
@@ -70,4 +69,3 @@ Deck of cards [by Дмитрий Фомин (Dmitry Fomin) on Wiki](https://en.w
 
 Keycode constants [Kabir Baidhya, Saugat Acharya](https://github.com/kabirbaidhya/keycode-js#usage)
 
-[Font awesome](https://fontawesome.com/) for the icons.

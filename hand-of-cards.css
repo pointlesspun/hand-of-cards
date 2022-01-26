@@ -1,6 +1,7 @@
 :root {
     --selection-color: #BBFFBB;
     --button-color: white;
+    --disabled-color: rgba(255, 255, 255, 0.5);
     --button-size: 64px;
     --button-margin: 24px;
 }
@@ -156,19 +157,19 @@ html, body {
     margin-right: var(--button-margin);
 }
 
-.button-panel-button.sync-button {
-    -webkit-mask-image: url('./data/font-awesome/sync-alt.svg');
-    mask-image: url('./data/font-awesome/sync-alt.svg');  
+.button-panel-button.refill-button {
+    -webkit-mask-image: url('./data/draw-cards.svg');
+    mask-image: url('./data/draw-cards.svg');  
 }
 
-.sync-button:active {
+.refill-button:active {
     background-color: var(--selection-color);
     transform: scale(0.9, 0.9);
 }
 
 .button-panel-button.lock-button {
-    -webkit-mask-image: url('./data/font-awesome/lock.svg');
-    mask-image: url('./data/font-awesome/lock.svg');
+    -webkit-mask-image: url('./data/lock.svg');
+    mask-image: url('./data/lock.svg');
 }
 
 .lock-button:active {
@@ -177,11 +178,28 @@ html, body {
 }
 
 .button-panel-button.lock-button-open {
-    -webkit-mask-image: url('./data/font-awesome/lock-open.svg');
-    mask-image: url('./data/font-awesome/lock-open.svg');
+    -webkit-mask-image: url('./data/unlock.svg');
+    mask-image: url('./data/unlock.svg');
 }
 
 .lock-button-open:active {
     background-color: var(--selection-color);
     transform: scale(0.9, 0.9);
 }
+
+.button-panel-button.play-button {
+    -webkit-mask-image: url('./data/play-cards.svg');
+    mask-image: url('./data/play-cards.svg');
+}
+
+.button-panel-button-disabled {
+    background-color: var(--disabled-color);
+    transform: scale(0.95, 0.95);
+    pointer-events: none;
+}
+
+.play-button:active {
+    background-color: var(--selection-color);
+    transform: scale(0.9, 0.9);
+}
+
