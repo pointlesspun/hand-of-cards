@@ -14,7 +14,7 @@ import { DEFAULT_DECK, pickRandomCards } from "./card-game/deck.js";
 import { PLATFORM_CONFIGURATIONS } from "./platform-configurations.js";
 import { ANIMATIONS } from "./animations.js";
 
-console.log("starting card component 0.42");
+console.log("starting card component 0.43");
 
 const element = document.querySelector('#card-container');
 const maxCards = element.attributes?.maxCards?.value ? parseInt(element.attributes.maxCards.value) : 7;

@@ -39,6 +39,8 @@ export class CardComponent extends React.Component {
         // transient properties
         this.swipeListener = (evt) => this.handleSwiped(evt);
         this.mouseListener = (evt) => this.handleMouseEvent(evt);
+        this.touchListener = (evt) => this.handleTouch(evt);
+        this.animationListener = (evt) => this.handleAnimationEnded(evt);
     }
     
     render() {
@@ -64,11 +66,7 @@ export class CardComponent extends React.Component {
             id: this.props.keyReference,
             className : this.createClassName(isActive),
             ref: this.ref,
-
-            onTouchStart : (evt) => this.handleTouch(evt),
-            onTouchEnd : (evt) => this.handleTouch(evt),
-            onAnimationEnd : (evt) => this.handleAnimationEnded(evt),
-    
+  
             style : {
                 width : this.state.mediaConfig.values.cardWidth + "px",
                 height : this.state.mediaConfig.values.cardHeight + "px",
@@ -104,15 +102,23 @@ export class CardComponent extends React.Component {
     // --- Event handlers ---------------------------------------------------------------------------------------------
     
     componentDidMount() {
+        const parameters =  { passive: false };
+        
         this.ref.current.addEventListener('swiped', this.swipeListener);
-        this.ref.current.addEventListener('mouseover', this.mouseListener);
-        this.ref.current.addEventListener('mouseup', this.mouseListener);
+        this.ref.current.addEventListener('mouseover', this.mouseListener, parameters );
+        this.ref.current.addEventListener('mouseup', this.mouseListener, parameters );
+        this.ref.current.addEventListener('touchstart', this.touchListener, parameters );
+        this.ref.current.addEventListener('touchend', this.touchListener, parameters );
+        this.ref.current.addEventListener('animationend', this.animationListener);
     }
 
     componentWillUnmount() {
         this.ref.current.removeEventListener('swiped', this.swipeListener);
         this.ref.current.removeEventListener('mouseover', this.mouseListener);
         this.ref.current.removeEventListener('mouseup', this.mouseListener);
+        this.ref.current.removeEventListener('touchstart', this.touchListener);
+        this.ref.current.removeEventListener('touchend', this.touchListener);
+        this.ref.current.removeEventListener('animationend', this.animationListener);
     }
 
     handleTouch(evt) {
@@ -127,6 +133,10 @@ export class CardComponent extends React.Component {
                 // tap happened
                 this.state.eventHandler(new CardEvent(this, CARD_EVENT_TYPES.TAP));
             }
+        }
+
+        if (evt.cancelable) {
+            evt.preventDefault();
         }
     }  
 
@@ -144,6 +154,8 @@ export class CardComponent extends React.Component {
         } else if (evt.type === 'mouseup') {
             this.state.eventHandler(new CardEvent(this, CARD_EVENT_TYPES.TAP));
         }
+
+        evt.preventDefault();
     }
 
     handleAnimationEnded(evt) {       
@@ -152,7 +164,9 @@ export class CardComponent extends React.Component {
             this.state.eventHandler(new CardEvent(this, CARD_EVENT_TYPES.ANIMATION, animationEvent));
         } 
 
-        this.setAnimation(null);
+        if (!this.state.isDeleted) {
+            this.setAnimation(null);
+        }
     }
     
     // --- State mutations  -------------------------------------------------------------------------------------------

@@ -263,7 +263,7 @@ export class HandComponent extends React.Component {
         this.handleAnimation(evt.parameters);
         break;
       case CARD_EVENT_TYPES.TAP:
-        this.handleTap(evt.card);
+        this.handleTap(evt);
         break;
       case CARD_EVENT_TYPES.SWIPE:
         this.handleSwipe(evt.parameters.detail.dir, evt.card.state.index);
@@ -276,13 +276,15 @@ export class HandComponent extends React.Component {
     }
   }
 
-  handleTap(source) {
+  handleTap(evt) {
     // don't interact when animating.
     if (!this.animationCount) {
-      if (source.state.index !== this.state.activeIndex) {
+      const card = evt.card;
+
+      if (card.state.index !== this.state.activeIndex) {
         // needs to be in this order
-        this.toggleSelected(source.state.index);
-        this.setActiveIndex(source.state.index);
+        this.toggleSelected(card.state.index);
+        this.setActiveIndex(card.state.index);
       } else {
         this.toggleActiveItemSelected();
       }
@@ -298,6 +300,8 @@ export class HandComponent extends React.Component {
       this.animationCount--;
 
       if (evt.animation.name === ANIMATIONS.playCard.name) {
+        // mark the card as deleted, we need to do this asap and not delay until removeSelectedItems
+        // otherwise one last frame of rendering may kick in and we end up with weird glitches
         evt.source.setDeleted();
       
         // no more outstanding animations ?
@@ -309,12 +313,7 @@ export class HandComponent extends React.Component {
   }
 
   setActiveIndex(idx) {
-    const newState = {
-      ...this.state,
-      activeIndex: Math.clamp(idx, 0, this.state.cards.length),
-    };
-
-    this.setState(newState);
+    this.setState({activeIndex: Math.clamp(idx, 0, this.state.cards.length)});
     this.forEachCard(card => card.setActiveIndex(idx));
   }
 
@@ -428,7 +427,7 @@ export class HandComponent extends React.Component {
 
       this.forEachCard( card => {
         card.setCenterIndex(newCenterCard);
-        card.setCardCount(cardDefinitions.length);
+        card.setCardCount(this.props.maxCards);
       });
 
       // create a new array of cards, consisting of old and new cards
