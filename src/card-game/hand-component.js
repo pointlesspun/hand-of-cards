@@ -67,7 +67,7 @@ export class HandComponent extends React.Component {
     // state properties
     const activeIndex = props.initialIndex ?? 0;
     const cardCount = props.hand ? props.hand.length : 0;
-    const centerCardIndex = props.isLocked ? Math.floor(cardCount / 2) : activeIndex;
+    const centerCardIndex = props.isLocked ? this.calculateCenterCard(cardCount) : activeIndex;
 
     this.state = {
       activeIndex,
@@ -76,9 +76,13 @@ export class HandComponent extends React.Component {
       mediaConfig: null,
       isLocked: props.isLocked,      
       cardKeyCounter: cardCount,
-      cards: props.hand ? props.hand.map((definition, idx) => new CardReference(React.createRef(), `${CARD_KEY_PREFIX}-${idx}`, definition )) : undefined
+      cards: props.hand ? props.hand.map(
+        (definition, idx) => new CardReference(React.createRef(), `${CARD_KEY_PREFIX}-${idx}`, definition )) : undefined
     };
   }
+
+  // --- React overrides --------------------------------------------------------------------------------------------
+
   /**
    * React-render component
    * @returns a react.element
@@ -140,6 +144,141 @@ export class HandComponent extends React.Component {
     window.removeEventListener('resize', this.resizeHandler);
   }
 
+  // --- Sub elements -----------------------------------------------------------------------------------------------
+
+  /**
+   * 
+   * @param {PlatformConfiguration} config used to layout the cards appropriate for the current platform/medium (laptop/desktop/tablet/phone...)
+   * @returns 
+   */
+   renderCarousel(config) {
+    
+    const carouselProperties = {
+        key: "main-carousel",
+        className : "carousel",
+        style: {
+          // take the height from the platform specific settings
+          height: `${config.values.innerHeight*100}%` 
+        }
+    };
+
+    const innerId = `${carouselProperties.key}-inner`;
+    const childProperties = {
+        className:"inner",
+        key: innerId,
+        id: innerId,
+    };
+  
+    const cardElements = this.state.cards.map( (cardReference, index) => 
+      React.createElement(CardComponent, {
+        ref: cardReference.ref,
+        key: cardReference.key, 
+        keyReference: cardReference.key,
+        definition: cardReference.definition, 
+        index,      
+        animation : cardReference.animation,
+        eventHandler: this.cardEventHandler,
+        centerIndex: this.state.centerCardIndex, 
+        activeIndex: this.state.activeIndex,
+        cardCount: this.state.cards.length,
+        mediaConfig: this.state.mediaConfig
+      }));
+
+    const innerChildren = React.createElement(ELEMENT_TYPES.DIV, childProperties, cardElements);
+
+    return React.createElement(ELEMENT_TYPES.DIV, carouselProperties, innerChildren);
+}
+
+renderControlBar(config) { 
+  const properties = {
+    key: "controlbar",
+    style: {
+      width : "100%",
+      height: `${(1.0 - config.values.innerHeight) * 100}%`,
+      overflow: "hidden"
+    }
+  };
+
+  const statusText = `${config.name} ${config.screenSize.width}x${config.screenSize.height}`;
+
+  return React.createElement(ELEMENT_TYPES.DIV, properties, [
+    this.renderIndicators(this.state.cards),
+    this.renderButtons(),
+    React.createElement(ELEMENT_TYPES.DIV, {key: "device-description", className: "platform-context"}, statusText)
+  ]);
+}
+
+ /**
+   * 
+   * @private
+   * @param {*} keyPrefix 
+   * @param {*} callback 
+   * @param {*} activeIndex 
+   * @param {*} cards 
+   * @returns 
+   */
+  renderIndicatorItems = (callback, activeIndex, cards) =>
+    cards.map((card, index) =>     
+        React.createElement(ELEMENT_TYPES.DIV, { 
+          key: `indicator-${index}`,
+          className : `indicator ${index === activeIndex ? "indicator-active" : ""} ${card.ref.current?.state.isSelected ? "indicator-selected" : ""}`,
+          onClick : () => callback(index)
+        })
+    );
+
+    /**
+     * @private
+     * @returns 
+     */
+  renderIndicators(cards) {
+    const properties = {
+      key: "indicators",
+      className: "indicators",
+    };
+
+    const children = this.renderIndicatorItems(
+      (idx) => this.setActiveIndex(idx),
+      this.state.activeIndex, 
+      cards
+    );
+
+    return React.createElement(ELEMENT_TYPES.DIV, properties, children);
+  }
+
+  renderButtons() {
+
+    const refillButtonEnabled = this.ref.current && this.state.cards.length < this.props.maxCards;
+
+    const refreshButton = React.createElement(ELEMENT_TYPES.DIV, {
+      key: "refresh-button",
+      className: `button-panel-button refill-button ${refillButtonEnabled ? ""  : "button-panel-button-disabled"}`,
+      onClick: () => this.refill()
+    });
+
+    const lockButton = React.createElement(ELEMENT_TYPES.DIV, {
+      key: "lock-button",
+      className: `button-panel-button ${this.state.isLocked ? "lock-button" : "lock-button-open"}`,
+      onClick: () => {
+        this.toggleLock();
+      }
+    });
+
+    const playButtonEnabled = this.ref.current && this.countSelectedCards() > 0;
+
+    const playButton = React.createElement(ELEMENT_TYPES.DIV, {
+      key: "play-button",
+      className: `button-panel-button play-button ${playButtonEnabled ? ""  : "button-panel-button-disabled"}`,
+      onClick: () => this.playSelectedCards()
+    });
+
+    return React.createElement(ELEMENT_TYPES.DIV, {
+      key: "button-panel",
+      className: "button-panel"
+    }, [playButton, refreshButton, lockButton]);
+  }
+
+  // --- Event handlers ---------------------------------------------------------------------------------------------
+
   /**
    * Deal with swipes generated with a touch device
    * @param {*} direction 
@@ -150,18 +289,7 @@ export class HandComponent extends React.Component {
     if (this.animationCount === 0) {
       switch (direction) {
         case SWIPE_DIRECTIONS.UP:
-            // are there any cards in hand ?
-            if (this.state.cards.length > 0) {             
-              // which card was swiped
-              if (index !== undefined) {
-                //If the card was already selected, and the user swipes up again play the cards
-                if (this.getCard(index).state.isSelected) {
-                  this.playSelectedCards();
-                } else {
-                  this.toggleSelected(index);
-                }
-              }
-            }
+            this.handleSwipeUp(index);
             break;
 
         case SWIPE_DIRECTIONS.RIGHT:
@@ -169,18 +297,36 @@ export class HandComponent extends React.Component {
           break;
     
         case SWIPE_DIRECTIONS.DOWN:
-          if (this.state.cards.length > 0) {             
-            // which card was swiped
-            if (index !== undefined) {
-              this.selectItem(index, false);
-            }
-          }
+          this.handleSwipeDown(index);
           break;
-        
 
         case SWIPE_DIRECTIONS.LEFT:
           this.nextItem();
           break;
+      }
+    }
+  }
+
+  handleSwipeUp(index) {
+    // are there any cards in hand ?
+    if (this.state.cards.length > 0) {             
+      // which card was swiped
+      if (index !== undefined) {
+        //If the card was already selected, and the user swipes up again play the cards
+        if (this.getCard(index).state.isSelected) {
+          this.playSelectedCards();
+        } else {
+          this.toggleSelected(index);
+        }
+      }
+    }
+  }
+
+  handleSwipeDown(index) {
+    if (this.state.cards.length > 0) {             
+      // which card was swiped
+      if (index !== undefined) {
+        this.selectItem(index, false);
       }
     }
   }
@@ -195,57 +341,73 @@ export class HandComponent extends React.Component {
     if (evt.type === 'keyup') {
       // wait for the animations to finish
       if (this.animationCount === 0) {
-        switch (keyCode) {
-          case KeyCode.KEY_LEFT:
-            this.previousItem();
-            evt.preventDefault();
-            break;
-          case KeyCode.KEY_RIGHT:
-            this.nextItem();
-            evt.preventDefault();
-            break;
-          case KeyCode.KEY_UP:
-            
-          if (this.state.cards.length > 0 && !this.getActiveCard().state.isSelected) {
-              this.toggleActiveItemSelected();
-            }
-
-            evt.preventDefault();
-            break;
-          case KeyCode.KEY_DOWN:
-            if (this.getActiveCard().state.isSelected) {
-              this.selectActiveItem(false);
-            }
-            
-            evt.preventDefault();
-            break;  
-          case KeyCode.KEY_DELETE:
-            this.removeSelectedItems();
-            evt.preventDefault();
-            break;
-          case KeyCode.KEY_RETURN:
-            this.refill();
-            evt.preventDefault();
-            break;
-          case KeyCode.KEY_SPACE:
-            this.playSelectedCards();
-            evt.preventDefault();
-            break;
+        if (this.handleKeyUp(keyCode)) {
+          evt.preventDefault();
         }
       } 
     } else if (evt.type === 'keydown') {
-      switch (keyCode) {
-        case KeyCode.KEY_LEFT:
-        case KeyCode.KEY_RIGHT:
-        case KeyCode.KEY_UP:
-        case KeyCode.KEY_DOWN:
-        case KeyCode.KEY_DELETE:
-        case KeyCode.KEY_RETURN:
-        case KeyCode.KEY_SPACE:
+        if (this.handleKeydown(keyCode)) {
           evt.preventDefault();
-          break;
-      }
+        }
     }
+  }
+
+  handleKeyUp(keyCode) {
+    switch (keyCode) {
+      case KeyCode.KEY_LEFT:
+        this.previousItem();
+        break;
+
+      case KeyCode.KEY_RIGHT:
+        this.nextItem();
+        break;
+
+      case KeyCode.KEY_UP:
+        if (this.state.cards.length > 0 && !this.getActiveCard().state.isSelected) {
+          this.toggleActiveItemSelected();
+        }
+        break;
+
+      case KeyCode.KEY_DOWN:
+        if (this.getActiveCard().state.isSelected) {
+          this.selectActiveItem(false);
+        }
+        break;  
+
+      case KeyCode.KEY_DELETE:
+        this.removeSelectedItems();
+        break;
+
+      case KeyCode.KEY_RETURN:
+        this.refill();
+        break;
+
+      case KeyCode.KEY_SPACE:
+        this.playSelectedCards();
+        break;        
+      
+        default:
+          // not handled
+          return false;
+    }
+
+    // code was handled
+    return true;
+  }
+
+  handleKeydown(keyCode) {
+    switch (keyCode) {
+      case KeyCode.KEY_LEFT:
+      case KeyCode.KEY_RIGHT:
+      case KeyCode.KEY_UP:
+      case KeyCode.KEY_DOWN:
+      case KeyCode.KEY_DELETE:
+      case KeyCode.KEY_RETURN:
+      case KeyCode.KEY_SPACE:
+        return true;
+    }
+
+    return false;
   }
 
   /**
@@ -312,6 +474,8 @@ export class HandComponent extends React.Component {
     }
   }
 
+  // --- State mutations & queries ----------------------------------------------------------------------------------
+
   setActiveIndex(idx) {
     this.setState({activeIndex: Math.clamp(idx, 0, this.state.cards.length)});
     this.forEachCard(card => card.setActiveIndex(idx));
@@ -326,14 +490,10 @@ export class HandComponent extends React.Component {
     this.forEachCard(card => card.setActiveAndCenterIndices(this.state.activeIndex, this.state.centerCardIndex));
   }
 
-  previousItem() {
-    this.moveActiveItem(-1);
-  }
-
-  nextItem() {
-    this.moveActiveItem(1);
-  }
-
+  previousItem = () => this.moveActiveItem(-1);
+  
+  nextItem = () =>  this.moveActiveItem(1);
+  
   selectActiveItem(isItemSelected) {
     this.selectItem(this.state.activeIndex, isItemSelected);
   }
@@ -365,7 +525,7 @@ export class HandComponent extends React.Component {
     if (this.state.cards.length > 0) {
       const cards = this.state.cards.filter(card => !card.ref.current.state.isSelected);
       const activeIndex = Math.min(Math.max(0, cards.length-1), this.state.activeIndex);
-      const newCenterCardIndex = this.state.isLocked ? Math.floor(cards.length / 2) : activeIndex;
+      const newCenterCardIndex = this.state.isLocked ? this.calculateCenterCard(cards.length) : activeIndex;
 
       cards.forEach((card, idx) => {
         card.ref.current.setIndex(idx);
@@ -384,14 +544,14 @@ export class HandComponent extends React.Component {
     if (this.state.cards.length > 0) {
       // if set to true the remaining cards will fold back now. If false, they will
       // fold after the animation is complete and the cards are deleted.
-      const immediatelyFoldCards = true;
+      const immediatelyFoldCards = false;
       
       this.animationCount = 0;
 
       let idx = 0;
       const cardsLeft = this.state.cards.length - this.countSelectedCards();
       const activeIndex = Math.min(Math.max(0, cardsLeft-1), this.state.activeIndex);
-      const centerCardIndex = this.state.isLocked ? Math.floor(cardsLeft / 2) : activeIndex;
+      const centerCardIndex = this.state.isLocked ? this.calculateCenterCard(cardsLeft) : activeIndex;
 
       this.forEachCard(card => {
         if (card.state.isSelected) {
@@ -423,7 +583,7 @@ export class HandComponent extends React.Component {
       
       const newCardCount = this.props.maxCards - this.state.cards.length;
       const cardDefinitions = pickRandomCards(this.props.deck, newCardCount);
-      const newCenterCard = this.state.isLocked ? Math.floor(this.props.maxCards / 2) : this.state.centerCardIndex;
+      const newCenterCard = this.state.isLocked ? this.calculateCenterCard(this.props.maxCards) : this.state.centerCardIndex;
 
       this.forEachCard( card => {
         card.setCenterIndex(newCenterCard);
@@ -484,21 +644,21 @@ export class HandComponent extends React.Component {
     this.forEachCard( card => card.setCenterIndex(newCenterIndex));
   }
 
-  getCard(idx) {
-    return this.state.cards[idx].ref.current;
-  }
+  getCard = (idx) => this.state.cards[idx].ref.current;
+    
+  getActiveCard = () => this.state.cards[this.state.activeIndex].ref.current;
   
-  getActiveCard() {
-    return this.state.cards[this.state.activeIndex].ref.current;
-  }
-
+  /**
+   * Utility to iterate over the state's cards without having to deref the cards 
+   * @param {*} f a function of the form (card, index) where card is the card component
+   */
   forEachCard( f ) {
     this.state.cards.forEach( (card, index) => f(card.ref.current, index));
   }
 
   /**
    * Count the number of cards that have been selected.
-   * @returns number
+   * @returns {number} number of cards selected
    */
   countSelectedCards() {
     let result = 0;
@@ -508,137 +668,15 @@ export class HandComponent extends React.Component {
       }
     }
     return result;
-  }
+  } 
 
   /**
-   * 
-   * @param {PlatformConfiguration} config used to layout the cards appropriate for the current platform/medium (laptop/desktop/tablet/phone...)
-   * @returns 
+   * Calculate the center in locked mode
+   * @param {number} cardCount 
+   * @returns {number} the center of the cards
    */
-  renderCarousel(config) {
-    
-    const carouselProperties = {
-        key: "main-carousel",
-        className : "carousel",
-        style: {
-          // take the height from the platform specific settings
-          height: `${config.values.innerHeight*100}%` 
-        }
-    };
-
-    const innerId = `${carouselProperties.key}-inner`;
-    const childProperties = {
-        className:"inner",
-        key: innerId,
-        id: innerId,
-    };
-  
-    const cardElements = this.state.cards.map( (cardReference, index) => 
-      React.createElement(CardComponent, {
-        ref: cardReference.ref,
-        key: cardReference.key, 
-        keyReference: cardReference.key,
-        definition: cardReference.definition, 
-        index,      
-        animation : cardReference.animation,
-        eventHandler: this.cardEventHandler,
-        centerIndex: this.state.centerCardIndex, 
-        activeIndex: this.state.activeIndex,
-        cardCount: this.state.cards.length,
-        mediaConfig: this.state.mediaConfig
-      }));
-
-    const innerChildren = React.createElement(ELEMENT_TYPES.DIV, childProperties, cardElements);
-
-    return React.createElement(ELEMENT_TYPES.DIV, carouselProperties, innerChildren);
-}
-
-renderControlBar(config) { 
-  const properties = {
-    key: "controlbar",
-    style: {
-      width : "100%",
-      height: `${(1.0 - config.values.innerHeight) * 100}%`,
-      overflow: "hidden"
-    }
-  };
-
-  const statusText = `${config.name} ${config.screenSize.width}x${config.screenSize.height}`;
-
-  return React.createElement(ELEMENT_TYPES.DIV, properties, [
-    this.createIndicators(this.state.cards),
-    this.createButtons(),
-    React.createElement(ELEMENT_TYPES.DIV, {key: "device-description", className: "platform-context"}, statusText)
-  ]);
-}
-
- /**
-   * 
-   * @private
-   * @param {*} keyPrefix 
-   * @param {*} callback 
-   * @param {*} activeIndex 
-   * @param {*} cards 
-   * @returns 
-   */
-  createIndicatorItems = (callback, activeIndex, cards) =>
-    cards.map((card, index) =>     
-        React.createElement(ELEMENT_TYPES.DIV, { 
-          key: `indicator-${index}`,
-          className : `indicator ${index === activeIndex ? "indicator-active" : ""} ${card.ref.current?.state.isSelected ? "indicator-selected" : ""}`,
-          onClick : () => callback(index)
-        })
-    );
-
-    /**
-     * @private
-     * @returns 
-     */
-  createIndicators(cards) {
-    const properties = {
-      key: "indicators",
-      className: "indicators",
-    };
-
-    const children = this.createIndicatorItems(
-      (idx) => this.setActiveIndex(idx),
-      this.state.activeIndex, 
-      cards
-    );
-
-    return React.createElement(ELEMENT_TYPES.DIV, properties, children);
-  }
-
-  createButtons() {
-
-    const refillButtonEnabled = this.ref.current && this.state.cards.length < this.props.maxCards;
-
-    const refreshButton = React.createElement(ELEMENT_TYPES.DIV, {
-      key: "refresh-button",
-      className: `button-panel-button refill-button ${refillButtonEnabled ? ""  : "button-panel-button-disabled"}`,
-      onClick: () => this.refill()
-    });
-
-    const lockButton = React.createElement(ELEMENT_TYPES.DIV, {
-      key: "lock-button",
-      className: `button-panel-button ${this.state.isLocked ? "lock-button" : "lock-button-open"}`,
-      onClick: () => {
-        this.toggleLock();
-      }
-    });
-
-    const playButtonEnabled = this.ref.current && this.countSelectedCards() > 0;
-
-    const playButton = React.createElement(ELEMENT_TYPES.DIV, {
-      key: "play-button",
-      className: `button-panel-button play-button ${playButtonEnabled ? ""  : "button-panel-button-disabled"}`,
-      onClick: () => this.playSelectedCards()
-    });
-
-    return React.createElement(ELEMENT_TYPES.DIV, {
-      key: "button-panel",
-      className: "button-panel"
-    }, [playButton, refreshButton, lockButton]);
-  }
-
+  calculateCenterCard = (cardCount) => 
+      cardCount % 2 == 0 
+        ? (cardCount / 2) - 0.5
+        : Math.floor(cardCount / 2);
 }

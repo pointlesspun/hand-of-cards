@@ -43,6 +43,8 @@ export class CardComponent extends React.Component {
         this.animationListener = (evt) => this.handleAnimationEnded(evt);
     }
     
+    // --- React overrides --------------------------------------------------------------------------------------------
+
     render() {
         // no configuration known yet
         if (!this.state.mediaConfig) {
@@ -86,7 +88,7 @@ export class CardComponent extends React.Component {
             }
         }
         
-        return React.createElement(ELEMENT_TYPES.DIV, properties, this.createOverlay(isActive));
+        return React.createElement(ELEMENT_TYPES.DIV, properties, this.renderOverlay(isActive));
     }
 
     // --- Sub elements -----------------------------------------------------------------------------------------------
@@ -95,7 +97,7 @@ export class CardComponent extends React.Component {
      * color overlay giving the card some shadow depending on its state
      * @private
      */ 
-    createOverlay(isActive) {
+    renderOverlay(isActive) {
         return React.createElement(ELEMENT_TYPES.DIV, { className : `card-overlay${isActive ? "-active" : ""}`});
     } 
 
@@ -169,7 +171,7 @@ export class CardComponent extends React.Component {
         }
     }
     
-    // --- State mutations  -------------------------------------------------------------------------------------------
+    // --- State mutations & queries ----------------------------------------------------------------------------------
     
     shouldComponentUpdate( nextProps, nextState) {
         // do not re-render if this card is flagged for deletion. If this is omitted we end up with the last frame

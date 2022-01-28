@@ -62,7 +62,6 @@ This project was created while learning React and is currently very much under d
 * Adjust animations on mobile device
 * // todo: fix this dependency 
     import { ANIMATIONS } from "../animations.js";
-* fix centering in locked mode - it's off center
 * fix wobble in the animation when browsing and selecting at the same time
 * add option to fold after remove / fold immediately 
 
