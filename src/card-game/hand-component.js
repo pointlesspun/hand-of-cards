@@ -37,6 +37,15 @@ export const MAX_SELECTION_REACHED_POLICY = {
   CYCLE_OLDEST: 'cycle-oldest'
 };
 
+class CardReference {
+  constructor(ref, key, definition, animation = null) {
+    this.ref = ref;
+    this.key = key;
+    this.definition = definition;
+    this.animation = animation;
+  }
+}
+
 export class HandComponent extends React.Component {
   /**
    *
@@ -47,32 +56,27 @@ export class HandComponent extends React.Component {
     super(props);
 
     // event handlers
-    //this.swipeHandler = (evt) => this.handleSwipe(evt.detail.dir);
     this.keyHandler = (evt) => this.handleKeyEvent(evt);
     this.resizeHandler = (evt) => this.handleResize();
     this.cardEventHandler = (evt) => this.handleCardEvent(evt);
     
     // transient properties
     this.ref = React.createRef();
-    this.isRefInitialized = false;
     this.animationCount = 0;
-    this.mediaConfig = null;
 
-    this.cardContext = {
-      getActiveIndex: () => this.state.activeIndex,
-      getCardCount: () => this.state.cards.length,
-      getCenterCardIndex: () => this.state.centerCardIndex,
-      getMediaConfig: () => this.mediaConfig
-    }
+    // state properties
+    const activeIndex = props.initialIndex ?? 0;
+    const cardCount = props.hand ? props.hand.length : 0;
+    const centerCardIndex = props.isLocked ? Math.floor(cardCount / 2) : activeIndex;
 
     this.state = {
-      activeIndex: props.initialIndex || 0,
-      isLocked: props.isLocked,
-      centerCardIndex: props.isLocked ? Math.floor(this.state.cards.length / 2) : props.initialIndex,
-      cardKeyCounter: props.hand ? props.hand.length : 0,
-      cards: props.hand ? props.hand.map( (definition, idx) => 
-        this.createCardComponent(React.createRef(), CARD_KEY_PREFIX + idx, idx, definition)
-      ) : []
+      activeIndex,
+      centerCardIndex,
+      // is unknown until we have a ref
+      mediaConfig: null,
+      isLocked: props.isLocked,      
+      cardKeyCounter: cardCount,
+      cards: props.hand ? props.hand.map((definition, idx) => new CardReference(React.createRef(), `${CARD_KEY_PREFIX}-${idx}`, definition )) : undefined
     };
   }
   /**
@@ -80,7 +84,6 @@ export class HandComponent extends React.Component {
    * @returns a react.element
    */
   render() {
-
     const properties = {
       className: "hand",
       ref: this.ref,
@@ -93,14 +96,13 @@ export class HandComponent extends React.Component {
       return React.createElement(ELEMENT_TYPES.DIV, properties, "no items to display in the carousel...");
     }
     
-    // Need to know the width of the component to do a proper layout, so until we have a reference,
+    // Need to know the height of the component to do a proper layout, so until we have a reference,
     // we skip this render.
-    if (this.ref.current) {
-      this.mediaConfig = this.props.getLayoutConfiguration(this.ref);
-      
+    if (this.ref.current) {     
+
       const children = [
-        this.createCarousel(this.mediaConfig),
-        this.createControlBar(this.mediaConfig),        
+        this.renderCarousel(this.state.mediaConfig),
+        this.renderControlBar(this.state.mediaConfig),        
       ];
 
       return React.createElement(ELEMENT_TYPES.DIV, properties, children);
@@ -124,12 +126,8 @@ export class HandComponent extends React.Component {
     window.addEventListener('keydown', this.keyHandler, keyhandlerOptions);
     window.addEventListener('resize', this.resizeHandler);
 
-    // have we got the initial reference ?
-    if (!this.isRefInitialized) {
-      this.isRefInitialized = true;
-      // now we have a dom element, we can render the component
-      this.forceUpdate();
-    }
+    // after the initial mount we've got a ref and media config 
+    this.handleResize();
   }
 
   /**
@@ -208,7 +206,7 @@ export class HandComponent extends React.Component {
             break;
           case KeyCode.KEY_UP:
             
-          if (!this.getActiveCard().state.isSelected) {
+          if (this.state.cards.length > 0 && !this.getActiveCard().state.isSelected) {
               this.toggleActiveItemSelected();
             }
 
@@ -254,8 +252,9 @@ export class HandComponent extends React.Component {
    * Callback from when the window resizes and we have to re render
    */
   handleResize() {
-    this.forceUpdate();
-    this.updateCardContext();
+    const mediaConfig = this.props.getLayoutConfiguration(this.ref);
+    this.setState({mediaConfig});
+    this.forEachCard(card => card?.setMediaConfig(mediaConfig));
   }
 
   handleCardEvent(evt) {
@@ -289,7 +288,6 @@ export class HandComponent extends React.Component {
       }
     }
   }
-
   
   /**
    * Handle animation start / end events
@@ -299,16 +297,13 @@ export class HandComponent extends React.Component {
     if (evt.type === ANIMATION_EVENT_TYPE.END) {
       this.animationCount--;
 
-      // no more outstanding animations ?
-      if (this.animationCount === 0) {
-        if (evt.animation.name === ANIMATIONS.playCard.name) {
+      if (evt.animation.name === ANIMATIONS.playCard.name) {
+        evt.source.setDeleted();
+      
+        // no more outstanding animations ?
+        if (this.animationCount === 0) {
           this.removeSelectedItems();
-        } else if (evt.animation.name === ANIMATIONS.drawCard.name) {          
-          this.updateCardContext();
-        }
-
-        // force update to reset the animation transforms
-        this.forceUpdate();
+        } 
       }
     }
   }
@@ -320,18 +315,16 @@ export class HandComponent extends React.Component {
     };
 
     this.setState(newState);
-    this.updateCardContext();
+    this.forEachCard(card => card.setActiveIndex(idx));
   }
 
   moveActiveItem(delta) {
-    const newState = {
-      ...this.state,
+    this.setState({
       activeIndex: Math.clamp(this.state.activeIndex + delta, 0, this.state.cards.length),
-      centerCardIndex: this.state.isLocked ? this.state.centerCardIndex : Math.clamp(this.state.centerCardIndex + delta, 0, this.state.cards.length),
-    };
+      centerCardIndex: this.state.isLocked ? this.state.centerCardIndex : Math.clamp(this.state.centerCardIndex + delta, 0, this.state.cards.length)
+    });
 
-    this.setState(newState);
-    this.updateCardContext();
+    this.forEachCard(card => card.setActiveAndCenterIndices(this.state.activeIndex, this.state.centerCardIndex));
   }
 
   previousItem() {
@@ -354,6 +347,7 @@ export class HandComponent extends React.Component {
       // does the state change ?
       if (currentCard.state.isSelected != isSelected) {
         currentCard.setSelected(isSelected);
+        // the indicators may need to be redrawn as well as the buttons
         this.forceUpdate();
       }
     }
@@ -361,8 +355,7 @@ export class HandComponent extends React.Component {
 
   canSelectMoreCards() {
     // any cards to select ?
-    return this.state.cards.length > 0
-      
+    return this.state.cards.length > 0      
       && ( //if negative there is no limit  
            this.props.maxSelectedCards < 0 
           // can still select more cards ?
@@ -373,13 +366,16 @@ export class HandComponent extends React.Component {
     if (this.state.cards.length > 0) {
       const cards = this.state.cards.filter(card => !card.ref.current.state.isSelected);
       const activeIndex = Math.min(Math.max(0, cards.length-1), this.state.activeIndex);
+      const newCenterCardIndex = this.state.isLocked ? Math.floor(cards.length / 2) : activeIndex;
 
-      cards.forEach((card, idx) => card.ref.current.setIndex(idx));   
+      cards.forEach((card, idx) => {
+        card.ref.current.setIndex(idx);
+        card.ref.current.setActiveAndCenterIndices(activeIndex, newCenterCardIndex);
+      });   
 
       this.setState({
-        ...this.state,
         activeIndex,
-        centerCardIndex: this.state.isLocked ? Math.floor(cards.length / 2) : activeIndex,
+        centerCardIndex: newCenterCardIndex,
         cards
       });           
     }
@@ -387,15 +383,36 @@ export class HandComponent extends React.Component {
 
   playSelectedCards() {  
     if (this.state.cards.length > 0) {
+      // if set to true the remaining cards will fold back now. If false, they will
+      // fold after the animation is complete and the cards are deleted.
+      const immediatelyFoldCards = true;
+      
       this.animationCount = 0;
 
-      this.state.cards.forEach(cardRef => {
-        const card = cardRef.ref.current;
+      let idx = 0;
+      const cardsLeft = this.state.cards.length - this.countSelectedCards();
+      const activeIndex = Math.min(Math.max(0, cardsLeft-1), this.state.activeIndex);
+      const centerCardIndex = this.state.isLocked ? Math.floor(cardsLeft / 2) : activeIndex;
+
+      this.forEachCard(card => {
         if (card.state.isSelected) {
           this.animationCount++;
           card.setAnimation(ANIMATIONS.playCard);
-        } 
+        } else {
+          if (immediatelyFoldCards) {
+            card.setIndex(idx);
+            card.setActiveAndCenterIndices(activeIndex, centerCardIndex);
+          }
+          idx++;
+        }
       });
+
+      if (immediatelyFoldCards) {
+        this.setState({
+          activeIndex,
+          centerCardIndex
+        }); 
+      }    
     }
   }
 
@@ -407,40 +424,31 @@ export class HandComponent extends React.Component {
       
       const newCardCount = this.props.maxCards - this.state.cards.length;
       const cardDefinitions = pickRandomCards(this.props.deck, newCardCount);
-      const oldCards = this.state.cards;
+      const newCenterCard = this.state.isLocked ? Math.floor(this.props.maxCards / 2) : this.state.centerCardIndex;
+
+      this.forEachCard( card => {
+        card.setCenterIndex(newCenterCard);
+        card.setCardCount(cardDefinitions.length);
+      });
 
       // create a new array of cards, consisting of old and new cards
       const cards = [
         ...this.state.cards, 
-        ...cardDefinitions.map( (definition, idx) => {
-          const updatedCard = this.createCardComponent(
+        ...cardDefinitions.map( (definition, idx) => 
+          new CardReference( 
             React.createRef(), 
-            CARD_KEY_PREFIX + (idx + this.state.cardKeyCounter), 
-            idx + this.state.cards.length, 
-            definition, 
-            false, 
-            ANIMATIONS.drawCard
-          );
-          this.animationCount++;
-          return updatedCard;
-        })];
+            `${CARD_KEY_PREFIX}-${this.state.cardKeyCounter + idx}`, 
+            definition,
+            ANIMATIONS.drawCard)
+      )];
+
+      this.animationCount = cardDefinitions.length;
       
-      // at this point the new cards will be re-rendered and the state will
-      // be updated. Not sure why the updating of the state is not delayed unlike
-      // in other situations. I'm sure this is due to my lack
-      // of knowledge of React but I feel the rules around re-rendering
-      // components are inconsistent.
       this.setState({
-        ...this.state,
         cardKeyCounter: this.state.cardKeyCounter + newCardCount,
-        centerCardIndex: this.state.isLocked ? Math.floor(cards.length / 2) : this.state.centerCardIndex,
+        centerCardIndex: newCenterCard,
         cards
       });
-
-
-      // only update the old cards otherwise the rerender will overwrite the current animation 
-      // of the new cards and the card will float mid air.
-      this.updateCardContext(oldCards);
     }
   }
 
@@ -456,7 +464,7 @@ export class HandComponent extends React.Component {
         // can we deselect the oldest ?
       } else if ( this.props.maxCardsReachedPolicy === MAX_SELECTION_REACHED_POLICY.CYCLE_OLDEST) {
         const firstSelectedCard = this.state.cards.filter(card => card.ref.current.state.isSelected).reduce( 
-            (card, prev) => prev.ref.current.state.timeSelected < card.ref.current.state.timeSelected ? prev : card);
+            (card, prev) => prev.ref.current.state.lastUpdate < card.ref.current.state.lastUpdate ? prev : card);
          
         // deselect the oldest/first selected card
         this.selectItem(firstSelectedCard.ref.current.state.index, false);
@@ -468,13 +476,13 @@ export class HandComponent extends React.Component {
   }
 
   toggleLock() {   
+    const newCenterIndex = !this.state.isLocked ? Math.floor(this.state.cards.length / 2) : this.state.activeIndex;
     this.setState({
-      ...this.state,
       isLocked: !this.state.isLocked,
-      centerCardIndex: !this.state.isLocked ? Math.floor(this.state.cards.length / 2) : this.state.activeIndex,
+      centerCardIndex: newCenterIndex,
     });
 
-    this.updateCardContext();
+    this.forEachCard( card => card.setCenterIndex(newCenterIndex));
   }
 
   getCard(idx) {
@@ -483,6 +491,10 @@ export class HandComponent extends React.Component {
   
   getActiveCard() {
     return this.state.cards[this.state.activeIndex].ref.current;
+  }
+
+  forEachCard( f ) {
+    this.state.cards.forEach( (card, index) => f(card.ref.current, index));
   }
 
   /**
@@ -500,22 +512,11 @@ export class HandComponent extends React.Component {
   }
 
   /**
-   * Soft forceUpdate on the cards
-   */
-  updateCardContext(cards) {
-    if (cards) {
-        cards.forEach(card => card.ref.current.updateContext(this.cardContext));
-    } else {
-      this.state.cards.forEach(card => card.ref.current.updateContext(this.cardContext));
-    }
-  }
-
-  /**
    * 
    * @param {PlatformConfiguration} config used to layout the cards appropriate for the current platform/medium (laptop/desktop/tablet/phone...)
    * @returns 
    */
-  createCarousel(config) {
+  renderCarousel(config) {
     
     const carouselProperties = {
         key: "main-carousel",
@@ -532,28 +533,28 @@ export class HandComponent extends React.Component {
         key: innerId,
         id: innerId,
     };
-    
-    const innerChildren = React.createElement(ELEMENT_TYPES.DIV, childProperties, this.state.cards);
+  
+    const cardElements = this.state.cards.map( (cardReference, index) => 
+      React.createElement(CardComponent, {
+        ref: cardReference.ref,
+        key: cardReference.key, 
+        keyReference: cardReference.key,
+        definition: cardReference.definition, 
+        index,      
+        animation : cardReference.animation,
+        eventHandler: this.cardEventHandler,
+        centerIndex: this.state.centerCardIndex, 
+        activeIndex: this.state.activeIndex,
+        cardCount: this.state.cards.length,
+        mediaConfig: this.state.mediaConfig
+      }));
+
+    const innerChildren = React.createElement(ELEMENT_TYPES.DIV, childProperties, cardElements);
 
     return React.createElement(ELEMENT_TYPES.DIV, carouselProperties, innerChildren);
 }
 
-  
-createCardComponent = (ref, key, index, definition, isSelected = false, animation = null) => 
-  React.createElement(CardComponent, {
-    ref,
-    key, 
-    keyReference: key,
-    definition, 
-    index, 
-    isSelected, 
-    animation,
-    eventHandler: this.cardEventHandler,
-    context: this.cardContext,
-    mediaConfig: this.props.config
-  });
-
-createControlBar(config) { 
+renderControlBar(config) { 
   const properties = {
     key: "controlbar",
     style: {

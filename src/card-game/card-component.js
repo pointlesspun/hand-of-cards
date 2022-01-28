@@ -25,118 +25,84 @@ export class CardComponent extends React.Component {
     
         this.state = {
           index: props.index,
-          isSelected: props.isSelected,
-          timeSelected: Date.now(),
-          context: this.props.context,
-          eventHandler: this.props.eventHandler
+          activeIndex: props.activeIndex,
+          cardCount: props.cardCount,
+          centerIndex: props.centerIndex,
+          isSelected: props.isSelected ?? false,
+          lastUpdate: Date.now(),
+          mediaConfig: props.mediaConfig,
+          eventHandler: props.eventHandler,
+          animation: props.animation,
+          isDeleted: false
         };       
 
         // transient properties
-        this.animation = props.animation;
-        this.activeAnimation = null;
-        this.swipeListener = (evt) => {
-            if (this.state.eventHandler) {
-                this.state.eventHandler(new CardEvent(this, CARD_EVENT_TYPES.SWIPE, evt));
-            }
-        };
-        this.mouseListener = (evt) => {
-            if (evt.type === 'mouseover') {
-                if (this.state.eventHandler) {
-                    this.state.eventHandler(new CardEvent(this, CARD_EVENT_TYPES.FOCUS));
-                }
-            } else if (evt.type === 'mouseup') {
-                this.state.eventHandler(new CardEvent(this, CARD_EVENT_TYPES.TAP));
-            }
-        };
+        this.swipeListener = (evt) => this.handleSwiped(evt);
+        this.mouseListener = (evt) => this.handleMouseEvent(evt);
     }
-
-    updateContext(context) {
-        this.setState({
-            ...this.state,
-            context
-        });
-    }
-
-    setSelected(isSelected) {
-        this.setState({
-            ...this.state,
-            timeSelected: Date.now(),
-            isSelected
-        });
-    }
-
-    setIndex(index) {
-        this.setState({
-            ...this.state,
-            index
-        });
-    }
-
+    
     render() {
+        // no configuration known yet
+        if (!this.state.mediaConfig) {
+            return React.createElement(ELEMENT_TYPES.DIV, { 
+                ref: this.ref,
+            });
+        }
 
-        const cardContext = this.state.context;
-
-        const config = cardContext.getMediaConfig();
-        const activeIndex = cardContext.getActiveIndex();
-        const cardCount = cardContext.getCardCount();
-        const centerCardIndex = cardContext.getCenterCardIndex();
+        const isActive = this.state.index === this.state.activeIndex;
         
-        const isActive = this.state.index === activeIndex;
-        
-        const transform = this.calculateTransform(config, cardCount, this.state.index, activeIndex, centerCardIndex, this.state.isSelected);
+        const transform = this.calculateTransform(
+            this.state.mediaConfig, 
+            this.state.cardCount, 
+            this.state.index, 
+            this.state.activeIndex, 
+            this.state.centerIndex, 
+            this.state.isSelected
+        );
 
         const properties = {
             id: this.props.keyReference,
             className : this.createClassName(isActive),
             ref: this.ref,
+
+            onTouchStart : (evt) => this.handleTouch(evt),
+            onTouchEnd : (evt) => this.handleTouch(evt),
+            onAnimationEnd : (evt) => this.handleAnimationEnded(evt),
+    
             style : {
-                width : config.values.cardWidth + "px",
-                height : config.values.cardHeight + "px",
+                width : this.state.mediaConfig.values.cardWidth + "px",
+                height : this.state.mediaConfig.values.cardHeight + "px",
                 transformOrigin: "center bottom",
-                // don't set the transform if an active animation is running as I'm not sure what
-                // the interaction will be
-                transform:  transform && !this.activeAnimation ? transform.toCss({}) : "",
-                background: this.props.definition.toCss(),
-            } ,
-            onAnimationEnd: () => { 
-                const completedAnimation = this.activeAnimation;
-
-                this.activeAnimation = null;
-                this.animation = null; 
-
-                if(this.state.eventHandler) {
-                    this.state.eventHandler(new CardEvent(this, CARD_EVENT_TYPES.ANIMATION, new AnimationEvent(this, completedAnimation, ANIMATION_EVENT_TYPE.END)));
-                } 
-            },
-            onTouchStart: (evt) => this.handleTouch(evt),
-            onTouchEnd: (evt) => this.handleTouch(evt),
+                background: this.props.definition.toCss()
+            } 
         };
         
-        // can only play one animation at the time
-        if (this.animation && !this.activeAnimation) {
-            properties.style = {
-                ...properties.style,
-                ...this.animation.createAnimation({
-                    idx: this.state.index,
-                    config,
-                    targetTransform: transform
-                })
-            }; 
-
-            this.activeAnimation = this.animation;
-
-            if (this.state.eventHandler) {
-                this.state.eventHandler(new CardEvent(this, CARD_EVENT_TYPES.ANIMATION, new AnimationEvent(this, this.activeAnimation, ANIMATION_EVENT_TYPE.START)));
+        // if an activation is playing don't play an animation or set the transform
+        if (!properties.style.animationName) {
+            // is an animation scheduled
+            if (this.state.animation) {
+                this.startAnimation(transform, properties, this.state.mediaConfig);
+            } else {
+                // no animation just define the intended position, scale & rotation of the card
+                properties.style.transform = transform.toCss({});
             }
         }
         
-
-        // color overlay giving the card some shadow depending on its state
-        const overlay = React.createElement(ELEMENT_TYPES.DIV, { className : `card-overlay${isActive ? "-active" : ""}`});
-
-        return React.createElement(ELEMENT_TYPES.DIV, properties, overlay);
+        return React.createElement(ELEMENT_TYPES.DIV, properties, this.createOverlay(isActive));
     }
 
+    // --- Sub elements -----------------------------------------------------------------------------------------------
+
+    /** 
+     * color overlay giving the card some shadow depending on its state
+     * @private
+     */ 
+    createOverlay(isActive) {
+        return React.createElement(ELEMENT_TYPES.DIV, { className : `card-overlay${isActive ? "-active" : ""}`});
+    } 
+
+    // --- Event handlers ---------------------------------------------------------------------------------------------
+    
     componentDidMount() {
         this.ref.current.addEventListener('swiped', this.swipeListener);
         this.ref.current.addEventListener('mouseover', this.mouseListener);
@@ -149,11 +115,81 @@ export class CardComponent extends React.Component {
         this.ref.current.removeEventListener('mouseup', this.mouseListener);
     }
 
-    setAnimation(animation) {
-        this.animation = animation;
-        this.forceUpdate();
+    handleTouch(evt) {
+        // wait for the animations to finish
+        if (evt.type === 'touchstart') {    
+            this.touchStart = new Vector3(evt.changedTouches[0].clientX, evt.changedTouches[0].clientY);
+        } else {
+            const delta = new Vector3(evt.changedTouches[0].clientX - this.touchStart.x, 
+                                            evt.changedTouches[0].clientY - this.touchStart.y);
+            
+            if (delta.length() < TAP_THRESHOLD && this.state.eventHandler) {
+                // tap happened
+                this.state.eventHandler(new CardEvent(this, CARD_EVENT_TYPES.TAP));
+            }
+        }
+    }  
+
+    handleSwiped(evt) {
+        if (this.state.eventHandler) {
+            this.state.eventHandler(new CardEvent(this, CARD_EVENT_TYPES.SWIPE, evt));
+        }
     }
 
+    handleMouseEvent(evt) {
+        if (evt.type === 'mouseover') {
+            if (this.state.eventHandler) {
+                this.state.eventHandler(new CardEvent(this, CARD_EVENT_TYPES.FOCUS));
+            }
+        } else if (evt.type === 'mouseup') {
+            this.state.eventHandler(new CardEvent(this, CARD_EVENT_TYPES.TAP));
+        }
+    }
+
+    handleAnimationEnded(evt) {       
+        if(this.state.eventHandler) {
+            const animationEvent = new AnimationEvent(this, this.state.animation, ANIMATION_EVENT_TYPE.END);
+            this.state.eventHandler(new CardEvent(this, CARD_EVENT_TYPES.ANIMATION, animationEvent));
+        } 
+
+        this.setAnimation(null);
+    }
+    
+    // --- State mutations  -------------------------------------------------------------------------------------------
+    
+    shouldComponentUpdate( nextProps, nextState) {
+        // do not re-render if this card is flagged for deletion. If this is omitted we end up with the last frame
+        // of the animation being rendered with the default transform when the animation is cleared. 
+        return nextState.isDeleted === false;
+    }
+
+    setMediaConfig = (mediaConfig) => this.setState({mediaConfig});
+
+    setCardCount = (cardCount) => this.setState({cardCount});
+    
+    setActiveIndex = (activeIndex) => this.setState({activeIndex});
+
+    setCenterIndex = (centerIndex) => this.setState({centerIndex});
+
+    setActiveAndCenterIndices = (activeIndex, centerIndex) => {
+        this.setActiveIndex(activeIndex);
+        this.setCenterIndex(centerIndex);
+    }
+
+    setSelected = (isSelected) =>
+        this.setState({
+            lastUpdate: Date.now(),
+            isSelected
+        });
+    
+    setIndex = (index) => this.setState({index});
+
+    setAnimation = (animation) => this.setState({animation});
+    
+    setDeleted = () => this.setState({isDeleted: true});
+
+    // --- Utility methods  -------------------------------------------------------------------------------------------
+    
     /**
      * Calculates the transformation (translation, rotation, scale) of the card on screen
      * @private
@@ -195,7 +231,9 @@ export class CardComponent extends React.Component {
         const yOffset =  (parentHeight - values.cardHeight) + values.yBaseOffset;
         
         // move the card further down, the further it is from the center card to produce a curved hand illusion
-        const yOffsetWrtActive = isActive ? 0 : Math.abs(deltaCenterIdx) * Math.abs(deltaCenterIdx) * values.yTranslation;
+        const yOffsetWrtActive = isActive 
+            ? 0 
+            : Math.abs(deltaCenterIdx) * Math.abs(deltaCenterIdx) * values.yTranslation;
 
         const cardCenterX = values.cardWidth / 2;
 
@@ -214,7 +252,7 @@ export class CardComponent extends React.Component {
     createClassName(isActive) {
         let className = `card-item`;
 
-        if (!this.animation) {
+        if (!this.state.animation) {
             if (isActive) {
                 className += " card-item-active";
             }
@@ -227,24 +265,19 @@ export class CardComponent extends React.Component {
         return className;
     }
 
-    handleTouch(evt) {
-        // wait for the animations to finish
-        if (evt.type === 'touchstart') {
-            
-            this.touchStart = new Vector3(evt.changedTouches[0].clientX, evt.changedTouches[0].clientY);
-            } else {
-            const delta = new Vector3(evt.changedTouches[0].clientX  - this.touchStart.x, evt.changedTouches[0].clientY - this.touchStart.y);
-            
-            if (delta.length() < TAP_THRESHOLD && this.state.eventHandler) {
-                // tap happened
-                this.state.eventHandler(new CardEvent(this, CARD_EVENT_TYPES.TAP));
-            }
-        }
-      }  
+    startAnimation(targetTransform, properties, config) {
+        properties.style = {
+            ...properties.style,
+            ...this.state.animation.createAnimation({
+                idx: this.state.index,
+                config,
+                targetTransform
+            })
+        }; 
 
-      handleSwiped(evt) {
-          if (this.state.eventHandler) {
-            this.state.eventHandler(new CardEvent(this, CARD_EVENT_TYPES.SWIPE, evt.detail.dir));
-          }
-      }
-}
+        if (this.state.eventHandler) {
+            const animationEvent = new AnimationEvent(this, properties.style.animationName, ANIMATION_EVENT_TYPE.START);
+            this.state.eventHandler(new CardEvent(this, CARD_EVENT_TYPES.ANIMATION,animationEvent));
+        }
+    }
+}   
