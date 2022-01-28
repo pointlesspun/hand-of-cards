@@ -3,6 +3,7 @@
 /**
  * Main application which configures a HandOfCardsComponent and renders the component.
  */
+ //import toast, {Toaster} from "/node_modules/react-hot-toast";
 
 import { MediaConfiguration} from "./framework/media-configuration.js";
 import { allocAnimations } from "./framework/animation-utilities.js";
@@ -10,11 +11,11 @@ import { allocAnimations } from "./framework/animation-utilities.js";
 import { HandComponent, MAX_SELECTION_REACHED_POLICY } from "./card-game/hand-component.js";
 import { DEFAULT_DECK, pickRandomCards } from "./card-game/deck.js";
 
-
 import { PLATFORM_CONFIGURATIONS } from "./platform-configurations.js";
 import { ANIMATIONS } from "./animations.js";
+import { ToastComponent } from "./card-game/toast-component.js";
 
-console.log("starting card component 0.43");
+console.log("starting card component 0.45");
 
 const element = document.querySelector('#card-container');
 const maxCards = element.attributes?.maxCards?.value ? parseInt(element.attributes.maxCards.value) : 7;
@@ -22,6 +23,7 @@ const hand = pickRandomCards(DEFAULT_DECK, maxCards);
 const maxCardsReachedPolicy = element.attributes?.maxCardsReachedPolicy?.value ?? MAX_SELECTION_REACHED_POLICY.BLOCK;
 
 const properties = {
+    key: "hand-of-cards-container",
     hand,
     maxCards,
     maxCardsReachedPolicy,
@@ -34,5 +36,9 @@ const properties = {
 
 allocAnimations([ANIMATIONS.playCard.name,ANIMATIONS.drawCard.name], maxCards);
 
+
 ReactDOM.render(
-    React.createElement(React.StrictMode, {}, React.createElement(HandComponent, properties)), element);
+    React.createElement(React.StrictMode, {}, [
+        React.createElement(ToastComponent, {key: "toast-component", initialMessages: ["<h2><u>Hand of cards, version 0.45</u></h2>" ]}),
+        React.createElement(HandComponent, properties),
+    ]), element);

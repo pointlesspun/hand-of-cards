@@ -46,13 +46,6 @@ The design (such as it is) of the element consists of the following:
 This project was created while learning React and is currently very much under development. Clean-up and refactoring are very much in order. Outstanding features (in no particular order):
 
 * [bug] resize is not always captured on mobile it seems
-* Add a message queue / status display. 
-    * Component with text absolute position on top of cards
-    * Fade out after x seconds, show next message
-    * Show version in the status
-    * Add priority message
-    * Show warning if max selection is reached.
-    * Show screen resolution
 * Create class for config.values.
 * Refactor & add documentation.
 * Add jsx (or htm) variation.
@@ -75,3 +68,4 @@ Deck of cards [by Дмитрий Фомин (Dmitry Fomin) on Wiki](https://en.w
 
 Keycode constants [Kabir Baidhya, Saugat Acharya](https://github.com/kabirbaidhya/keycode-js#usage)
 
+Message bus [Gaurav Singhal](https://www.pluralsight.com/guides/how-to-communicate-between-independent-components-in-reactjs)

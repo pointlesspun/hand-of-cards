@@ -13,7 +13,6 @@ const TAP_THRESHOLD = 10;
 /** Prefix to generate React cards */
 export const CARD_KEY_PREFIX = "hoc-card";
 
-
 export class CardComponent extends React.Component {
     constructor(props) {
         super(props);   

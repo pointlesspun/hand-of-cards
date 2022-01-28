@@ -9,12 +9,14 @@ import "../framework/math-extensions.js";
 import { ELEMENT_TYPES } from "../framework/element-types.js";
 import { PlatformConfiguration } from "../framework/media-configuration.js";
 import { ANIMATION_EVENT_TYPE } from "../framework/animation-utilities.js";
+import eventBus from "../framework/event-bus.js";
 
 import { CARD_EVENT_TYPES } from "./card-event.js";
 import { CardComponent, CARD_KEY_PREFIX } from "./card-component.js";
 import { pickRandomCards } from "./deck.js";
 // todo: fix this dependency
 import { ANIMATIONS } from "../animations.js";
+import { TOAST_TOPIC } from "./toast-component.js";
 
 const SWIPE_DIRECTIONS = {
   UP : 'up',
@@ -199,12 +201,12 @@ renderControlBar(config) {
     }
   };
 
-  const statusText = `${config.name} ${config.screenSize.width}x${config.screenSize.height}`;
+  //const statusText = `${config.name} ${config.screenSize.width}x${config.screenSize.height}`;
 
   return React.createElement(ELEMENT_TYPES.DIV, properties, [
     this.renderIndicators(this.state.cards),
     this.renderButtons(),
-    React.createElement(ELEMENT_TYPES.DIV, {key: "device-description", className: "platform-context"}, statusText)
+    //React.createElement(ELEMENT_TYPES.DIV, {key: "device-description", className: "platform-context"}, statusText)
   ]);
 }
 
@@ -415,8 +417,12 @@ renderControlBar(config) {
    */
   handleResize() {
     const mediaConfig = this.props.getLayoutConfiguration(this.ref);
+    const message = `${mediaConfig.name} ${mediaConfig.screenSize.width}x${mediaConfig.screenSize.height}`;
+
     this.setState({mediaConfig});
     this.forEachCard(card => card?.setMediaConfig(mediaConfig));
+   
+    eventBus.dispatch(TOAST_TOPIC, { message, id: "platform-changed" });
   }
 
   handleCardEvent(evt) {
@@ -499,7 +505,7 @@ renderControlBar(config) {
   }
 
   selectItem(idx, isSelected) {
-  
+      
     if (!isSelected || this.canSelectMoreCards()) {
       const currentCard = this.getCard(idx);
 
@@ -509,6 +515,8 @@ renderControlBar(config) {
         // the indicators may need to be redrawn as well as the buttons
         this.forceUpdate();
       }
+    } else if (isSelected) {
+      this.dispatchMaxCardsSelectedWarning();
     }
   }
 
@@ -618,6 +626,7 @@ renderControlBar(config) {
   toggleSelected(idx) {   
     if (this.state.activeIndex < this.state.cards.length) {
       const isSelected = this.getCard(idx).state.isSelected;
+      
       if (isSelected || this.canSelectMoreCards()) {
         this.selectItem(idx, !isSelected);
         // can we deselect the oldest ?
@@ -630,6 +639,8 @@ renderControlBar(config) {
 
         // select the current
         this.selectItem(idx, true);    
+      } else {
+        this.dispatchMaxCardsSelectedWarning();
       }
     }
   }
@@ -679,4 +690,10 @@ renderControlBar(config) {
       cardCount % 2 == 0 
         ? (cardCount / 2) - 0.5
         : Math.floor(cardCount / 2);
+
+  dispatchMaxCardsSelectedWarning = () => 
+    eventBus.dispatch(TOAST_TOPIC, { 
+      message: "<h3>Maximum selected cards reached</h3>", 
+      id: "max-card-selected-warning" 
+    });
 }
