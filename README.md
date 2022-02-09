@@ -56,7 +56,6 @@ This project was created while learning React and is currently very much under d
 * // todo: fix this dependency 
     import { ANIMATIONS } from "../animations.js";
 * fix wobble in the animation when browsing and selecting at the same time
-* add option to fold after remove / fold immediately 
 * Overview at the start of application including which platforms are supported
 * Indicate if platforms are supported or not
 * Add (example) rule to card allowing cards to be played (or not)

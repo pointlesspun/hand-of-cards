@@ -22,53 +22,6 @@ export class CardCarousel extends React.Component {
     };
   }
 
-  setCards(cards, activeIndex) {
-    
-    const centerIndex = this.state.isLocked? this.calculateCenterCard(cards.length) : activeIndex;
-
-    this.setState({ 
-      cards,
-      activeIndex,
-      centerIndex,
-    });
-    
-    cards.forEach((card, idx) => {
-      const cardRef = card.ref.current;
-
-      if (cardRef) {
-        cardRef.setIndex(idx);
-        cardRef.setActiveAndCenterIndices(activeIndex, centerIndex);
-        cardRef.setCardCount(cards.length);
-      }
-    });
-  }
-
-  setMediaConfig = (mediaConfig) => {
-    this.setState({ mediaConfig });
-    this.forEachCard((card) => card?.setMediaConfig(mediaConfig));
-  };
-
-  setCardEventHandler = (eventHandler) => this.setState({ eventHandler });
-  
-  setActiveIndex(activeIndex, updateCenterCard = true) {
-    if (updateCenterCard) {
-      const centerIndex = this.state.isLocked
-          ? this.calculateCenterCard(this.state.cards.length)
-          : activeIndex;
-
-      this.setState({ activeIndex, centerIndex });
-      this.forEachCard((card) => card.setActiveAndCenterIndices(activeIndex, centerIndex));
-    } else {
-      this.setState({ activeIndex });
-      this.forEachCard((card) => card.setActiveIndex(activeIndex));
-    }
-  };
-
-  setActiveAndCenterIndices = (activeIndex, centerCardIndex) => {
-    this.setState({ activeIndex, centerCardIndex });
-    this.forEachCard((card) => card.setActiveAndCenterIndices(activeIndex, centerCardIndex));
-  };
-
   render() {
     const config = this.state.mediaConfig;
 
@@ -117,6 +70,87 @@ export class CardCarousel extends React.Component {
       carouselProperties,
       innerChildren
     );
+  }
+  
+  setCards(cards, activeIndex) {
+    
+    const centerIndex = this.state.isLocked? this.calculateCenterCard(cards.length) : activeIndex;
+
+    this.setState({ 
+      cards,
+      activeIndex,
+      centerIndex,
+    });
+    
+    cards.forEach((card, idx) => {
+      const cardRef = card.ref.current;
+
+      if (cardRef) {
+        cardRef.setIndex(idx);
+        cardRef.setActiveAndCenterIndices(activeIndex, centerIndex);
+        cardRef.setCardCount(cards.length);
+      }
+    });
+  }
+
+  setMediaConfig = (mediaConfig) => {
+    this.setState({ mediaConfig });
+    this.forEachCard((card) => card?.setMediaConfig(mediaConfig));
+  };
+
+  setCardEventHandler = (eventHandler) => this.setState({ eventHandler });
+  
+  setActiveIndex(activeIndex, updateCenterCard = true) {
+    if (updateCenterCard) {
+      const centerIndex = this.state.isLocked
+          ? this.calculateCenterCard(this.state.cards.length)
+          : activeIndex;
+
+      this.setState({ activeIndex, centerIndex });
+      this.forEachCard((card) => card.setActiveAndCenterIndices(activeIndex, centerIndex));
+    } else {
+      this.setState({ activeIndex });
+      this.forEachCard((card) => card.setActiveIndex(activeIndex));
+    }
+  }
+
+  setActiveAndCenterIndices = (activeIndex, centerCardIndex) => {
+    this.setState({ activeIndex, centerCardIndex });
+    this.forEachCard((card) => card.setActiveAndCenterIndices(activeIndex, centerCardIndex));
+  };
+
+  /**
+   * 
+   * @param {*} animation 
+   * @param {boolean} immediatelyFoldCards  if set to true the remaining cards will fold back now. If false, they will
+   * fold after the animation is complete and the cards are deleted.
+   */
+  playSelectedCards(activeIndex, animation, immediatelyFoldCards) {
+    
+    let idx = 0;
+    const cardsLeft = this.state.cards.length - this.countSelectedCards();
+    const centerIndex = this.state.isLocked
+    ? this.calculateCenterCard(cardsLeft)
+    : activeIndex;
+    
+    this.forEachCard((card) => {
+      if (card.state.isSelected) {
+        card.setAnimation(animation);
+      } else {
+        if (immediatelyFoldCards) {
+          card.setIndex(idx);
+          card.setActiveAndCenterIndices(activeIndex, centerIndex);
+          card.setCardCount(cardsLeft);
+        }
+        idx++;
+      }
+    });
+
+    if (immediatelyFoldCards) {
+      this.setState({
+        activeIndex
+      });
+    }   
   }
 
   getCard = (idx) =>

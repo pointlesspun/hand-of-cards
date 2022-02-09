@@ -45,6 +45,14 @@ export const MAX_SELECTION_REACHED_POLICY = {
   CYCLE_OLDEST: "cycle-oldest",
 };
 
+export const FOLD_CARDS_POLICY = {
+  /** Fold cards after the play cards animation has finished */
+  AFTER_ANIMATION: "after-animation",
+
+  /** Fold cards after the play cards animation has started */
+  IMMEDIATELY: "immediately"
+}
+
 class CardReference {
   constructor(ref, key, definition, animation = null) {
     this.ref = ref;
@@ -86,6 +94,7 @@ export class HandComponent extends React.Component {
       playButtonEnabled: false,
       drawButtonEnabled: false,
       cardKeyCounter: cardCount,
+      foldCardsPolicy: props.foldCardsPolicy ?? FOLD_CARDS_POLICY.AFTER_ANIMATION,
       cards: props.hand
         ? props.hand.map(
             (definition, idx) =>
@@ -522,39 +531,20 @@ export class HandComponent extends React.Component {
     }
   }
 
+  /**
+   * Play all cards currently selected. The cards will be removed from the internal array after the play-card animation has been finished.
+   */
   playSelectedCards() {
     if (this.state.cards.length > 0) {
-      // if set to true the remaining cards will fold back now. If false, they will
-      // fold after the animation is complete and the cards are deleted.
-      const immediatelyFoldCards = false;
+      this.animationCount = this.carouselRef.current.countSelectedCards();
 
-      this.animationCount = 0;
-
-      let idx = 0;
-      const cardsLeft = this.state.cards.length - this.carouselRef.current.countSelectedCards()
-      const activeIndex = Math.min(
-        Math.max(0, cardsLeft - 1),
-        this.state.activeIndex
-      );
+      const unselectedCards = this.state.cards.length - this.carouselRef.current.countSelectedCards();
+      const deltaActiveIndex = this.state.cards.filter((card, idx) => card.ref.current.state.isSelected && idx < this.state.activeIndex).length;
+      const activeIndex = Math.clamp(this.state.activeIndex - deltaActiveIndex, 0, unselectedCards);
      
-      this.forEachCard((card) => {
-        if (card.state.isSelected) {
-          this.animationCount++;
-          card.setAnimation(ANIMATIONS.playCard);
-        } else {
-          if (immediatelyFoldCards) {
-            card.setIndex(idx);
-            card.setActiveIndex(activeIndex);
-          }
-          idx++;
-        }
-      });
+      this.carouselRef.current.playSelectedCards(activeIndex, ANIMATIONS.playCard, this.state.foldCardsPolicy === FOLD_CARDS_POLICY.IMMEDIATELY);
 
-      if (immediatelyFoldCards) {
-        this.setState({activeIndex, centerCardIndex, playButtonEnabled: false});
-      } else {
-        this.setState({playButtonEnabled: false});
-      }
+      this.setState({activeIndex});
     }
   }
 

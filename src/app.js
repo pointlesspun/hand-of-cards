@@ -7,7 +7,7 @@
 import { MediaConfiguration} from "./framework/media-configuration.js";
 import { allocAnimations } from "./framework/animation-utilities.js";
 
-import { HandComponent, MAX_SELECTION_REACHED_POLICY } from "./card-game/hand-component.js";
+import { FOLD_CARDS_POLICY, HandComponent, MAX_SELECTION_REACHED_POLICY } from "./card-game/hand-component.js";
 import { DEFAULT_DECK, pickRandomCards } from "./card-game/deck.js";
 
 import { PLATFORM_CONFIGURATIONS } from "./platform-configurations.js";
@@ -20,12 +20,14 @@ const element = document.querySelector('#card-container');
 const maxCards = element.attributes?.maxCards?.value ? parseInt(element.attributes.maxCards.value) : 7;
 const hand = pickRandomCards(DEFAULT_DECK, maxCards);
 const maxCardsReachedPolicy = element.attributes?.maxCardsReachedPolicy?.value ?? MAX_SELECTION_REACHED_POLICY.BLOCK;
+const foldCardsPolicy = element.attributes?.foldCardsPolicy?.value ?? FOLD_CARDS_POLICY.AFTER_ANIMATION;
 
 const properties = {
     key: "hand-of-cards-container",
     hand,
     maxCards,
     maxCardsReachedPolicy,
+    foldCardsPolicy, 
     deck: DEFAULT_DECK,
     initialIndex: Math.floor(hand.length / 2),   
     isLocked: element.attributes?.isLocked?.value === "true" ?? false,

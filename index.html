@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <title>Hand of cards demonstration</title>
-    
+
     <!--
       Use during development (seems obvious but...)
     
@@ -14,22 +14,36 @@
     <!--
       Use during not-development (production?)
     -->
-    <script crossorigin src="https://unpkg.com/react@17/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js"></script>
-    
+    <script
+      crossorigin
+      src="https://unpkg.com/react@17/umd/react.production.min.js"
+    ></script>
+    <script
+      crossorigin
+      src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js"
+    ></script>
 
-    <script crossorigin src="https://unpkg.com/keycode-js@3.1.0/dist/keycode.min.js"></script>
-    
-    
+    <script
+      crossorigin
+      src="https://unpkg.com/keycode-js@3.1.0/dist/keycode.min.js"
+    ></script>
+
     <script src="./src/lib/swiped-events.min.js"></script>
-    <link rel="stylesheet" href="./css/hand-of-cards.css">
-    <link rel="stylesheet" href="./css/icon-button-panel.css">
-    <link rel="stylesheet" href="./css/toast.css">
-
+    <link rel="stylesheet" href="./css/hand-of-cards.css" />
+    <link rel="stylesheet" href="./css/icon-button-panel.css" />
+    <link rel="stylesheet" href="./css/toast.css" />
   </head>
-  <body>  
-      <div id="card-container" class="app-container" maxCards="9" maxSelectedCards="3" isLocked="false" maxCardsReachedPolicy="block"></div>   
-      
-      <script src="./src/app.js" type="module"></script>  
+  <body>
+    <div
+      id="card-container"
+      class="app-container"
+      maxCards="9"
+      maxSelectedCards="3"
+      isLocked="false"
+      maxCardsReachedPolicy="cycle-oldest"
+      foldCardsPolicy="immediately"
+    ></div>
+
+    <script src="./src/app.js" type="module"></script>
   </body>
 </html>
