@@ -6,14 +6,16 @@
  */
 
 import "../framework/math-extensions.js";
+
 import { ELEMENT_TYPES } from "../framework/element-types.js";
 import { PlatformConfiguration } from "../framework/media-configuration.js";
 import { ANIMATION_EVENT_TYPE } from "../framework/animation-utilities.js";
 import eventBus from "../framework/event-bus.js";
 
+import { pickRandomCardDefinitions } from "../model/card-util.js";
+
 import { CARD_EVENT_TYPES } from "./card-event.js";
 import { CardComponent, CARD_KEY_PREFIX } from "./card-component.js";
-import { pickRandomCards } from "./deck.js";
 // todo: fix this dependency
 import { ANIMATIONS } from "../animations.js";
 import { TOAST_TOPIC } from "./toast-component.js";
@@ -23,6 +25,8 @@ import {
 } from "./icon-button-panel-component.js";
 import { IndicatorComponent } from "./indicator-component.js";
 import { CardCarousel } from "./card-carousel.js";
+import { Player } from "../model/player.js";
+import { CardGameModel } from "../model/card-game-model.js";
 
 const SWIPE_DIRECTIONS = {
   UP: "up",
@@ -87,7 +91,8 @@ export class HandComponent extends React.Component {
     const cardCount = props.hand ? props.hand.length : 0;
 
     this.state = {
-      activeIndex,
+      model: props.model,
+      //activeIndex,
       // is unknown until we have a ref
       mediaConfig: null,
       isLocked: props.isLocked,
@@ -185,7 +190,7 @@ export class HandComponent extends React.Component {
       ref: this.carouselRef,
       cards: this.state.cards,
       eventHandler: this.cardEventHandler,
-      activeIndex: this.state.activeIndex,
+      activeIndex: this.getActiveIndex(),
       cardCount: this.state.cards.length,
       mediaConfig: this.state.mediaConfig,
     };
@@ -218,7 +223,7 @@ export class HandComponent extends React.Component {
       key: "indicators",
       ref: this.indicatorRef,
       data: cards,
-      activeIndex: this.state.activeIndex,
+      activeIndex: this.getActiveIndex(),
       isDataSelected: (idx) => this.getCard(idx)?.state.isSelected,
       onClick: (idx) => this.setActiveIndex(idx),
     });
@@ -347,7 +352,7 @@ export class HandComponent extends React.Component {
 
       case KeyCode.KEY_DOWN:
         if (this.getActiveCard().state.isSelected) {
-          this.selectCard(this.state.activeIndex, false);
+          this.selectCard(this.getActiveIndex(), false);
         }
         break;
 
@@ -427,7 +432,7 @@ export class HandComponent extends React.Component {
     if (!this.animationCount) {
       const card = evt.card;
 
-      if (card.state.index !== this.state.activeIndex) {
+      if (card.state.index !== this.getActiveIndex()) {
         // needs to be in this order
         this.toggleSelected(card.state.index);
         this.setActiveIndex(card.state.index);
@@ -463,15 +468,18 @@ export class HandComponent extends React.Component {
   setActiveIndex(idx, updateCenterCard = true) {
     const activeIndex = Math.clamp(idx, 0, this.state.cards.length);
 
-    this.setState({activeIndex});
+    //this.setState({activeIndex});
+    this.setActiveIndexValue(activeIndex);
   
     this.indicatorRef.current.setActiveIndex(activeIndex);
     this.carouselRef.current.setActiveIndex(idx, updateCenterCard);
   }
 
+  // xxx replace with setACtiveIndex 
   moveActiveItem(delta) {
-    const activeIndex = Math.clamp(this.state.activeIndex + delta, 0, this.state.cards.length);
-    this.setState({ activeIndex });
+    const activeIndex = Math.clamp(this.getActiveIndex() + delta, 0, this.state.cards.length);
+    //this.setState({ activeIndex });
+    this.setActiveIndexValue(activeIndex);
   
     this.indicatorRef.current.setActiveIndex(activeIndex);
     this.carouselRef.current.setActiveIndex(activeIndex);
@@ -515,8 +523,8 @@ export class HandComponent extends React.Component {
       // were any cards selected ?
       if (unselectedCards.length !== this.state.cards.length) {
         // count all cards in front of the active index, to offset the active index after the cards have been removed
-        const deltaActiveIndex = this.state.cards.filter((card, idx) => card.ref.current.state.isSelected && idx < this.state.activeIndex).length;
-        const activeIndex = Math.clamp(this.state.activeIndex - deltaActiveIndex, 0, unselectedCards.length);
+        const deltaActiveIndex = this.state.cards.filter((card, idx) => card.ref.current.state.isSelected && idx < this.getActiveIndex()).length;
+        const activeIndex = Math.clamp(this.getActiveIndex() - deltaActiveIndex, 0, unselectedCards.length);
 
         this.indicatorRef.current.setData(unselectedCards);
         this.indicatorRef.current.setActiveIndex(activeIndex);
@@ -539,8 +547,8 @@ export class HandComponent extends React.Component {
       this.animationCount = this.carouselRef.current.countSelectedCards();
 
       const unselectedCards = this.state.cards.length - this.carouselRef.current.countSelectedCards();
-      const deltaActiveIndex = this.state.cards.filter((card, idx) => card.ref.current.state.isSelected && idx < this.state.activeIndex).length;
-      const activeIndex = Math.clamp(this.state.activeIndex - deltaActiveIndex, 0, unselectedCards);
+      const deltaActiveIndex = this.state.cards.filter((card, idx) => card.ref.current.state.isSelected && idx < this.getActiveIndex()).length;
+      const activeIndex = Math.clamp(this.getActiveIndex() - deltaActiveIndex, 0, unselectedCards);
      
       this.carouselRef.current.playSelectedCards(activeIndex, ANIMATIONS.playCard, this.state.foldCardsPolicy === FOLD_CARDS_POLICY.IMMEDIATELY);
 
@@ -554,7 +562,7 @@ export class HandComponent extends React.Component {
   refill() {
     if (this.state.cards.length < this.props.maxCards) {
       const newCardCount = this.props.maxCards - this.state.cards.length;
-      const cardDefinitions = pickRandomCards(this.props.deck, newCardCount);
+      const cardDefinitions = pickRandomCardDefinitions(this.props.deck, newCardCount);
      
       this.forEachCard((card) => {     
         card.setCardCount(this.props.maxCards);
@@ -583,11 +591,11 @@ export class HandComponent extends React.Component {
       });
 
       this.indicatorRef.current.setData(cards);
-      this.carouselRef.current.setCards(cards, this.state.activeIndex);
+      this.carouselRef.current.setCards(cards, this.getActiveIndex());
     }
   }
 
-  toggleActiveItemSelected = () => this.toggleSelected(this.state.activeIndex);
+  toggleActiveItemSelected = () => this.toggleSelected(this.getActiveIndex());
   
   toggleSelected(idx) {
     // are there any cards ?
@@ -633,8 +641,17 @@ export class HandComponent extends React.Component {
 
   getCard = (idx) => this.carouselRef.current ? this.carouselRef.current.getCard(idx) : null; 
 
-  getActiveCard = () => this.getCard(this.state.activeIndex);
+  getActiveCard = () => this.getCard(this.getActiveIndex());
     
+  getActiveIndex = () => this.state.model.players[0].hand.focusIdx;
+
+  setActiveIndexValue(idx) {
+      const player = this.state.model.players[0];
+      const model = new CardGameModel([player.clone({hand : player.hand.clone({focusIdx: idx})})]);
+
+      this.setState({model});
+  }
+
   /**
    * Utility to iterate over the state's cards without having to deref the cards
    * @param {*} f a function of the form (card, index) where card is the card component
