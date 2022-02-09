@@ -3,7 +3,6 @@
 /**
  * Main application which configures a HandOfCardsComponent and renders the component.
  */
- //import toast, {Toaster} from "/node_modules/react-hot-toast";
 
 import { MediaConfiguration} from "./framework/media-configuration.js";
 import { allocAnimations } from "./framework/animation-utilities.js";

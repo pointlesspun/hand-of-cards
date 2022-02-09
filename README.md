@@ -46,10 +46,10 @@ The design (such as it is) of the element consists of the following:
 This project was created while learning React and is currently very much under development. Clean-up and refactoring are very much in order. Outstanding features (in no particular order):
 
 * [bug] resize is not always captured on mobile it seems
+* Split data from front-end
 * Create class for config.values.
 * Refactor & add documentation.
 * Add jsx (or htm) variation.
-* Try some optimization(s) for less powerful devices (aka phones).
 * Deal truly random cards or one from a deck of 52 cards.
 * Dynamic spacing and rotation as the number of cards increase (see hearthstone)
 * Adjust animations on mobile device
@@ -57,6 +57,10 @@ This project was created while learning React and is currently very much under d
     import { ANIMATIONS } from "../animations.js";
 * fix wobble in the animation when browsing and selecting at the same time
 * add option to fold after remove / fold immediately 
+* Overview at the start of application including which platforms are supported
+* Indicate if platforms are supported or not
+* Add (example) rule to card allowing cards to be played (or not)
+* Try some optimization(s) for less powerful devices (aka phones).
 
 ## Credits
 

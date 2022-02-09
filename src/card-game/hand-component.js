@@ -1,7 +1,7 @@
-'use strict';
+"use strict";
 
 /**
- * Main component which takes a number of cards and implements the interactions with those 
+ * Main component which takes a number of cards and implements the interactions with those
  * cards using a carousel.
  */
 
@@ -17,13 +17,19 @@ import { pickRandomCards } from "./deck.js";
 // todo: fix this dependency
 import { ANIMATIONS } from "../animations.js";
 import { TOAST_TOPIC } from "./toast-component.js";
+import {
+  IconButtonPanelComponent,
+  IconButton,
+} from "./icon-button-panel-component.js";
+import { IndicatorComponent } from "./indicator-component.js";
+import { CardCarousel } from "./card-carousel.js";
 
 const SWIPE_DIRECTIONS = {
-  UP : 'up',
-  RIGHT : 'right',
-  DOWN: 'down',
-  LEFT: 'left'
-}
+  UP: "up",
+  RIGHT: "right",
+  DOWN: "down",
+  LEFT: "left",
+};
 
 // number of pixels of movement allowed before a tap becomes a swipe
 const TAP_THRESHOLD = 10;
@@ -33,10 +39,10 @@ const TAP_THRESHOLD = 10;
  */
 export const MAX_SELECTION_REACHED_POLICY = {
   /** prevent the user from selecting more cards (default) */
-  BLOCK: 'block',
+  BLOCK: "block",
 
   /** de-select the card selected first, then select the current card */
-  CYCLE_OLDEST: 'cycle-oldest'
+  CYCLE_OLDEST: "cycle-oldest",
 };
 
 class CardReference {
@@ -61,25 +67,35 @@ export class HandComponent extends React.Component {
     this.keyHandler = (evt) => this.handleKeyEvent(evt);
     this.resizeHandler = (evt) => this.handleResize();
     this.cardEventHandler = (evt) => this.handleCardEvent(evt);
-    
+
     // transient properties
     this.ref = React.createRef();
+    this.indicatorRef = React.createRef();
+    this.carouselRef = React.createRef();
     this.animationCount = 0;
 
     // state properties
     const activeIndex = props.initialIndex ?? 0;
     const cardCount = props.hand ? props.hand.length : 0;
-    const centerCardIndex = props.isLocked ? this.calculateCenterCard(cardCount) : activeIndex;
 
     this.state = {
       activeIndex,
-      centerCardIndex,
       // is unknown until we have a ref
       mediaConfig: null,
-      isLocked: props.isLocked,      
+      isLocked: props.isLocked,
+      playButtonEnabled: false,
+      drawButtonEnabled: false,
       cardKeyCounter: cardCount,
-      cards: props.hand ? props.hand.map(
-        (definition, idx) => new CardReference(React.createRef(), `${CARD_KEY_PREFIX}-${idx}`, definition )) : undefined
+      cards: props.hand
+        ? props.hand.map(
+            (definition, idx) =>
+              new CardReference(
+                React.createRef(),
+                `${CARD_KEY_PREFIX}-${idx}`,
+                definition
+              )
+          )
+        : undefined,
     };
   }
 
@@ -93,22 +109,25 @@ export class HandComponent extends React.Component {
     const properties = {
       className: "hand",
       ref: this.ref,
-      onKeyUp : (evt) => {
+      onKeyUp: (evt) => {
         this.handleKeyEvent(evt.keyCode);
-      }
+      },
     };
 
     if (!this.state.cards) {
-      return React.createElement(ELEMENT_TYPES.DIV, properties, "no items to display in the carousel...");
+      return React.createElement(
+        ELEMENT_TYPES.DIV,
+        properties,
+        "no items to display in the carousel..."
+      );
     }
-    
+
     // Need to know the height of the component to do a proper layout, so until we have a reference,
     // we skip this render.
-    if (this.ref.current) {     
-
+    if (this.ref.current) {
       const children = [
-        this.renderCarousel(this.state.mediaConfig),
-        this.renderControlBar(this.state.mediaConfig),        
+        this.renderCarousel(),
+        this.renderControlBar(this.state.mediaConfig),
       ];
 
       return React.createElement(ELEMENT_TYPES.DIV, properties, children);
@@ -121,18 +140,17 @@ export class HandComponent extends React.Component {
    * Callback after the component was added to the dom. Use this opportunity to hook up the listeners.
    */
   componentDidMount() {
-  
     // ref https://stackoverflow.com/questions/8916620/disable-arrow-key-scrolling-in-users-browser/8916697
     const keyhandlerOptions = {
-      capture: true,   
-      passive: false   
+      capture: true,
+      passive: false,
     };
 
-    window.addEventListener('keyup', this.keyHandler);
-    window.addEventListener('keydown', this.keyHandler, keyhandlerOptions);
-    window.addEventListener('resize', this.resizeHandler);
+    window.addEventListener("keyup", this.keyHandler);
+    window.addEventListener("keydown", this.keyHandler, keyhandlerOptions);
+    window.addEventListener("resize", this.resizeHandler);
 
-    // after the initial mount we've got a ref and media config 
+    // after the initial mount we've got a ref and media config
     this.handleResize();
   }
 
@@ -140,170 +158,115 @@ export class HandComponent extends React.Component {
    * Callback for when the componet is about to be removed from the dom. Remove the listeners.
    */
   componentWillUnmount() {
-    window.removeEventListener('swiped', this.swipeHandler);
-    window.removeEventListener('keyup', this.keyHandler);
-    window.removeEventListener('keydown', this.keyHandler);
-    window.removeEventListener('resize', this.resizeHandler);
+    window.removeEventListener("swiped", this.swipeHandler);
+    window.removeEventListener("keyup", this.keyHandler);
+    window.removeEventListener("keydown", this.keyHandler);
+    window.removeEventListener("resize", this.resizeHandler);
   }
 
   // --- Sub elements -----------------------------------------------------------------------------------------------
 
   /**
-   * 
-   * @param {PlatformConfiguration} config used to layout the cards appropriate for the current platform/medium (laptop/desktop/tablet/phone...)
-   * @returns 
+   *
+   * @returns
    */
-   renderCarousel(config) {
-    
+  renderCarousel() {
     const carouselProperties = {
-        key: "main-carousel",
-        className : "carousel",
-        style: {
-          // take the height from the platform specific settings
-          height: `${config.values.innerHeight*100}%` 
-        }
+      key: "card-carousel",
+      ref: this.carouselRef,
+      cards: this.state.cards,
+      eventHandler: this.cardEventHandler,
+      activeIndex: this.state.activeIndex,
+      cardCount: this.state.cards.length,
+      mediaConfig: this.state.mediaConfig,
     };
 
-    const innerId = `${carouselProperties.key}-inner`;
-    const childProperties = {
-        className:"inner",
-        key: innerId,
-        id: innerId,
-    };
-  
-    const cardElements = this.state.cards.map( (cardReference, index) => 
-      React.createElement(CardComponent, {
-        ref: cardReference.ref,
-        key: cardReference.key, 
-        keyReference: cardReference.key,
-        definition: cardReference.definition, 
-        index,      
-        animation : cardReference.animation,
-        eventHandler: this.cardEventHandler,
-        centerIndex: this.state.centerCardIndex, 
-        activeIndex: this.state.activeIndex,
-        cardCount: this.state.cards.length,
-        mediaConfig: this.state.mediaConfig
-      }));
+    return React.createElement(CardCarousel, carouselProperties);   
+  }
 
-    const innerChildren = React.createElement(ELEMENT_TYPES.DIV, childProperties, cardElements);
-
-    return React.createElement(ELEMENT_TYPES.DIV, carouselProperties, innerChildren);
-}
-
-renderControlBar(config) { 
-  const properties = {
-    key: "controlbar",
-    style: {
-      width : "100%",
-      height: `${(1.0 - config.values.innerHeight) * 100}%`,
-      overflow: "hidden"
-    }
-  };
-
-  //const statusText = `${config.name} ${config.screenSize.width}x${config.screenSize.height}`;
-
-  return React.createElement(ELEMENT_TYPES.DIV, properties, [
-    this.renderIndicators(this.state.cards),
-    this.renderButtons(),
-    //React.createElement(ELEMENT_TYPES.DIV, {key: "device-description", className: "platform-context"}, statusText)
-  ]);
-}
-
- /**
-   * 
-   * @private
-   * @param {*} keyPrefix 
-   * @param {*} callback 
-   * @param {*} activeIndex 
-   * @param {*} cards 
-   * @returns 
-   */
-  renderIndicatorItems = (callback, activeIndex, cards) =>
-    cards.map((card, index) =>     
-        React.createElement(ELEMENT_TYPES.DIV, { 
-          key: `indicator-${index}`,
-          className : `indicator ${index === activeIndex ? "indicator-active" : ""} ${card.ref.current?.state.isSelected ? "indicator-selected" : ""}`,
-          onClick : () => callback(index)
-        })
-    );
-
-    /**
-     * @private
-     * @returns 
-     */
-  renderIndicators(cards) {
+  renderControlBar(config) {
     const properties = {
-      key: "indicators",
-      className: "indicators",
+      key: "controlbar",
+      style: {
+        width: "100%",
+        height: `${(1.0 - config.values.innerHeight) * 100}%`,
+        overflow: "hidden",
+      },
     };
 
-    const children = this.renderIndicatorItems(
-      (idx) => this.setActiveIndex(idx),
-      this.state.activeIndex, 
-      cards
-    );
+    return React.createElement(ELEMENT_TYPES.DIV, properties, [
+      this.renderIndicators(this.state.cards),
+      this.renderButtons(),
+    ]);
+  }
 
-    return React.createElement(ELEMENT_TYPES.DIV, properties, children);
+  /**
+   * @private
+   * @returns
+   */
+  renderIndicators(cards) {
+    return React.createElement(IndicatorComponent, {
+      key: "indicators",
+      ref: this.indicatorRef,
+      data: cards,
+      activeIndex: this.state.activeIndex,
+      isDataSelected: (idx) => this.getCard(idx)?.state.isSelected,
+      onClick: (idx) => this.setActiveIndex(idx),
+    });
   }
 
   renderButtons() {
 
-    const refillButtonEnabled = this.ref.current && this.state.cards.length < this.props.maxCards;
-
-    const refreshButton = React.createElement(ELEMENT_TYPES.DIV, {
-      key: "refresh-button",
-      className: `button-panel-button refill-button ${refillButtonEnabled ? ""  : "button-panel-button-disabled"}`,
-      onClick: () => this.refill()
+    return React.createElement(IconButtonPanelComponent, {
+      key: "cards-button-panel",
+      keyReference: "cards-button-panel",
+      buttons: [
+        new IconButton(
+          `button-panel-button play-button ${
+            this.state.playButtonEnabled ? "" : "button-panel-button-disabled"
+          }`,
+          () => this.playSelectedCards()
+        ),
+        new IconButton(
+          `button-panel-button refill-button ${
+            this.state.drawButtonEnabled ? "" : "button-panel-button-disabled"
+          }`,
+          () => this.refill()
+        ),
+        new IconButton(
+          `button-panel-button ${
+            this.isLocked() ? "lock-button" : "lock-button-open"
+          }`,
+          () => this.toggleLock()
+        ),
+      ],
     });
-
-    const lockButton = React.createElement(ELEMENT_TYPES.DIV, {
-      key: "lock-button",
-      className: `button-panel-button ${this.state.isLocked ? "lock-button" : "lock-button-open"}`,
-      onClick: () => {
-        this.toggleLock();
-      }
-    });
-
-    const playButtonEnabled = this.ref.current && this.countSelectedCards() > 0;
-
-    const playButton = React.createElement(ELEMENT_TYPES.DIV, {
-      key: "play-button",
-      className: `button-panel-button play-button ${playButtonEnabled ? ""  : "button-panel-button-disabled"}`,
-      onClick: () => this.playSelectedCards()
-    });
-
-    return React.createElement(ELEMENT_TYPES.DIV, {
-      key: "button-panel",
-      className: "button-panel"
-    }, [playButton, refreshButton, lockButton]);
   }
 
   // --- Event handlers ---------------------------------------------------------------------------------------------
 
   /**
    * Deal with swipes generated with a touch device
-   * @param {*} direction 
+   * @param {*} direction
    */
-  handleSwipe( direction, index ) {
-
+  handleSwipe(direction, index) {
     // wait for the animations to finish
     if (this.animationCount === 0) {
       switch (direction) {
         case SWIPE_DIRECTIONS.UP:
-            this.handleSwipeUp(index);
-            break;
+          this.handleSwipeUp(index);
+          break;
 
         case SWIPE_DIRECTIONS.RIGHT:
-          this.previousItem();
+          this.moveActiveItem(-1);
           break;
-    
+
         case SWIPE_DIRECTIONS.DOWN:
           this.handleSwipeDown(index);
           break;
 
         case SWIPE_DIRECTIONS.LEFT:
-          this.nextItem();
+          this.moveActiveItem(1);
           break;
       }
     }
@@ -311,7 +274,7 @@ renderControlBar(config) {
 
   handleSwipeUp(index) {
     // are there any cards in hand ?
-    if (this.state.cards.length > 0) {             
+    if (this.state.cards.length > 0) {
       // which card was swiped
       if (index !== undefined) {
         //If the card was already selected, and the user swipes up again play the cards
@@ -325,56 +288,59 @@ renderControlBar(config) {
   }
 
   handleSwipeDown(index) {
-    if (this.state.cards.length > 0) {             
+    if (this.state.cards.length > 0) {
       // which card was swiped
       if (index !== undefined) {
-        this.selectItem(index, false);
+        this.selectCard(index, false);
       }
     }
   }
 
   /**
    * Deal with keyboard input
-   * @param {number} keyCode 
+   * @param {number} keyCode
    */
   handleKeyEvent(evt) {
     const keyCode = evt.keyCode;
-    
-    if (evt.type === 'keyup') {
+
+    if (evt.type === "keyup") {
       // wait for the animations to finish
       if (this.animationCount === 0) {
         if (this.handleKeyUp(keyCode)) {
           evt.preventDefault();
         }
-      } 
-    } else if (evt.type === 'keydown') {
-        if (this.handleKeydown(keyCode)) {
-          evt.preventDefault();
-        }
+      }
+    } else if (evt.type === "keydown") {
+      if (this.handleKeydown(keyCode)) {
+        evt.preventDefault();
+      }
     }
   }
 
   handleKeyUp(keyCode) {
     switch (keyCode) {
       case KeyCode.KEY_LEFT:
-        this.previousItem();
+        this.moveActiveItem(-1);
         break;
 
       case KeyCode.KEY_RIGHT:
-        this.nextItem();
+        this.moveActiveItem(1);
         break;
 
       case KeyCode.KEY_UP:
-        if (this.state.cards.length > 0 && !this.getActiveCard().state.isSelected) {
+        if (
+          this.state.cards.length > 0 &&
+          !this.getActiveCard().state.isSelected
+        ) {
           this.toggleActiveItemSelected();
         }
         break;
 
       case KeyCode.KEY_DOWN:
         if (this.getActiveCard().state.isSelected) {
-          this.selectActiveItem(false);
+          this.selectCard(this.state.activeIndex, false);
         }
-        break;  
+        break;
 
       case KeyCode.KEY_DELETE:
         this.removeSelectedItems();
@@ -386,11 +352,11 @@ renderControlBar(config) {
 
       case KeyCode.KEY_SPACE:
         this.playSelectedCards();
-        break;        
-      
-        default:
-          // not handled
-          return false;
+        break;
+
+      default:
+        // not handled
+        return false;
     }
 
     // code was handled
@@ -419,15 +385,18 @@ renderControlBar(config) {
     const mediaConfig = this.props.getLayoutConfiguration(this.ref);
     const message = `${mediaConfig.name} ${mediaConfig.screenSize.width}x${mediaConfig.screenSize.height}`;
 
-    this.setState({mediaConfig});
-    this.forEachCard(card => card?.setMediaConfig(mediaConfig));
-   
+    this.setState({ mediaConfig });
+    
+    if (this.carouselRef.current) {
+      this.carouselRef.current.setMediaConfig(mediaConfig);
+    }
+
     eventBus.dispatch(TOAST_TOPIC, { message, id: "platform-changed" });
   }
 
   handleCardEvent(evt) {
     switch (evt.type) {
-      case CARD_EVENT_TYPES.ANIMATION: 
+      case CARD_EVENT_TYPES.ANIMATION:
         this.handleAnimation(evt.parameters);
         break;
       case CARD_EVENT_TYPES.TAP:
@@ -438,7 +407,7 @@ renderControlBar(config) {
         break;
       case CARD_EVENT_TYPES.FOCUS:
         if (this.animationCount === 0) {
-          this.setActiveIndex(evt.card.state.index);
+          this.setActiveIndex(evt.card.state.index, false);
         }
         break;
     }
@@ -458,10 +427,10 @@ renderControlBar(config) {
       }
     }
   }
-  
+
   /**
    * Handle animation start / end events
-   * @param {*} evt 
+   * @param {*} evt
    */
   handleAnimation(evt) {
     if (evt.type === ANIMATION_EVENT_TYPE.END) {
@@ -471,49 +440,47 @@ renderControlBar(config) {
         // mark the card as deleted, we need to do this asap and not delay until removeSelectedItems
         // otherwise one last frame of rendering may kick in and we end up with weird glitches
         evt.source.setDeleted();
-      
+
         // no more outstanding animations ?
         if (this.animationCount === 0) {
           this.removeSelectedItems();
-        } 
+        }
       }
     }
   }
 
   // --- State mutations & queries ----------------------------------------------------------------------------------
 
-  setActiveIndex(idx) {
-    this.setState({activeIndex: Math.clamp(idx, 0, this.state.cards.length)});
-    this.forEachCard(card => card.setActiveIndex(idx));
+  setActiveIndex(idx, updateCenterCard = true) {
+    const activeIndex = Math.clamp(idx, 0, this.state.cards.length);
+
+    this.setState({activeIndex});
+  
+    this.indicatorRef.current.setActiveIndex(activeIndex);
+    this.carouselRef.current.setActiveIndex(idx, updateCenterCard);
   }
 
   moveActiveItem(delta) {
-    this.setState({
-      activeIndex: Math.clamp(this.state.activeIndex + delta, 0, this.state.cards.length),
-      centerCardIndex: this.state.isLocked ? this.state.centerCardIndex : Math.clamp(this.state.centerCardIndex + delta, 0, this.state.cards.length)
-    });
-
-    this.forEachCard(card => card.setActiveAndCenterIndices(this.state.activeIndex, this.state.centerCardIndex));
+    const activeIndex = Math.clamp(this.state.activeIndex + delta, 0, this.state.cards.length);
+    this.setState({ activeIndex });
+  
+    this.indicatorRef.current.setActiveIndex(activeIndex);
+    this.carouselRef.current.setActiveIndex(activeIndex);
   }
 
-  previousItem = () => this.moveActiveItem(-1);
-  
-  nextItem = () =>  this.moveActiveItem(1);
-  
-  selectActiveItem(isItemSelected) {
-    this.selectItem(this.state.activeIndex, isItemSelected);
-  }
-
-  selectItem(idx, isSelected) {
-      
+  selectCard(idx, isSelected) {
     if (!isSelected || this.canSelectMoreCards()) {
-      const currentCard = this.getCard(idx);
 
       // does the state change ?
-      if (currentCard.state.isSelected != isSelected) {
-        currentCard.setSelected(isSelected);
-        // the indicators may need to be redrawn as well as the buttons
-        this.forceUpdate();
+      if (this.carouselRef.current.isCardSelected(idx) != isSelected) {
+        
+        this.carouselRef.current.setCardSelected(idx, isSelected);
+
+        const playButtonEnabled = this.carouselRef.current.countSelectedCards() > 0;
+
+        if (playButtonEnabled != this.state.playButtonEnabled) {
+          this.setState({playButtonEnabled});
+        }
       }
     } else if (isSelected) {
       this.dispatchMaxCardsSelectedWarning();
@@ -522,64 +489,72 @@ renderControlBar(config) {
 
   canSelectMoreCards() {
     // any cards to select ?
-    return this.state.cards.length > 0      
-      && ( //if negative there is no limit  
-           this.props.maxSelectedCards < 0 
-          // can still select more cards ?
-          || this.countSelectedCards() < this.props.maxSelectedCards);
+    return (
+      this.carouselRef.current &&
+      this.state.cards.length > 0 && //if negative there is no limit
+      (this.props.maxSelectedCards < 0 ||
+        // can still select more cards ?
+        this.carouselRef.current.countSelectedCards() < this.props.maxSelectedCards)
+    );
   }
 
-  removeSelectedItems() {  
+  removeSelectedItems() {
     if (this.state.cards.length > 0) {
-      const cards = this.state.cards.filter(card => !card.ref.current.state.isSelected);
-      const activeIndex = Math.min(Math.max(0, cards.length-1), this.state.activeIndex);
-      const newCenterCardIndex = this.state.isLocked ? this.calculateCenterCard(cards.length) : activeIndex;
 
-      cards.forEach((card, idx) => {
-        card.ref.current.setIndex(idx);
-        card.ref.current.setActiveAndCenterIndices(activeIndex, newCenterCardIndex);
-      });   
+      const unselectedCards = this.state.cards.filter(card => !card.ref.current.state.isSelected);
 
-      this.setState({
-        activeIndex,
-        centerCardIndex: newCenterCardIndex,
-        cards
-      });           
+      // were any cards selected ?
+      if (unselectedCards.length !== this.state.cards.length) {
+        // count all cards in front of the active index, to offset the active index after the cards have been removed
+        const deltaActiveIndex = this.state.cards.filter((card, idx) => card.ref.current.state.isSelected && idx < this.state.activeIndex).length;
+        const activeIndex = Math.clamp(this.state.activeIndex - deltaActiveIndex, 0, unselectedCards.length);
+
+        this.indicatorRef.current.setData(unselectedCards);
+        this.indicatorRef.current.setActiveIndex(activeIndex);
+        this.carouselRef.current.setCards(unselectedCards, activeIndex);
+
+        this.setState({
+          activeIndex,
+          cards: unselectedCards,
+          drawButtonEnabled: true
+        });
+      }
     }
   }
 
-  playSelectedCards() {  
+  playSelectedCards() {
     if (this.state.cards.length > 0) {
       // if set to true the remaining cards will fold back now. If false, they will
       // fold after the animation is complete and the cards are deleted.
       const immediatelyFoldCards = false;
-      
+
       this.animationCount = 0;
 
       let idx = 0;
-      const cardsLeft = this.state.cards.length - this.countSelectedCards();
-      const activeIndex = Math.min(Math.max(0, cardsLeft-1), this.state.activeIndex);
-      const centerCardIndex = this.state.isLocked ? this.calculateCenterCard(cardsLeft) : activeIndex;
-
-      this.forEachCard(card => {
+      const cardsLeft = this.state.cards.length - this.carouselRef.current.countSelectedCards()
+      const activeIndex = Math.min(
+        Math.max(0, cardsLeft - 1),
+        this.state.activeIndex
+      );
+     
+      this.forEachCard((card) => {
         if (card.state.isSelected) {
           this.animationCount++;
           card.setAnimation(ANIMATIONS.playCard);
         } else {
           if (immediatelyFoldCards) {
             card.setIndex(idx);
-            card.setActiveAndCenterIndices(activeIndex, centerCardIndex);
+            card.setActiveIndex(activeIndex);
           }
           idx++;
         }
       });
 
       if (immediatelyFoldCards) {
-        this.setState({
-          activeIndex,
-          centerCardIndex
-        }); 
-      }    
+        this.setState({activeIndex, centerCardIndex, playButtonEnabled: false});
+      } else {
+        this.setState({playButtonEnabled: false});
+      }
     }
   }
 
@@ -588,112 +563,99 @@ renderControlBar(config) {
    */
   refill() {
     if (this.state.cards.length < this.props.maxCards) {
-      
       const newCardCount = this.props.maxCards - this.state.cards.length;
       const cardDefinitions = pickRandomCards(this.props.deck, newCardCount);
-      const newCenterCard = this.state.isLocked ? this.calculateCenterCard(this.props.maxCards) : this.state.centerCardIndex;
-
-      this.forEachCard( card => {
-        card.setCenterIndex(newCenterCard);
+     
+      this.forEachCard((card) => {     
         card.setCardCount(this.props.maxCards);
       });
 
       // create a new array of cards, consisting of old and new cards
       const cards = [
-        ...this.state.cards, 
-        ...cardDefinitions.map( (definition, idx) => 
-          new CardReference( 
-            React.createRef(), 
-            `${CARD_KEY_PREFIX}-${this.state.cardKeyCounter + idx}`, 
-            definition,
-            ANIMATIONS.drawCard)
-      )];
+        ...this.state.cards,
+        ...cardDefinitions.map(
+          (definition, idx) =>
+            new CardReference(
+              React.createRef(),
+              `${CARD_KEY_PREFIX}-${this.state.cardKeyCounter + idx}`,
+              definition,
+              ANIMATIONS.drawCard
+            )
+        ),
+      ];
 
       this.animationCount = cardDefinitions.length;
-      
+
       this.setState({
-        cardKeyCounter: this.state.cardKeyCounter + newCardCount,
-        centerCardIndex: newCenterCard,
-        cards
+        cardKeyCounter: this.state.cardKeyCounter + newCardCount,       
+        cards,
+        drawButtonEnabled: false
       });
+
+      this.indicatorRef.current.setData(cards);
+      this.carouselRef.current.setCards(cards, this.state.activeIndex);
     }
   }
 
-  toggleActiveItemSelected() {   
-      this.toggleSelected(this.state.activeIndex);
-  }
+  toggleActiveItemSelected = () => this.toggleSelected(this.state.activeIndex);
+  
+  toggleSelected(idx) {
+    // are there any cards ?
+    if (this.state.cards.length > 0) {
 
-  toggleSelected(idx) {   
-    if (this.state.activeIndex < this.state.cards.length) {
       const isSelected = this.getCard(idx).state.isSelected;
-      
-      if (isSelected || this.canSelectMoreCards()) {
-        this.selectItem(idx, !isSelected);
-        // can we deselect the oldest ?
-      } else if ( this.props.maxCardsReachedPolicy === MAX_SELECTION_REACHED_POLICY.CYCLE_OLDEST) {
-        const firstSelectedCard = this.state.cards.filter(card => card.ref.current.state.isSelected).reduce( 
-            (card, prev) => prev.ref.current.state.lastUpdate < card.ref.current.state.lastUpdate ? prev : card);
-         
+
+      // If the card is currently selected we can always deselect it. If it's currently 
+      // not selected we need to check if more cards can be selected or the max is reached
+      if (isSelected || this.canSelectMoreCards()) {        
+        this.selectCard(idx, !isSelected);
+      } 
+      // do we want to deselect the oldest selected card? 
+      else if (this.props.maxCardsReachedPolicy === MAX_SELECTION_REACHED_POLICY.CYCLE_OLDEST) {
+        
+        // find the card that was selected first (ie the oldest selected card)
+        const firstSelectedCard = this.state.cards
+          .filter((card) => card.ref.current.state.isSelected)
+          .reduce((card, prev) => prev.ref.current.state.lastUpdate < card.ref.current.state.lastUpdate
+              ? prev
+              : card
+          );
+
         // deselect the oldest/first selected card
-        this.selectItem(firstSelectedCard.ref.current.state.index, false);
+        this.selectCard(firstSelectedCard.ref.current.state.index, false);
 
         // select the current
-        this.selectItem(idx, true);    
+        this.selectCard(idx, true);
       } else {
+
+        // let the user know the max is reached
         this.dispatchMaxCardsSelectedWarning();
       }
     }
   }
 
-  toggleLock() {   
-    const newCenterIndex = !this.state.isLocked ? Math.floor(this.state.cards.length / 2) : this.state.activeIndex;
-    this.setState({
-      isLocked: !this.state.isLocked,
-      centerCardIndex: newCenterIndex,
-    });
-
-    this.forEachCard( card => card.setCenterIndex(newCenterIndex));
+  toggleLock() {  
+    this.carouselRef.current.setIsLocked(!this.state.isLocked);
+    this.setState({isLocked: !this.state.isLocked});
   }
 
-  getCard = (idx) => this.state.cards[idx].ref.current;
+  isLocked = () => this.state.isLocked;
+
+  getCard = (idx) => this.carouselRef.current ? this.carouselRef.current.getCard(idx) : null; 
+
+  getActiveCard = () => this.getCard(this.state.activeIndex);
     
-  getActiveCard = () => this.state.cards[this.state.activeIndex].ref.current;
-  
   /**
-   * Utility to iterate over the state's cards without having to deref the cards 
+   * Utility to iterate over the state's cards without having to deref the cards
    * @param {*} f a function of the form (card, index) where card is the card component
    */
-  forEachCard( f ) {
-    this.state.cards.forEach( (card, index) => f(card.ref.current, index));
+  forEachCard(f) {
+    this.state.cards.forEach((card, index) => f(card.ref.current, index));
   }
 
-  /**
-   * Count the number of cards that have been selected.
-   * @returns {number} number of cards selected
-   */
-  countSelectedCards() {
-    let result = 0;
-    for (let i = 0; i < this.state.cards.length; ++i) {
-      if (this.getCard(i)?.state.isSelected) {
-        result++;
-      }
-    }
-    return result;
-  } 
-
-  /**
-   * Calculate the center in locked mode
-   * @param {number} cardCount 
-   * @returns {number} the center of the cards
-   */
-  calculateCenterCard = (cardCount) => 
-      cardCount % 2 == 0 
-        ? (cardCount / 2) - 0.5
-        : Math.floor(cardCount / 2);
-
-  dispatchMaxCardsSelectedWarning = () => 
-    eventBus.dispatch(TOAST_TOPIC, { 
-      message: "<h3>Maximum selected cards reached</h3>", 
-      id: "max-card-selected-warning" 
+  dispatchMaxCardsSelectedWarning = () =>
+    eventBus.dispatch(TOAST_TOPIC, {
+      message: "<h3>Maximum selected cards reached</h3>",
+      id: "max-card-selected-warning",
     });
 }

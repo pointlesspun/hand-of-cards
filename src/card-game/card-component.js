@@ -203,6 +203,8 @@ export class CardComponent extends React.Component {
     
     setDeleted = () => this.setState({isDeleted: true});
 
+    isSelected = () => this.state.isSelected;
+
     // --- Utility methods  -------------------------------------------------------------------------------------------
     
     /**
