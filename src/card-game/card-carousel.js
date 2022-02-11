@@ -5,6 +5,34 @@ import { CardComponent } from "./card-component.js";
 import { Transform } from "../framework/transform.js";
 import { Vector3 } from "../framework/vector3.js";
 
+export const CAROUSEL_EVENT_NAME = "card-carousel-event";
+
+export const CARD_CAROUSEL_EVENT_TYPES = {
+  // focus on a certain code
+  FOCUS: "focus",
+
+  // select a given card
+  SELECT: "select",
+
+  // deselect a given card
+  DESELECT: "deselect",
+
+  // remove the selected cards
+  REMOVE_SELECTED_CARDS: "remove",
+
+  // draw more cards
+  DRAW_CARDS: "draw",
+
+  // play the selected cards
+  PLAY_SELECTED_CARDS: "play"
+}
+
+export class CardCarouselDetails {
+  constructor(type, parameters) {
+    this.type = type;
+    this.parameters = parameters;
+  }
+}
 
 export class CardCarousel extends React.Component {
   constructor(props) {
@@ -13,6 +41,9 @@ export class CardCarousel extends React.Component {
     const centerCardIndex = props.isLocked
       ? this.calculateCenterCard(props.cards.length)
       : props.activeIndex;
+
+    this.ref = React.createRef();
+    this.keyHandler = (evt) => this.handleKeyEvent(evt);
 
     this.state = {
       cards: props.cards,
@@ -24,14 +55,20 @@ export class CardCarousel extends React.Component {
     };
   }
 
+  // --- React overrides --------------------------------------------------------------------------------------------
+
   render() {
     const config = this.state.mediaConfig;
+    const innerHeight = config ? config.values.innerHeight : 1.0;
 
     const carouselProperties = {
       className: "carousel",
+      ref: this.ref,
+      // to listen for key events in case the scope is local
+      tabIndex: this.props.useGlobalEventScope === undefined ? undefined : 0,
       style: {
         // take the height from the platform specific settings
-        height: `${config.values.innerHeight * 100}%`,
+        height: `${innerHeight * 100}%`,
       },
     };
 
@@ -45,27 +82,30 @@ export class CardCarousel extends React.Component {
       id: innerId,
     };
 
-    const cardElements = this.state.cards.map((cardReference, index) =>
-      React.createElement(CardComponent, {
-        ref: cardReference.ref,
-        key: cardReference.key,
-        keyReference: cardReference.key,
-        definition: cardReference.definition,
-        transform: this.calculateTransform(
-          this.state.mediaConfig,
-          this.state.cards.length,
+    // only when a media configuration is known create the card elements
+    // otherwise we have no information to base the transforms on
+    const cardElements = config === null ? []
+      : this.state.cards.map((cardReference, index) =>
+        React.createElement(CardComponent, {
+          ref: cardReference.ref,
+          key: cardReference.key,
           index,
-          this.state.activeIndex,
-          this.state.centerCardIndex,
-          this.state.activeIndex === index
-        ),
-        index,
-        animation: cardReference.animation,
-        eventHandler: this.state.eventHandler,
-        hasFocus: this.state.activeIndex === index,
-        mediaConfig: this.state.mediaConfig,
-      })
-    );
+          keyReference: cardReference.key,
+          definition: cardReference.definition,
+          animation: cardReference.animation,
+          eventHandler: this.state.eventHandler,
+          hasFocus: this.state.activeIndex === index,
+          mediaConfig: config,
+          transform: this.calculateTransform(
+            config,
+            this.state.cards.length,
+            index,
+            this.state.activeIndex,
+            this.state.centerCardIndex,
+            false
+          ),
+        })
+      );
 
     const innerChildren = React.createElement(
       ELEMENT_TYPES.DIV,
@@ -79,6 +119,119 @@ export class CardCarousel extends React.Component {
       innerChildren
     );
   }
+
+  componentDidMount() {
+    if (this.props.useGlobalEventScope) {
+      globalThis.addEventListener("keyup", this.keyHandler);
+    } else {
+      this.ref.current.addEventListener("keyup", this.keyHandler);
+    }
+  }
+
+  /**
+   * Callback for when the componet is about to be removed from the dom. Remove the listeners.
+   */
+  componentWillUnmount() {
+    if (this.props.useGlobalEventScope) {
+      globalThis.removeEventListener("keyup", this.keyHandler);
+    }else {
+      this.ref.current.removeEventListener("keyup", this.keyHandler);
+    }
+  }
+
+  // --- Event handlers ---------------------------------------------------------------------------------------------
+
+  addEventListener(signal, listener) {
+    this.ref.current.addEventListener(signal, listener);
+  }
+
+  removeEventListener(signal, listener) {
+    this.ref.current.removeEventListener(signal, listener);
+  }
+
+  /**
+   * Utility method to dispatch an event
+   * @param {*} detail 
+   */
+   dispatchEvent(detail) {
+    this.ref.current.dispatchEvent(new CustomEvent(CAROUSEL_EVENT_NAME, {
+      detail,
+      bubbles: true,
+      cancelable: true,
+       composed: false
+    }));
+  }
+
+  /**
+   * Deal with keyboard input
+   * @param {number} keyCode
+   */
+  handleKeyEvent(evt) {
+    const keyCode = evt.keyCode;
+
+    if (evt.type === "keyup") {
+      // wait for the animations to finish
+      //if (this.animationCount === 0) {
+        if (this.handleKeyUp(keyCode)) {
+          evt.preventDefault();
+        }
+      //}
+    }
+  }
+  
+  handleKeyUp(keyCode) {
+    switch (keyCode) {
+      case KeyCode.KEY_LEFT:
+        if (this.state.activeIndex > 0) {
+          this.dispatchEvent(new CardCarouselDetails(CARD_CAROUSEL_EVENT_TYPES.FOCUS, this.state.activeIndex - 1));
+        }
+      break;
+
+      case KeyCode.KEY_RIGHT:
+        if (this.state.activeIndex < this.state.cards.length) {
+          this.dispatchEvent(new CardCarouselDetails(CARD_CAROUSEL_EVENT_TYPES.FOCUS, this.state.activeIndex + 1));
+        }
+        break;
+
+      case KeyCode.KEY_UP:
+        if (this.state.cards.length > 0 && !this.getCard(this.state.activeIndex).state.isSelected) {
+          this.dispatchEvent(new CardCarouselDetails(CARD_CAROUSEL_EVENT_TYPES.SELECT, this.state.activeIndex));
+        }
+        break;
+
+      case KeyCode.KEY_DOWN:
+        if (this.state.cards.length > 0 && this.getCard(this.state.activeIndex).state.isSelected) {
+          this.dispatchEvent(new CardCarouselDetails(CARD_CAROUSEL_EVENT_TYPES.DESELECT, this.state.activeIndex));
+        }
+        break;
+
+      case KeyCode.KEY_DELETE:
+        if (this.state.cards.length > 0 && this.countSelectedCards() > 0) {
+          this.emitEvent(new CardCarouselDetails(CARD_CAROUSEL_EVENT_TYPES.REMOVE_SELECTED_CARDS));
+
+        }
+        break;
+
+      case KeyCode.KEY_RETURN:
+        this.dispatchEvent(new CardCarouselDetails(CARD_CAROUSEL_EVENT_TYPES.DRAW_CARDS));
+        break;
+
+      case KeyCode.KEY_SPACE:
+        if (this.state.cards.length > 0 && this.countSelectedCards() > 0) {
+          this.dispatchEvent(new CardCarouselDetails(CARD_CAROUSEL_EVENT_TYPES.PLAY_SELECTED_CARDS));
+        }
+        break;
+
+      default:
+        // not handled
+        return false;
+    }
+
+    // code was handled
+    return true;
+  }
+
+  // --- State mutations & queries ----------------------------------------------------------------------------------
 
   setCards(cards, activeIndex) {
     const centerIndex = this.state.isLocked
@@ -100,7 +253,7 @@ export class CardCarousel extends React.Component {
         this.updateCardTransform(cardRef, idx, activeIndex, centerIndex);
       }
     });
-  }  
+  }
 
   setMediaConfig = (mediaConfig) => {
     this.setState({ mediaConfig });
@@ -118,19 +271,18 @@ export class CardCarousel extends React.Component {
 
   setActiveIndex(activeIndex, updateCenterCard = true) {
     if (updateCenterCard) {
-      const centerIndex = this.state.isLocked
+      const centerCardIndex = this.state.isLocked
         ? this.calculateCenterCard(this.state.cards.length)
         : activeIndex;
 
-      this.setState({ activeIndex, centerIndex });
+      this.setState({ activeIndex, centerCardIndex });
       this.forEachCard((card) => {
         this.updateCardTransform(
           card,
           card.getIndex(),
           activeIndex,
-          centerIndex
+          centerCardIndex
         );
-
       });
     } else {
       this.setState({ activeIndex });
@@ -141,7 +293,7 @@ export class CardCarousel extends React.Component {
           activeIndex,
           this.state.centerCardIndex
         );
-        });
+      });
     }
   }
 
@@ -165,7 +317,7 @@ export class CardCarousel extends React.Component {
         idx,
         activeIndex,
         centerIndex,
-        activeIndex === card.getIndex()
+        card.state.isSelected
       )
     );
 
@@ -228,7 +380,11 @@ export class CardCarousel extends React.Component {
    * @param {*} f a function of the form (card, index) where card is the card component
    */
   forEachCard(f) {
-    this.state.cards.forEach((card, index) => f(card.ref.current, index));
+    this.state.cards.forEach((card, index) => {
+      if (card.ref.current) {
+        f(card.ref.current, index);
+      }
+    });
   }
 
   /**
@@ -244,13 +400,14 @@ export class CardCarousel extends React.Component {
       centerCardIndex: centerIndex,
     });
 
-    this.forEachCard((card) => 
+    this.forEachCard((card) =>
       this.updateCardTransform(
         card,
         card.getIndex(),
         this.state.activeIndex,
         centerIndex
-      ));
+      )
+    );
   }
 
   isLocked = () => this.state.isLocked;
@@ -259,11 +416,12 @@ export class CardCarousel extends React.Component {
     cardCount % 2 == 0 ? cardCount / 2 - 0.5 : Math.floor(cardCount / 2);
 
   setCardSelected(idx, isSelected) {
-    const currentCard = this.getCard(idx);
+    const card = this.getCard(idx);
 
     // does the state change ?
-    if (currentCard.state.isSelected != isSelected) {
-      currentCard.setSelected(isSelected);
+    if (card.state.isSelected != isSelected) {
+      card.setSelected(isSelected);
+      this.updateCardTransform(card, idx, this.state.activeIndex, this.state.centerCardIndex);
     }
   }
 
@@ -276,6 +434,7 @@ export class CardCarousel extends React.Component {
    * @param {number} cardCount represents to the total number of cards in hand
    * @param {number} activeIndex index of the card the player is currently looking at
    * @param {number} centerCardIndex index of the card which is the center of the hand
+   * @param {boolean} isSelected indicates if the card is selected or not
    * @returns {Transform}
    */
   calculateTransform(
@@ -293,7 +452,7 @@ export class CardCarousel extends React.Component {
     const parentHeight = config.clientSize.height * values.innerHeight;
 
     // is the current card active (the one in the center which the user is working with) ?
-    const isActive = index === activeIndex;
+    const hasFocus = index === activeIndex;
 
     // center of the parent x axis
     const parentCenterX = config.clientSize.width / 2;
@@ -311,13 +470,13 @@ export class CardCarousel extends React.Component {
     const itemSelectedOffset = isSelected ? values.ySelectedOffset : 0;
 
     // if the item is active raise the y position
-    const itemActiveOffset = isActive ? values.yActiveOffset : 0;
+    const itemActiveOffset = hasFocus ? values.yActiveOffset : 0;
 
     // move the card to the bottom of the parent
     const yOffset = parentHeight - values.cardHeight + values.yBaseOffset;
 
     // move the card further down, the further it is from the center card to produce a curved hand illusion
-    const yOffsetWrtActive = isActive
+    const yOffsetWrtActive = hasFocus
       ? 0
       : Math.abs(deltaCenterIdx) *
         Math.abs(deltaCenterIdx) *
@@ -330,10 +489,10 @@ export class CardCarousel extends React.Component {
         parentCenterX - cardCenterX + deltaCenterIdx * values.xTranslation,
         yOffset + itemSelectedOffset + itemActiveOffset + yOffsetWrtActive,
         // make sure the cards closer to the center overlap cards further away
-        isActive ? 200 : 100 - Math.abs(deltaCenterIdx)
+        hasFocus ? 200 : 100 - Math.abs(deltaCenterIdx)
       ),
       new Vector3(itemScale, itemScale),
-      isActive ? 0 : values.rotation * deltaCenterIdx
+      hasFocus ? 0 : values.rotation * deltaCenterIdx
     );
   }
 }
