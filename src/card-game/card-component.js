@@ -17,17 +17,12 @@ export class CardComponent extends React.Component {
     constructor(props) {
         super(props);   
         
-        // transient properties
-        this.ref = React.createRef();
-        this.isRefInitialized = false;
-        this.animationCount = 0;
-    
         this.state = {
           index: props.index,
-          activeIndex: props.activeIndex,
-          cardCount: props.cardCount,
-          centerIndex: props.centerIndex,
+          hasFocus: props.hasFocus,
+          transform: props.transform,
           isSelected: props.isSelected ?? false,
+          // xxx move to model
           lastUpdate: Date.now(),
           mediaConfig: props.mediaConfig,
           eventHandler: props.eventHandler,
@@ -36,6 +31,7 @@ export class CardComponent extends React.Component {
         };       
 
         // transient properties
+        this.ref = React.createRef();
         this.swipeListener = (evt) => this.handleSwiped(evt);
         this.mouseListener = (evt) => this.handleMouseEvent(evt);
         this.touchListener = (evt) => this.handleTouch(evt);
@@ -52,20 +48,9 @@ export class CardComponent extends React.Component {
             });
         }
 
-        const isActive = this.state.index === this.state.activeIndex;
-        
-        const transform = this.calculateTransform(
-            this.state.mediaConfig, 
-            this.state.cardCount, 
-            this.state.index, 
-            this.state.activeIndex, 
-            this.state.centerIndex, 
-            this.state.isSelected
-        );
-
         const properties = {
             id: this.props.keyReference,
-            className : this.createClassName(isActive),
+            className : this.createClassName(this.state.hasFocus),
             ref: this.ref,
   
             style : {
@@ -80,14 +65,14 @@ export class CardComponent extends React.Component {
         if (!properties.style.animationName) {
             // is an animation scheduled
             if (this.state.animation) {
-                this.startAnimation(transform, properties, this.state.mediaConfig);
+                this.startAnimation(this.state.transform, properties, this.state.mediaConfig);
             } else {
                 // no animation just define the intended position, scale & rotation of the card
-                properties.style.transform = transform.toCss({});
+                properties.style.transform = this.state.transform.toCss({});
             }
         }
         
-        return React.createElement(ELEMENT_TYPES.DIV, properties, this.renderOverlay(isActive));
+        return React.createElement(ELEMENT_TYPES.DIV, properties, this.renderOverlay(this.state.hasFocus));
     }
 
     // --- Sub elements -----------------------------------------------------------------------------------------------
@@ -96,8 +81,8 @@ export class CardComponent extends React.Component {
      * color overlay giving the card some shadow depending on its state
      * @private
      */ 
-    renderOverlay(isActive) {
-        return React.createElement(ELEMENT_TYPES.DIV, { className : `card-overlay${isActive ? "-active" : ""}`});
+    renderOverlay(hasFocus) {
+        return React.createElement(ELEMENT_TYPES.DIV, { className : `card-overlay${hasFocus ? "-focus" : ""}`});
     } 
 
     // --- Event handlers ---------------------------------------------------------------------------------------------
@@ -179,17 +164,12 @@ export class CardComponent extends React.Component {
     }
 
     setMediaConfig = (mediaConfig) => this.setState({mediaConfig});
-
-    setCardCount = (cardCount) => this.setState({cardCount});
     
-    setActiveIndex = (activeIndex) => this.setState({activeIndex});
-
-    setCenterIndex = (centerIndex) => this.setState({centerIndex});
-
-    setActiveAndCenterIndices = (activeIndex, centerIndex) => {
-        this.setActiveIndex(activeIndex);
-        this.setCenterIndex(centerIndex);
+    setHasFocus(hasFocus) {
+        this.setState({isActive: hasFocus});
     }
+    
+    setTransform = (transform) => this.setState({transform});
 
     setSelected = (isSelected) =>
         this.setState({
@@ -197,7 +177,11 @@ export class CardComponent extends React.Component {
             isSelected
         });
     
-    setIndex = (index) => this.setState({index});
+    setIndex(index) {
+        this.setState({index});
+    } 
+
+    getIndex = () => this.state.index;
 
     setAnimation = (animation) => this.setState({animation});
     
@@ -206,72 +190,13 @@ export class CardComponent extends React.Component {
     isSelected = () => this.state.isSelected;
 
     // --- Utility methods  -------------------------------------------------------------------------------------------
-    
-    /**
-     * Calculates the transformation (translation, rotation, scale) of the card on screen
-     * @private
-     * @param {PlatformConfiguration} config contains the settings relevant to the current media/device 
-     * @param {number} cardCount represents to the total number of cards in hand
-     * @param {number} activeIndex index of the card the player is currently looking at
-     * @param {number} centerCardIndex index of the card which is the center of the hand
-     * @returns {Transform}
-     */
-     calculateTransform(config, cardCount, index, activeIndex, centerCardIndex, isSelected) {
-            
-        // short hand reference
-        const values = config.values;
-
-        // size of the div containing these cards
-        const parentHeight = config.clientSize.height * values.innerHeight;
-
-        // is the current card active (the one in the center which the user is working with) ?
-        const isActive = index === activeIndex;
-
-        // center of the parent x axis
-        const parentCenterX = config.clientSize.width / 2;
-
-        // how far is this card from the center cards ?
-        const deltaCenterIdx = index - centerCardIndex;
-
-        const maxDeltaIdx = Math.abs(deltaCenterIdx) / cardCount;
-
-        // try to scale down items further away from the center somewhat more
-        const itemScale = values.baseScale + values.dynamicScale * (1-maxDeltaIdx);
-
-        // if the item is selected raise the y position
-        const itemSelectedOffset = isSelected ? values.ySelectedOffset : 0;
-        
-        // if the item is active raise the y position
-        const itemActiveOffset = isActive ? values.yActiveOffset : 0;
-        
-        // move the card to the bottom of the parent
-        const yOffset =  (parentHeight - values.cardHeight) + values.yBaseOffset;
-        
-        // move the card further down, the further it is from the center card to produce a curved hand illusion
-        const yOffsetWrtActive = isActive 
-            ? 0 
-            : Math.abs(deltaCenterIdx) * Math.abs(deltaCenterIdx) * values.yTranslation;
-
-        const cardCenterX = values.cardWidth / 2;
-
-        return new Transform(
-            new Vector3(
-                parentCenterX - cardCenterX + deltaCenterIdx * values.xTranslation,
-                yOffset + itemSelectedOffset + itemActiveOffset + yOffsetWrtActive,
-                // make sure the cards closer to the center overlap cards further away
-                isActive ? 200 : 100 - Math.abs(deltaCenterIdx)
-            ),
-            new Vector3(itemScale, itemScale),
-            isActive ? 0 :  values.rotation * deltaCenterIdx,
-        );        
-    }
 
     createClassName(isActive) {
         let className = `card-item`;
 
         if (!this.state.animation) {
             if (isActive) {
-                className += " card-item-active";
+                className += " card-item-focus";
             }
 
             if (this.state.isSelected) {

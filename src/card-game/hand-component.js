@@ -191,7 +191,6 @@ export class HandComponent extends React.Component {
       cards: this.state.cards,
       eventHandler: this.cardEventHandler,
       activeIndex: this.getActiveIndex(),
-      cardCount: this.state.cards.length,
       mediaConfig: this.state.mediaConfig,
     };
 
@@ -541,7 +540,10 @@ export class HandComponent extends React.Component {
      
       this.carouselRef.current.playSelectedCards(activeIndex, ANIMATIONS.playCard, this.state.foldCardsPolicy === FOLD_CARDS_POLICY.IMMEDIATELY);
 
-      this.setState({activeIndex});
+      this.setState({
+        activeIndex,
+        playButtonEnabled: false
+      });
     }
   }
 
@@ -553,10 +555,6 @@ export class HandComponent extends React.Component {
       const newCardCount = this.props.maxCards - this.state.cards.length;
       const cardDefinitions = pickRandomCardDefinitions(this.props.deck, newCardCount);
      
-      this.forEachCard((card) => {     
-        card.setCardCount(this.props.maxCards);
-      });
-
       // create a new array of cards, consisting of old and new cards
       const cards = [
         ...this.state.cards,

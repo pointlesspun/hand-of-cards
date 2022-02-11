@@ -2,15 +2,17 @@
 
 import { ELEMENT_TYPES } from "../framework/element-types.js";
 import { CardComponent } from "./card-component.js";
+import { Transform } from "../framework/transform.js";
+import { Vector3 } from "../framework/vector3.js";
 
-// rename hand component to main ?
+
 export class CardCarousel extends React.Component {
   constructor(props) {
     super(props);
 
     const centerCardIndex = props.isLocked
-        ? this.calculateCenterCard(props.cards.length)
-        : props.activeIndex;
+      ? this.calculateCenterCard(props.cards.length)
+      : props.activeIndex;
 
     this.state = {
       cards: props.cards,
@@ -49,12 +51,18 @@ export class CardCarousel extends React.Component {
         key: cardReference.key,
         keyReference: cardReference.key,
         definition: cardReference.definition,
+        transform: this.calculateTransform(
+          this.state.mediaConfig,
+          this.state.cards.length,
+          index,
+          this.state.activeIndex,
+          this.state.centerCardIndex,
+          this.state.activeIndex === index
+        ),
         index,
         animation: cardReference.animation,
         eventHandler: this.state.eventHandler,
-        centerIndex: this.state.centerCardIndex,
-        activeIndex: this.state.activeIndex,
-        cardCount: this.state.cards.length,
+        hasFocus: this.state.activeIndex === index,
         mediaConfig: this.state.mediaConfig,
       })
     );
@@ -71,76 +79,119 @@ export class CardCarousel extends React.Component {
       innerChildren
     );
   }
-  
-  setCards(cards, activeIndex) {
-    
-    const centerIndex = this.state.isLocked? this.calculateCenterCard(cards.length) : activeIndex;
 
-    this.setState({ 
+  setCards(cards, activeIndex) {
+    const centerIndex = this.state.isLocked
+      ? this.calculateCenterCard(cards.length)
+      : activeIndex;
+
+    this.setState({
       cards,
       activeIndex,
-      centerIndex,
+      centerCardIndex: centerIndex,
     });
-    
+
     cards.forEach((card, idx) => {
       const cardRef = card.ref.current;
 
       if (cardRef) {
         cardRef.setIndex(idx);
-        cardRef.setActiveAndCenterIndices(activeIndex, centerIndex);
-        cardRef.setCardCount(cards.length);
+        cardRef.setHasFocus(idx === activeIndex);
+        this.updateCardTransform(cardRef, idx, activeIndex, centerIndex);
       }
     });
-  }
+  }  
 
   setMediaConfig = (mediaConfig) => {
     this.setState({ mediaConfig });
-    this.forEachCard((card) => card?.setMediaConfig(mediaConfig));
+    this.forEachCard((card) =>
+      this.updateCardTransform(
+        card,
+        card.getIndex(),
+        this.state.activeIndex,
+        this.state.centerCardIndex
+      )
+    );
   };
 
   setCardEventHandler = (eventHandler) => this.setState({ eventHandler });
-  
+
   setActiveIndex(activeIndex, updateCenterCard = true) {
     if (updateCenterCard) {
       const centerIndex = this.state.isLocked
-          ? this.calculateCenterCard(this.state.cards.length)
-          : activeIndex;
+        ? this.calculateCenterCard(this.state.cards.length)
+        : activeIndex;
 
       this.setState({ activeIndex, centerIndex });
-      this.forEachCard((card) => card.setActiveAndCenterIndices(activeIndex, centerIndex));
+      this.forEachCard((card) => {
+        this.updateCardTransform(
+          card,
+          card.getIndex(),
+          activeIndex,
+          centerIndex
+        );
+
+      });
     } else {
       this.setState({ activeIndex });
-      this.forEachCard((card) => card.setActiveIndex(activeIndex));
+      this.forEachCard((card) => {
+        this.updateCardTransform(
+          card,
+          card.getIndex(),
+          activeIndex,
+          this.state.centerCardIndex
+        );
+        });
     }
   }
 
   setActiveAndCenterIndices = (activeIndex, centerCardIndex) => {
     this.setState({ activeIndex, centerCardIndex });
-    this.forEachCard((card) => card.setActiveAndCenterIndices(activeIndex, centerCardIndex));
+    this.forEachCard((card) => {
+      this.updateCardTransform(
+        card,
+        card.getIndex(),
+        activeIndex,
+        centerCardIndex
+      );
+    });
   };
 
+  updateCardTransform(card, idx, activeIndex, centerIndex) {
+    card.setTransform(
+      this.calculateTransform(
+        this.state.mediaConfig,
+        this.state.cards.length,
+        idx,
+        activeIndex,
+        centerIndex,
+        activeIndex === card.getIndex()
+      )
+    );
+
+    card.setHasFocus(idx === activeIndex);
+  }
+
   /**
-   * 
-   * @param {*} animation 
+   *
+   * @param {*} animation
    * @param {boolean} immediatelyFoldCards  if set to true the remaining cards will fold back now. If false, they will
    * fold after the animation is complete and the cards are deleted.
    */
   playSelectedCards(activeIndex, animation, immediatelyFoldCards) {
-    
     let idx = 0;
     const cardsLeft = this.state.cards.length - this.countSelectedCards();
     const centerIndex = this.state.isLocked
-    ? this.calculateCenterCard(cardsLeft)
-    : activeIndex;
-    
+      ? this.calculateCenterCard(cardsLeft)
+      : activeIndex;
+
     this.forEachCard((card) => {
       if (card.state.isSelected) {
         card.setAnimation(animation);
       } else {
         if (immediatelyFoldCards) {
           card.setIndex(idx);
-          card.setActiveAndCenterIndices(activeIndex, centerIndex);
-          card.setCardCount(cardsLeft);
+          this.updateCardTransform(card, idx, activeIndex, centerIndex);
         }
         idx++;
       }
@@ -148,9 +199,9 @@ export class CardCarousel extends React.Component {
 
     if (immediatelyFoldCards) {
       this.setState({
-        activeIndex
+        activeIndex,
       });
-    }   
+    }
   }
 
   getCard = (idx) =>
@@ -193,7 +244,13 @@ export class CardCarousel extends React.Component {
       centerCardIndex: centerIndex,
     });
 
-    this.forEachCard((card) => card.setCenterIndex(centerIndex));
+    this.forEachCard((card) => 
+      this.updateCardTransform(
+        card,
+        card.getIndex(),
+        this.state.activeIndex,
+        centerIndex
+      ));
   }
 
   isLocked = () => this.state.isLocked;
@@ -211,5 +268,72 @@ export class CardCarousel extends React.Component {
   }
 
   isCardSelected = (idx) => this.getCard(idx).state.isSelected;
- 
+
+  /**
+   * Calculates the transformation (translation, rotation, scale) of the card on screen
+   * @private
+   * @param {PlatformConfiguration} config contains the settings relevant to the current media/device
+   * @param {number} cardCount represents to the total number of cards in hand
+   * @param {number} activeIndex index of the card the player is currently looking at
+   * @param {number} centerCardIndex index of the card which is the center of the hand
+   * @returns {Transform}
+   */
+  calculateTransform(
+    config,
+    cardCount,
+    index,
+    activeIndex,
+    centerCardIndex,
+    isSelected
+  ) {
+    // short hand reference
+    const values = config.values;
+
+    // size of the div containing these cards
+    const parentHeight = config.clientSize.height * values.innerHeight;
+
+    // is the current card active (the one in the center which the user is working with) ?
+    const isActive = index === activeIndex;
+
+    // center of the parent x axis
+    const parentCenterX = config.clientSize.width / 2;
+
+    // how far is this card from the center cards ?
+    const deltaCenterIdx = index - centerCardIndex;
+
+    const maxDeltaIdx = Math.abs(deltaCenterIdx) / cardCount;
+
+    // try to scale down items further away from the center somewhat more
+    const itemScale =
+      values.baseScale + values.dynamicScale * (1 - maxDeltaIdx);
+
+    // if the item is selected raise the y position
+    const itemSelectedOffset = isSelected ? values.ySelectedOffset : 0;
+
+    // if the item is active raise the y position
+    const itemActiveOffset = isActive ? values.yActiveOffset : 0;
+
+    // move the card to the bottom of the parent
+    const yOffset = parentHeight - values.cardHeight + values.yBaseOffset;
+
+    // move the card further down, the further it is from the center card to produce a curved hand illusion
+    const yOffsetWrtActive = isActive
+      ? 0
+      : Math.abs(deltaCenterIdx) *
+        Math.abs(deltaCenterIdx) *
+        values.yTranslation;
+
+    const cardCenterX = values.cardWidth / 2;
+
+    return new Transform(
+      new Vector3(
+        parentCenterX - cardCenterX + deltaCenterIdx * values.xTranslation,
+        yOffset + itemSelectedOffset + itemActiveOffset + yOffsetWrtActive,
+        // make sure the cards closer to the center overlap cards further away
+        isActive ? 200 : 100 - Math.abs(deltaCenterIdx)
+      ),
+      new Vector3(itemScale, itemScale),
+      isActive ? 0 : values.rotation * deltaCenterIdx
+    );
+  }
 }
