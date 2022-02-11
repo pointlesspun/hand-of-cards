@@ -272,7 +272,7 @@ export class HandComponent extends React.Component {
           break;
 
         case SWIPE_DIRECTIONS.RIGHT:
-          this.moveActiveItem(-1);
+          this.setActiveIndex(this.getActiveIndex()-1);
           break;
 
         case SWIPE_DIRECTIONS.DOWN:
@@ -280,7 +280,7 @@ export class HandComponent extends React.Component {
           break;
 
         case SWIPE_DIRECTIONS.LEFT:
-          this.moveActiveItem(1);
+          this.setActiveIndex(this.getActiveIndex()+1);
           break;
       }
     }
@@ -334,11 +334,11 @@ export class HandComponent extends React.Component {
   handleKeyUp(keyCode) {
     switch (keyCode) {
       case KeyCode.KEY_LEFT:
-        this.moveActiveItem(-1);
+        this.setActiveIndex(this.getActiveIndex()-1);
         break;
 
       case KeyCode.KEY_RIGHT:
-        this.moveActiveItem(1);
+        this.setActiveIndex(this.getActiveIndex()+1);
         break;
 
       case KeyCode.KEY_UP:
@@ -468,21 +468,10 @@ export class HandComponent extends React.Component {
   setActiveIndex(idx, updateCenterCard = true) {
     const activeIndex = Math.clamp(idx, 0, this.state.cards.length);
 
-    //this.setState({activeIndex});
     this.setActiveIndexValue(activeIndex);
   
     this.indicatorRef.current.setActiveIndex(activeIndex);
-    this.carouselRef.current.setActiveIndex(idx, updateCenterCard);
-  }
-
-  // xxx replace with setACtiveIndex 
-  moveActiveItem(delta) {
-    const activeIndex = Math.clamp(this.getActiveIndex() + delta, 0, this.state.cards.length);
-    //this.setState({ activeIndex });
-    this.setActiveIndexValue(activeIndex);
-  
-    this.indicatorRef.current.setActiveIndex(activeIndex);
-    this.carouselRef.current.setActiveIndex(activeIndex);
+    this.carouselRef.current.setActiveIndex(activeIndex, updateCenterCard);
   }
 
   selectCard(idx, isSelected) {
@@ -530,8 +519,8 @@ export class HandComponent extends React.Component {
         this.indicatorRef.current.setActiveIndex(activeIndex);
         this.carouselRef.current.setCards(unselectedCards, activeIndex);
 
+        this.setActiveIndexValue(activeIndex);
         this.setState({
-          activeIndex,
           cards: unselectedCards,
           drawButtonEnabled: true
         });

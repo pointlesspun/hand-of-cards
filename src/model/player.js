@@ -19,4 +19,8 @@ export class Player {
             deck ?? this.deck,
             hand ?? this.hand
         );
+
+    next( modifier ) {
+        return modifier(this.clone());
+    }
 }
