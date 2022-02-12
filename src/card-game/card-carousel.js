@@ -4,15 +4,25 @@ import { ELEMENT_TYPES } from "../framework/element-types.js";
 import { CardComponent } from "./card-component.js";
 import { Transform } from "../framework/transform.js";
 import { Vector3 } from "../framework/vector3.js";
+import { CARD_EVENT_TYPES } from "./card-event.js";
+import { ANIMATIONS } from "../animations.js";
+import { SWIPE_DIRECTIONS } from "../framework/swipe-directions.js";
+import { ANIMATION_EVENT_TYPE } from "../framework/animation-utilities.js";
 
 export const CAROUSEL_EVENT_NAME = "card-carousel-event";
 
 export const CARD_CAROUSEL_EVENT_TYPES = {
-  // focus on a certain code
+  // focus on a certain card
   FOCUS: "focus",
+
+  // hover over a card
+  HOVER: "hover",
 
   // select a given card
   SELECT: "select",
+
+  // focusses and selects a given card
+  FOCUS_AND_SELECT: "focus-and-select",
 
   // deselect a given card
   DESELECT: "deselect",
@@ -24,8 +34,11 @@ export const CARD_CAROUSEL_EVENT_TYPES = {
   DRAW_CARDS: "draw",
 
   // play the selected cards
-  PLAY_SELECTED_CARDS: "play"
-}
+  PLAY_SELECTED_CARDS: "play",
+
+  // animation for draw or play has completed
+  ANIMATION_COMPLETE: "animation-complete"
+};
 
 export class CardCarouselDetails {
   constructor(type, parameters) {
@@ -44,11 +57,13 @@ export class CardCarousel extends React.Component {
 
     this.ref = React.createRef();
     this.keyHandler = (evt) => this.handleKeyEvent(evt);
+    this.cardEventHandler = (evt) => this.handleCardEvent(evt);
+
+    this.animationCount = 0;
 
     this.state = {
       cards: props.cards,
       mediaConfig: props.mediaConfig,
-      eventHandler: props.eventHandler,
       centerCardIndex,
       activeIndex: props.activeIndex,
       isLocked: props.isLocked,
@@ -84,28 +99,30 @@ export class CardCarousel extends React.Component {
 
     // only when a media configuration is known create the card elements
     // otherwise we have no information to base the transforms on
-    const cardElements = config === null ? []
-      : this.state.cards.map((cardReference, index) =>
-        React.createElement(CardComponent, {
-          ref: cardReference.ref,
-          key: cardReference.key,
-          index,
-          keyReference: cardReference.key,
-          definition: cardReference.definition,
-          animation: cardReference.animation,
-          eventHandler: this.state.eventHandler,
-          hasFocus: this.state.activeIndex === index,
-          mediaConfig: config,
-          transform: this.calculateTransform(
-            config,
-            this.state.cards.length,
-            index,
-            this.state.activeIndex,
-            this.state.centerCardIndex,
-            false
-          ),
-        })
-      );
+    const cardElements =
+      config === null
+        ? []
+        : this.state.cards.map((cardReference, index) =>
+            React.createElement(CardComponent, {
+              ref: cardReference.ref,
+              key: cardReference.key,
+              index,
+              keyReference: cardReference.key,
+              definition: cardReference.definition,
+              animation: cardReference.animation,
+              eventHandler: this.cardEventHandler,
+              hasFocus: this.state.activeIndex === index,
+              mediaConfig: config,
+              transform: this.calculateTransform(
+                config,
+                this.state.cards.length,
+                index,
+                this.state.activeIndex,
+                this.state.centerCardIndex,
+                false
+              ),
+            })
+          );
 
     const innerChildren = React.createElement(
       ELEMENT_TYPES.DIV,
@@ -134,7 +151,7 @@ export class CardCarousel extends React.Component {
   componentWillUnmount() {
     if (this.props.useGlobalEventScope) {
       globalThis.removeEventListener("keyup", this.keyHandler);
-    }else {
+    } else {
       this.ref.current.removeEventListener("keyup", this.keyHandler);
     }
   }
@@ -151,15 +168,17 @@ export class CardCarousel extends React.Component {
 
   /**
    * Utility method to dispatch an event
-   * @param {*} detail 
+   * @param {*} detail
    */
-   dispatchEvent(detail) {
-    this.ref.current.dispatchEvent(new CustomEvent(CAROUSEL_EVENT_NAME, {
-      detail,
-      bubbles: true,
-      cancelable: true,
-       composed: false
-    }));
+  dispatchEvent(detail) {
+    this.ref.current.dispatchEvent(
+      new CustomEvent(CAROUSEL_EVENT_NAME, {
+        detail,
+        bubbles: true,
+        cancelable: true,
+        composed: false,
+      })
+    );
   }
 
   /**
@@ -171,54 +190,94 @@ export class CardCarousel extends React.Component {
 
     if (evt.type === "keyup") {
       // wait for the animations to finish
-      //if (this.animationCount === 0) {
+      if (this.animationCount === 0) {
         if (this.handleKeyUp(keyCode)) {
           evt.preventDefault();
         }
-      //}
+      }
     }
   }
-  
+
   handleKeyUp(keyCode) {
+    // wait for the animations to finish, don't process events while animating (in the current implementation there's no clean way to deal with it)
+    if(this.animationCount > 0) {
+      return;
+    }
+
     switch (keyCode) {
       case KeyCode.KEY_LEFT:
         if (this.state.activeIndex > 0) {
-          this.dispatchEvent(new CardCarouselDetails(CARD_CAROUSEL_EVENT_TYPES.FOCUS, this.state.activeIndex - 1));
+          this.dispatchEvent(
+            new CardCarouselDetails(
+              CARD_CAROUSEL_EVENT_TYPES.FOCUS,
+              this.state.activeIndex - 1
+            )
+          );
         }
-      break;
+        break;
 
       case KeyCode.KEY_RIGHT:
         if (this.state.activeIndex < this.state.cards.length) {
-          this.dispatchEvent(new CardCarouselDetails(CARD_CAROUSEL_EVENT_TYPES.FOCUS, this.state.activeIndex + 1));
+          this.dispatchEvent(
+            new CardCarouselDetails(
+              CARD_CAROUSEL_EVENT_TYPES.FOCUS,
+              this.state.activeIndex + 1
+            )
+          );
         }
         break;
 
       case KeyCode.KEY_UP:
-        if (this.state.cards.length > 0 && !this.getCard(this.state.activeIndex).state.isSelected) {
-          this.dispatchEvent(new CardCarouselDetails(CARD_CAROUSEL_EVENT_TYPES.SELECT, this.state.activeIndex));
+        if (
+          this.state.cards.length > 0 &&
+          !this.getCard(this.state.activeIndex).state.isSelected
+        ) {
+          this.dispatchEvent(
+            new CardCarouselDetails(
+              CARD_CAROUSEL_EVENT_TYPES.SELECT,
+              this.state.activeIndex
+            )
+          );
         }
         break;
 
       case KeyCode.KEY_DOWN:
-        if (this.state.cards.length > 0 && this.getCard(this.state.activeIndex).state.isSelected) {
-          this.dispatchEvent(new CardCarouselDetails(CARD_CAROUSEL_EVENT_TYPES.DESELECT, this.state.activeIndex));
+        if (
+          this.state.cards.length > 0 &&
+          this.getCard(this.state.activeIndex).state.isSelected
+        ) {
+          this.dispatchEvent(
+            new CardCarouselDetails(
+              CARD_CAROUSEL_EVENT_TYPES.DESELECT,
+              this.state.activeIndex
+            )
+          );
         }
         break;
 
       case KeyCode.KEY_DELETE:
         if (this.state.cards.length > 0 && this.countSelectedCards() > 0) {
-          this.emitEvent(new CardCarouselDetails(CARD_CAROUSEL_EVENT_TYPES.REMOVE_SELECTED_CARDS));
-
+          this.emitEvent(
+            new CardCarouselDetails(
+              CARD_CAROUSEL_EVENT_TYPES.REMOVE_SELECTED_CARDS
+            )
+          );
         }
         break;
 
       case KeyCode.KEY_RETURN:
-        this.dispatchEvent(new CardCarouselDetails(CARD_CAROUSEL_EVENT_TYPES.DRAW_CARDS));
+        this.dispatchEvent(
+          new CardCarouselDetails(CARD_CAROUSEL_EVENT_TYPES.DRAW_CARDS)
+        );
         break;
 
       case KeyCode.KEY_SPACE:
         if (this.state.cards.length > 0 && this.countSelectedCards() > 0) {
-          this.dispatchEvent(new CardCarouselDetails(CARD_CAROUSEL_EVENT_TYPES.PLAY_SELECTED_CARDS));
+          this.dispatchEvent(
+            new CardCarouselDetails(
+              CARD_CAROUSEL_EVENT_TYPES.PLAY_SELECTED_CARDS
+            )
+          );
         }
         break;
 
@@ -229,6 +288,147 @@ export class CardCarousel extends React.Component {
 
     // code was handled
     return true;
+  }
+
+  handleCardEvent(evt) {
+      switch (evt.type) {
+        case CARD_EVENT_TYPES.ANIMATION:
+          this.handleAnimation(evt.parameters);
+          break;
+        case CARD_EVENT_TYPES.TAP:
+          this.handleTap(evt.card);
+          break;
+        case CARD_EVENT_TYPES.SWIPE:
+          this.handleSwipe(evt.parameters.detail.dir, evt.card.state.index);
+          break;
+        case CARD_EVENT_TYPES.FOCUS:
+          this.dispatchEvent(
+            new CardCarouselDetails(
+              CARD_CAROUSEL_EVENT_TYPES.HOVER,
+              evt.card.state.index
+            )
+          );
+          break;
+      }
+  }
+
+ /**
+   * Handle animation start / end events
+   * @param {AnimationEvent} evt
+   */
+  handleAnimation(evt) {
+    if (evt.type === ANIMATION_EVENT_TYPE.START) {
+      this.animationCount++;
+    } else if (evt.type === ANIMATION_EVENT_TYPE.END) {
+      this.animationCount--;
+
+      if (evt.animation.name === ANIMATIONS.playCard.name) {
+        // mark the card as deleted, we need to do this asap and not delay until removeSelectedItems
+        // otherwise one last frame of rendering may kick in and we end up with weird glitches
+        evt.source.setDeleted();
+      }
+
+      // no more outstanding animations ?
+      if (this.animationCount === 0) {
+        this.dispatchEvent(
+          new CardCarouselDetails(CARD_CAROUSEL_EVENT_TYPES.ANIMATION_COMPLETE, evt.animation)
+        );
+      }      
+    }
+  }
+
+  handleTap(card) {
+    // wait for the animations to finish, don't process events while animating (in the current implementation there's no clean way to deal with it)
+    if (this.animationCount === 0) {
+      
+      const idx = card.state.index;
+
+      if (idx !== this.state.activeIndex) {
+        this.dispatchEvent(
+          new CardCarouselDetails(CARD_CAROUSEL_EVENT_TYPES.FOCUS_AND_SELECT, idx)
+        );
+      } else {
+        // toggle
+        if (card.state.isSelected) {
+          this.dispatchEvent(
+            new CardCarouselDetails(CARD_CAROUSEL_EVENT_TYPES.DESELECT, idx)
+          );
+        } else {
+          this.dispatchEvent(
+            new CardCarouselDetails(CARD_CAROUSEL_EVENT_TYPES.SELECT, idx)
+          );
+        }
+      }
+    }
+  }
+
+  /**
+   * Deal with swipes generated with a touch device
+   * @param {*} direction
+   */
+  handleSwipe(direction, index) {
+    // wait for the animations to finish, don't process events while animating (in the current implementation there's no clean way to deal with it)
+    if (this.animationCount === 0) {
+      switch (direction) {
+        case SWIPE_DIRECTIONS.UP:
+          this.handleSwipeUp(index);
+          break;
+
+        case SWIPE_DIRECTIONS.RIGHT:
+          this.dispatchEvent(
+            new CardCarouselDetails(
+              CARD_CAROUSEL_EVENT_TYPES.FOCUS,
+              this.state.activeIndex - 1
+            )
+          );
+          break;
+
+        case SWIPE_DIRECTIONS.DOWN:
+          this.handleSwipeDown(index);
+          break;
+
+        case SWIPE_DIRECTIONS.LEFT:
+          this.dispatchEvent(
+            new CardCarouselDetails(
+              CARD_CAROUSEL_EVENT_TYPES.FOCUS,
+              this.state.activeIndex + 1
+            )
+          );
+          break;
+      }
+    }
+  }
+
+  handleSwipeUp(index) {
+    // are there any cards in hand ?
+    if (this.state.cards.length > 0) {
+      // which card was swiped
+      if (index !== undefined) {
+        //If the card was already selected, and the user swipes up again play the cards
+        if (this.getCard(index).state.isSelected) {
+          this.dispatchEvent(
+            new CardCarouselDetails(
+              CARD_CAROUSEL_EVENT_TYPES.PLAY_SELECTED_CARDS
+            )
+          );
+        } else {
+          this.dispatchEvent(
+            new CardCarouselDetails(CARD_CAROUSEL_EVENT_TYPES.SELECT, index)
+          );
+        }
+      }
+    }
+  }
+
+  handleSwipeDown(index) {
+    if (this.state.cards.length > 0) {
+      // which card was swiped
+      if (index !== undefined) {
+        this.dispatchEvent(
+          new CardCarouselDetails(CARD_CAROUSEL_EVENT_TYPES.DESELECT, index)
+        );
+      }
+    }
   }
 
   // --- State mutations & queries ----------------------------------------------------------------------------------
@@ -266,8 +466,6 @@ export class CardCarousel extends React.Component {
       )
     );
   };
-
-  setCardEventHandler = (eventHandler) => this.setState({ eventHandler });
 
   setActiveIndex(activeIndex, updateCenterCard = true) {
     if (updateCenterCard) {
@@ -339,7 +537,7 @@ export class CardCarousel extends React.Component {
 
     this.forEachCard((card) => {
       if (card.state.isSelected) {
-        card.setAnimation(animation);
+        card.setAnimation(animation);       
       } else {
         if (immediatelyFoldCards) {
           card.setIndex(idx);
@@ -421,7 +619,12 @@ export class CardCarousel extends React.Component {
     // does the state change ?
     if (card.state.isSelected != isSelected) {
       card.setSelected(isSelected);
-      this.updateCardTransform(card, idx, this.state.activeIndex, this.state.centerCardIndex);
+      this.updateCardTransform(
+        card,
+        idx,
+        this.state.activeIndex,
+        this.state.centerCardIndex
+      );
     }
   }
 

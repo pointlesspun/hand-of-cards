@@ -32,13 +32,6 @@ import {
 import { Player } from "../model/player.js";
 import { CardGameModel } from "../model/card-game-model.js";
 
-const SWIPE_DIRECTIONS = {
-  UP: "up",
-  RIGHT: "right",
-  DOWN: "down",
-  LEFT: "left",
-};
-
 // number of pixels of movement allowed before a tap becomes a swipe
 const TAP_THRESHOLD = 10;
 
@@ -149,7 +142,10 @@ export class HandComponent extends React.Component {
       passive: false,
     };
 
-    this.carouselRef.current.addEventListener(CAROUSEL_EVENT_NAME, this.carouselEventHandler);
+    this.carouselRef.current.addEventListener(
+      CAROUSEL_EVENT_NAME,
+      this.carouselEventHandler
+    );
 
     window.addEventListener("keydown", this.keyHandler, keyhandlerOptions);
     window.addEventListener("resize", this.resizeHandler);
@@ -162,7 +158,10 @@ export class HandComponent extends React.Component {
    * Callback for when the componet is about to be removed from the dom. Remove the listeners.
    */
   componentWillUnmount() {
-    this.carouselRef.current.addEventListener(CAROUSEL_EVENT_NAME, this.carouselEventHandler);
+    this.carouselRef.current.addEventListener(
+      CAROUSEL_EVENT_NAME,
+      this.carouselEventHandler
+    );
 
     window.removeEventListener("keydown", this.keyHandler);
     window.removeEventListener("resize", this.resizeHandler);
@@ -179,7 +178,6 @@ export class HandComponent extends React.Component {
       key: "card-carousel",
       ref: this.carouselRef,
       cards: this.state.cards,
-      eventHandler: this.cardEventHandler,
       activeIndex: this.getActiveIndex(),
       mediaConfig: this.state.mediaConfig,
       // if set to true the carousel will listen for events on globalThis, otherwise
@@ -262,6 +260,13 @@ export class HandComponent extends React.Component {
       case CARD_CAROUSEL_EVENT_TYPES.SELECT:
         this.selectCard(parameters, true);
         break;
+      case CARD_CAROUSEL_EVENT_TYPES.FOCUS_AND_SELECT:
+        this.setActiveIndex(parameters);
+        this.selectCard(parameters, true);
+        break;
+      case CARD_CAROUSEL_EVENT_TYPES.HOVER:
+        this.setActiveIndex(parameters, false);
+        break;
       case CARD_CAROUSEL_EVENT_TYPES.DESELECT:
         this.selectCard(parameters, false);
         break;
@@ -274,57 +279,11 @@ export class HandComponent extends React.Component {
       case CARD_CAROUSEL_EVENT_TYPES.PLAY_SELECTED_CARDS:
         this.playSelectedCards();
         break;
-    }
-  }
-
-  /**
-   * Deal with swipes generated with a touch device
-   * @param {*} direction
-   */
-  handleSwipe(direction, index) {
-    // wait for the animations to finish
-    if (this.animationCount === 0) {
-      switch (direction) {
-        case SWIPE_DIRECTIONS.UP:
-          this.handleSwipeUp(index);
-          break;
-
-        case SWIPE_DIRECTIONS.RIGHT:
-          this.setActiveIndex(this.getActiveIndex() - 1);
-          break;
-
-        case SWIPE_DIRECTIONS.DOWN:
-          this.handleSwipeDown(index);
-          break;
-
-        case SWIPE_DIRECTIONS.LEFT:
-          this.setActiveIndex(this.getActiveIndex() + 1);
-          break;
-      }
-    }
-  }
-
-  handleSwipeUp(index) {
-    // are there any cards in hand ?
-    if (this.state.cards.length > 0) {
-      // which card was swiped
-      if (index !== undefined) {
-        //If the card was already selected, and the user swipes up again play the cards
-        if (this.getCard(index).state.isSelected) {
-          this.playSelectedCards();
-        } else {
-          this.toggleSelected(index);
+      case CARD_CAROUSEL_EVENT_TYPES.ANIMATION_COMPLETE:
+        if (parameters.name === ANIMATIONS.playCard.name) {
+          this.removeSelectedItems();
         }
-      }
-    }
-  }
-
-  handleSwipeDown(index) {
-    if (this.state.cards.length > 0) {
-      // which card was swiped
-      if (index !== undefined) {
-        this.selectCard(index, false);
-      }
+        break;
     }
   }
 
@@ -336,71 +295,17 @@ export class HandComponent extends React.Component {
     const keyCode = evt.keyCode;
 
     if (evt.type === "keydown") {
-      if (this.handleKeydown(keyCode)) {
-        evt.preventDefault();
+      switch (keyCode) {
+        case KeyCode.KEY_LEFT:
+        case KeyCode.KEY_RIGHT:
+        case KeyCode.KEY_UP:
+        case KeyCode.KEY_DOWN:
+        case KeyCode.KEY_DELETE:
+        case KeyCode.KEY_RETURN:
+        case KeyCode.KEY_SPACE:
+          evt.preventDefault();
       }
     }
-  }
-
-  handleKeyUp(keyCode) {
-    switch (keyCode) {
-      case KeyCode.KEY_LEFT:
-        this.setActiveIndex(this.getActiveIndex() - 1);
-        break;
-
-      case KeyCode.KEY_RIGHT:
-        this.setActiveIndex(this.getActiveIndex() + 1);
-        break;
-
-      case KeyCode.KEY_UP:
-        if (
-          this.state.cards.length > 0 &&
-          !this.getActiveCard().state.isSelected
-        ) {
-          this.toggleActiveItemSelected();
-        }
-        break;
-
-      case KeyCode.KEY_DOWN:
-        if (this.getActiveCard().state.isSelected) {
-          this.selectCard(this.getActiveIndex(), false);
-        }
-        break;
-
-      case KeyCode.KEY_DELETE:
-        this.removeSelectedItems();
-        break;
-
-      case KeyCode.KEY_RETURN:
-        this.refill();
-        break;
-
-      case KeyCode.KEY_SPACE:
-        this.playSelectedCards();
-        break;
-
-      default:
-        // not handled
-        return false;
-    }
-
-    // code was handled
-    return true;
-  }
-
-  handleKeydown(keyCode) {
-    switch (keyCode) {
-      case KeyCode.KEY_LEFT:
-      case KeyCode.KEY_RIGHT:
-      case KeyCode.KEY_UP:
-      case KeyCode.KEY_DOWN:
-      case KeyCode.KEY_DELETE:
-      case KeyCode.KEY_RETURN:
-      case KeyCode.KEY_SPACE:
-        return true;
-    }
-
-    return false;
   }
 
   /**
@@ -417,61 +322,6 @@ export class HandComponent extends React.Component {
     }
 
     eventBus.dispatch(TOAST_TOPIC, { message, id: "platform-changed" });
-  }
-
-  handleCardEvent(evt) {
-    switch (evt.type) {
-      case CARD_EVENT_TYPES.ANIMATION:
-        this.handleAnimation(evt.parameters);
-        break;
-      case CARD_EVENT_TYPES.TAP:
-        this.handleTap(evt);
-        break;
-      case CARD_EVENT_TYPES.SWIPE:
-        this.handleSwipe(evt.parameters.detail.dir, evt.card.state.index);
-        break;
-      case CARD_EVENT_TYPES.FOCUS:
-        if (this.animationCount === 0) {
-          this.setActiveIndex(evt.card.state.index, false);
-        }
-        break;
-    }
-  }
-
-  handleTap(evt) {
-    // don't interact when animating.
-    if (!this.animationCount) {
-      const card = evt.card;
-
-      if (card.state.index !== this.getActiveIndex()) {
-        // needs to be in this order
-        this.toggleSelected(card.state.index);
-        this.setActiveIndex(card.state.index);
-      } else {
-        this.toggleActiveItemSelected();
-      }
-    }
-  }
-
-  /**
-   * Handle animation start / end events
-   * @param {*} evt
-   */
-  handleAnimation(evt) {
-    if (evt.type === ANIMATION_EVENT_TYPE.END) {
-      this.animationCount--;
-
-      if (evt.animation.name === ANIMATIONS.playCard.name) {
-        // mark the card as deleted, we need to do this asap and not delay until removeSelectedItems
-        // otherwise one last frame of rendering may kick in and we end up with weird glitches
-        evt.source.setDeleted();
-
-        // no more outstanding animations ?
-        if (this.animationCount === 0) {
-          this.removeSelectedItems();
-        }
-      }
-    }
   }
 
   // --- State mutations & queries ----------------------------------------------------------------------------------

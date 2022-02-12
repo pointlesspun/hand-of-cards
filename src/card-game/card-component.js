@@ -32,6 +32,7 @@ export class CardComponent extends React.Component {
 
         // transient properties
         this.ref = React.createRef();
+        this.currentAnimation = null;
         this.swipeListener = (evt) => this.handleSwiped(evt);
         this.mouseListener = (evt) => this.handleMouseEvent(evt);
         this.touchListener = (evt) => this.handleTouch(evt);
@@ -61,15 +62,20 @@ export class CardComponent extends React.Component {
             } 
         };
         
-        // if an activation is playing don't play an animation or set the transform
-        if (!properties.style.animationName) {
-            // is an animation scheduled
-            if (this.state.animation) {
-                this.startAnimation(this.state.transform, properties, this.state.mediaConfig);
-            } else {
-                // no animation just define the intended position, scale & rotation of the card
-                properties.style.transform = this.state.transform.toCss({});
-            }
+        // is an animation playing ?
+        if (this.currentAnimation) {
+            // have to copy it again
+            properties.style = {
+                ...properties.style,
+                ...this.currentAnimation
+            };
+        }
+        // is an animation scheduled
+        else if (this.state.animation) {
+            this.startAnimation(this.state.transform, properties, this.state.mediaConfig);
+        } else {
+            // no animation just define the intended position, scale & rotation of the card
+            properties.style.transform = this.state.transform.toCss({});
         }
         
         return React.createElement(ELEMENT_TYPES.DIV, properties, this.renderOverlay(this.state.hasFocus));
@@ -144,7 +150,9 @@ export class CardComponent extends React.Component {
         evt.preventDefault();
     }
 
-    handleAnimationEnded(evt) {       
+    handleAnimationEnded(evt) {      
+        this.currentAnimation = null;
+
         if(this.state.eventHandler) {
             const animationEvent = new AnimationEvent(this, this.state.animation, ANIMATION_EVENT_TYPE.END);
             this.state.eventHandler(new CardEvent(this, CARD_EVENT_TYPES.ANIMATION, animationEvent));
@@ -208,13 +216,15 @@ export class CardComponent extends React.Component {
     }
 
     startAnimation(targetTransform, properties, config) {
+        this.currentAnimation = this.state.animation.createAnimation({
+            idx: this.state.index,
+            config,
+            targetTransform
+        });
+        
         properties.style = {
             ...properties.style,
-            ...this.state.animation.createAnimation({
-                idx: this.state.index,
-                config,
-                targetTransform
-            })
+            ...this.currentAnimation
         }; 
 
         if (this.state.eventHandler) {
