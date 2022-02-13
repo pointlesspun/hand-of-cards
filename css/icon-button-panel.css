@@ -1,0 +1,77 @@
+:root {
+    --selection-color: #BBFFBB;
+    --button-color: white;
+    --disabled-color: rgba(255, 255, 255, 0.5);
+    --button-size: 64px;
+    --button-margin: 24px;
+}
+
+.button-panel {
+    display: flex;
+    justify-content: center;
+    margin: 12px;
+}
+
+.button-panel-button {
+    background-color: var(--button-color);
+
+    mask-size: contain;
+    -webkit-mask-size: contain;
+
+    mask-repeat: no-repeat;
+    -webkit-mask-repeat: no-repeat;
+
+    transition: transform background-color 0.05s;
+    transform: scale(1.0, 1.0);
+
+     width: var(--button-size);
+    height: var(--button-size);
+    margin-left: var(--button-margin);
+    margin-right: var(--button-margin);
+}
+
+.button-panel-button.refill-button {
+    -webkit-mask-image: url('/data/draw-cards.svg');
+    mask-image: url('/data/draw-cards.svg');  
+}
+
+.refill-button:active {
+    background-color: var(--selection-color);
+    transform: scale(0.9, 0.9);
+}
+
+.button-panel-button.lock-button {
+    -webkit-mask-image: url('/data/lock.svg');
+    mask-image: url('/data/lock.svg');
+}
+
+.lock-button:active {
+    background-color: var(--selection-color);
+    transform: scale(0.9, 0.9);
+}
+
+.button-panel-button.lock-button-open {
+    -webkit-mask-image: url('/data/unlock.svg');
+    mask-image: url('/data/unlock.svg');
+}
+
+.lock-button-open:active {
+    background-color: var(--selection-color);
+    transform: scale(0.9, 0.9);
+}
+
+.button-panel-button.play-button {
+    -webkit-mask-image: url('/data/play-cards.svg');
+    mask-image: url('/data/play-cards.svg');
+}
+
+.button-panel-button-disabled {
+    background-color: var(--disabled-color);
+    transform: scale(0.95, 0.95);
+    pointer-events: none;
+}
+
+.play-button:active {
+    background-color: var(--selection-color);
+    transform: scale(0.9, 0.9);
+}
