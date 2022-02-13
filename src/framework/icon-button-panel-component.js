@@ -1,4 +1,4 @@
-import { ELEMENT_TYPES } from "../framework/element-types.js";
+import { ELEMENT_TYPES } from "./element-types.js";
 
 export class IconButton {
     constructor(className, onClick) {

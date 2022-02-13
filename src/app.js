@@ -18,7 +18,7 @@ import { FOLD_CARDS_POLICY, HandComponent, MAX_SELECTION_REACHED_POLICY } from "
 
 import { PLATFORM_CONFIGURATIONS } from "./platform-configurations.js";
 import { ANIMATIONS } from "./animations.js";
-import { ToastComponent } from "./card-game/toast-component.js";
+import { ToastComponent } from "./framework/toast-component.js";
 
 console.log("starting card component 0.45");
 

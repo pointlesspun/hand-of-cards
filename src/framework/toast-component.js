@@ -1,5 +1,5 @@
-import { ELEMENT_TYPES } from "../framework/element-types.js";
-import eventBus from "../framework/event-bus.js";
+import { ELEMENT_TYPES } from "./element-types.js";
+import eventBus from "./event-bus.js";
 
 export const TOAST_TOPIC = "topic.toast";
 

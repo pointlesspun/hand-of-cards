@@ -14,12 +14,13 @@ import { pickRandomCardDefinitions } from "../model/card-util.js";
 
 // todo: fix this dependency
 import { ANIMATIONS } from "../animations.js";
-import { TOAST_TOPIC } from "./toast-component.js";
-import { IconButtonPanelComponent, IconButton } from "./icon-button-panel-component.js";
-import { IndicatorComponent } from "./indicator-component.js";
+import { TOAST_TOPIC } from "../framework/toast-component.js";
+import { IconButtonPanelComponent, IconButton } from "../framework/icon-button-panel-component.js";
+import { IndicatorComponent } from "../framework/indicator-component.js";
 import { CardCarouselComponent } from "./card-carousel-component.js";
 import { CardGameModel } from "../model/card-game-model.js";
 import { CARD_CAROUSEL_EVENT_TYPES, CAROUSEL_EVENT_NAME } from "./card-carousel-event.js";
+import { ButtonPanelComponent } from "./button-panel-component.js";
 
 /**
  * What happens when the user selects a card when the max cards have been reached
@@ -50,24 +51,24 @@ export class HandComponent extends React.Component {
         super(props);
 
         // event handlers
-        this.keyHandler = evt => this.handleKeyEvent(evt);
-        this.resizeHandler = evt => this.handleResize();
-        this.carouselEventHandler = evt => this.handleCarouselEvent(evt);
+        this.keyHandler = (evt) => this.handleKeyEvent(evt);
+        this.resizeHandler = (evt) => this.handleResize();
+        this.carouselEventHandler = (evt) => this.handleCarouselEvent(evt);
 
         // transient properties
         this.ref = React.createRef();
+        this.buttonPanelRef = React.createRef();
         this.indicatorRef = React.createRef();
         this.carouselRef = React.createRef();
 
         this.state = {
             model: props.model,
-            // is unknown until we have a ref
+            // mediaConfig unknown until after the first render and we have a ref
             mediaConfig: null,
-            isLocked: props.isLocked,
-            playButtonEnabled: false,
-            drawButtonEnabled: false,
             foldCardsPolicy: props.foldCardsPolicy ?? FOLD_CARDS_POLICY.AFTER_ANIMATION,
-            cards: props.hand ? props.hand.map(definition => CardCarouselComponent.createCard(definition)) : undefined,
+            cards: props.hand
+                ? props.hand.map((definition) => CardCarouselComponent.createCard(definition))
+                : undefined,
         };
     }
 
@@ -77,16 +78,15 @@ export class HandComponent extends React.Component {
      * React-render component
      * @returns a react.element
      */
-    render() {
-        const properties = {
-            className: "hand",
-            ref: this.ref,
-        };
-
-        const children = [this.renderCarousel(), this.renderControlBar(this.state.mediaConfig)];
-
-        return React.createElement(ELEMENT_TYPES.DIV, properties, children);
-    }
+    render = () =>
+        React.createElement(
+            ELEMENT_TYPES.DIV,
+            {
+                className: "hand",
+                ref: this.ref,
+            },
+            [this.renderCarousel(), this.renderControlBar(this.state.mediaConfig)]
+        );
 
     /**
      * Callback after the component was added to the dom. Use this opportunity to hook up the listeners.
@@ -166,32 +166,25 @@ export class HandComponent extends React.Component {
             ref: this.indicatorRef,
             data: cards,
             activeIndex: this.getActiveIndex(),
-            isDataSelected: idx => this.getCard(idx)?.state.isSelected,
-            onClick: idx => this.setActiveIndex(idx),
+            isDataSelected: (idx) => this.getCard(idx)?.state.isSelected,
+            onClick: (idx) => this.setActiveIndex(idx),
         });
     }
 
+    /**
+     * @private
+     * @returns
+     */
     renderButtons() {
-        return React.createElement(IconButtonPanelComponent, {
+        return React.createElement(ButtonPanelComponent, {
             key: "cards-button-panel",
-            keyReference: "cards-button-panel",
-            buttons: [
-                new IconButton(
-                    `button-panel-button play-button ${
-                        this.state.playButtonEnabled ? "" : "button-panel-button-disabled"
-                    }`,
-                    () => this.playSelectedCards()
-                ),
-                new IconButton(
-                    `button-panel-button refill-button ${
-                        this.state.drawButtonEnabled ? "" : "button-panel-button-disabled"
-                    }`,
-                    () => this.drawCards()
-                ),
-                new IconButton(`button-panel-button ${this.isLocked() ? "lock-button" : "lock-button-open"}`, () =>
-                    this.toggleLock()
-                ),
-            ],
+            ref: this.buttonPanelRef,
+            isLocked: this.props.isLocked,
+            playButtonEnabled: false,
+            drawButtonEnabled: false,
+            playHandler: () => this.playSelectedCards(),
+            drawCardsHandler: () => this.drawCards(),
+            toggleLockHandler: () => this.toggleLock(),
         });
     }
 
@@ -287,18 +280,13 @@ export class HandComponent extends React.Component {
             // does the state change ?
             if (this.carouselRef.current.isCardSelected(idx) != isSelected) {
                 this.carouselRef.current.setCardSelected(idx, isSelected);
-
-                const playButtonEnabled = this.carouselRef.current.countSelectedCards() > 0;
-
-                if (playButtonEnabled != this.state.playButtonEnabled) {
-                    this.setState({ playButtonEnabled });
-                }
+                this.buttonPanelRef.current.setEnablePlayButton(this.carouselRef.current.countSelectedCards() > 0);
             }
-        // do we want to deselect the oldest selected card?
+            // do we want to deselect the oldest selected card?
         } else if (this.props.maxCardsReachedPolicy === MAX_SELECTION_REACHED_POLICY.CYCLE_OLDEST) {
             // find the card that was selected first (ie the oldest selected card)
             const firstSelectedCard = this.state.cards
-                .filter(card => card.ref.current.state.isSelected)
+                .filter((card) => card.ref.current.state.isSelected)
                 .reduce((card, prev) =>
                     prev.ref.current.state.lastUpdate < card.ref.current.state.lastUpdate ? prev : card
                 );
@@ -326,7 +314,7 @@ export class HandComponent extends React.Component {
 
     removeSelectedItems() {
         if (this.state.cards.length > 0) {
-            const unselectedCards = this.state.cards.filter(card => !card.ref.current.state.isSelected);
+            const unselectedCards = this.state.cards.filter((card) => !card.ref.current.state.isSelected);
 
             // were any cards selected ?
             if (unselectedCards.length !== this.state.cards.length) {
@@ -340,11 +328,12 @@ export class HandComponent extends React.Component {
                 this.indicatorRef.current.setData(unselectedCards);
                 this.indicatorRef.current.setActiveIndex(activeIndex);
                 this.carouselRef.current.setCards(unselectedCards, activeIndex);
+                this.buttonPanelRef.current.setEnableDrawButton(true);
 
                 this.setActiveIndexValue(activeIndex);
+
                 this.setState({
                     cards: unselectedCards,
-                    drawButtonEnabled: true,
                 });
             }
         }
@@ -356,7 +345,6 @@ export class HandComponent extends React.Component {
      */
     playSelectedCards() {
         if (this.state.cards.length > 0) {
-        
             const unselectedCards = this.state.cards.length - this.carouselRef.current.countSelectedCards();
             const deltaActiveIndex = this.state.cards.filter(
                 (card, idx) => card.ref.current.state.isSelected && idx < this.getActiveIndex()
@@ -370,10 +358,9 @@ export class HandComponent extends React.Component {
                 this.state.foldCardsPolicy === FOLD_CARDS_POLICY.IMMEDIATELY
             );
 
-            this.setState({
-                activeIndex,
-                playButtonEnabled: false,
-            });
+            this.buttonPanelRef.current.setEnablePlayButton(false);
+
+            this.setActiveIndexValue(activeIndex);
         }
     }
 
@@ -388,12 +375,15 @@ export class HandComponent extends React.Component {
             // create a new array of cards, consisting of old and new cards
             const cards = [
                 ...this.state.cards,
-                ...cardDefinitions.map((definition) => CardCarouselComponent.createCard(definition, ANIMATIONS.drawCard)),
+                ...cardDefinitions.map((definition) =>
+                    CardCarouselComponent.createCard(definition, ANIMATIONS.drawCard)
+                ),
             ];
+
+            this.buttonPanelRef.current.setEnableDrawButton(false);
 
             this.setState({
                 cards,
-                drawButtonEnabled: false,
             });
 
             this.indicatorRef.current.setData(cards);
@@ -402,14 +392,12 @@ export class HandComponent extends React.Component {
     }
 
     toggleLock() {
-        this.carouselRef.current.setIsLocked(!this.state.isLocked);
-        this.setState({ isLocked: !this.state.isLocked });
+        const isLocked = !this.buttonPanelRef.current.isLocked();
+        this.carouselRef.current.setIsLocked(isLocked);
+        this.buttonPanelRef.current.setIsLocked(isLocked);
     }
 
-
-    isLocked = () => this.state.isLocked;
-
-    getCard = idx => (this.carouselRef.current ? this.carouselRef.current.getCard(idx) : null);
+    getCard = (idx) => (this.carouselRef.current ? this.carouselRef.current.getCard(idx) : null);
 
     getActiveCard = () => this.getCard(this.getActiveIndex());
 
