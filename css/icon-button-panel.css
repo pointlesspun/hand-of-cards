@@ -31,8 +31,8 @@
 }
 
 .button-panel-button.refill-button {
-    -webkit-mask-image: url('/data/draw-cards.svg');
-    mask-image: url('/data/draw-cards.svg');  
+    -webkit-mask-image: url('../data/draw-cards.svg');
+    mask-image: url('../data/draw-cards.svg');  
 }
 
 .refill-button:active {
@@ -41,8 +41,8 @@
 }
 
 .button-panel-button.lock-button {
-    -webkit-mask-image: url('/data/lock.svg');
-    mask-image: url('/data/lock.svg');
+    -webkit-mask-image: url('../data/lock.svg');
+    mask-image: url('../data/lock.svg');
 }
 
 .lock-button:active {
@@ -51,8 +51,8 @@
 }
 
 .button-panel-button.lock-button-open {
-    -webkit-mask-image: url('/data/unlock.svg');
-    mask-image: url('/data/unlock.svg');
+    -webkit-mask-image: url('../data/unlock.svg');
+    mask-image: url('../data/unlock.svg');
 }
 
 .lock-button-open:active {
@@ -61,8 +61,8 @@
 }
 
 .button-panel-button.play-button {
-    -webkit-mask-image: url('/data/play-cards.svg');
-    mask-image: url('/data/play-cards.svg');
+    -webkit-mask-image: url('../data/play-cards.svg');
+    mask-image: url('../data/play-cards.svg');
 }
 
 .button-panel-button-disabled {
