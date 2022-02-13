@@ -1,57 +1,47 @@
-// xxx to do extract the card carousel from the hand component
-
 import { ELEMENT_TYPES } from "../framework/element-types.js";
-import { CardComponent } from "./card-component.js";
 import { Transform } from "../framework/transform.js";
 import { Vector3 } from "../framework/vector3.js";
-import { CARD_EVENT_TYPES } from "./card-event.js";
 import { ANIMATIONS } from "../animations.js";
 import { SWIPE_DIRECTIONS } from "../framework/swipe-directions.js";
 import { ANIMATION_EVENT_TYPE } from "../framework/animation-utilities.js";
 
-export const CAROUSEL_EVENT_NAME = "card-carousel-event";
+import { CardComponent } from "./card-component.js";
+import { CARD_EVENT_TYPES } from "./card-event.js";
+import { CardCarouselDetails, CARD_CAROUSEL_EVENT_TYPES, CAROUSEL_EVENT_NAME } from "./card-carousel-event.js";
 
-export const CARD_CAROUSEL_EVENT_TYPES = {
-    // focus on a certain card
-    FOCUS: "focus",
+/**
+ * Internal class keeping track of the card references and initial properties
+ * of the card.
+ */
+class CardProperties {
+    static cardKeyCounter = 0;
 
-    // hover over a card
-    HOVER: "hover",
-
-    // select a given card
-    SELECT: "select",
-
-    // focusses and selects a given card
-    FOCUS_AND_SELECT: "focus-and-select",
-
-    // deselect a given card
-    DESELECT: "deselect",
-
-    // remove the selected cards
-    REMOVE_SELECTED_CARDS: "remove",
-
-    // draw more cards
-    DRAW_CARDS: "draw",
-
-    // play the selected cards
-    PLAY_SELECTED_CARDS: "play",
-
-    // animation for draw or play has completed
-    ANIMATION_COMPLETE: "animation-complete",
-};
-
-export class CardCarouselDetails {
-    constructor(type, parameters) {
-        this.type = type;
-        this.parameters = parameters;
+    constructor(definition, startAnimation = null) {
+        this.ref = React.createRef();
+        this.key = `card-viewmodel-${CardProperties.cardKeyCounter}`;
+        this.definition = definition;
+        this.startAnimation = startAnimation;
+        CardProperties.cardKeyCounter++;
     }
 }
 
-export class CardCarousel extends React.Component {
+/**
+ * Implements a carousel with game cards. ViewState properties:
+ * 
+ * - Cards: an array of cards created with the CardCarousel.create card method
+ * - MediaConfig: configuration of the window and client and settings as how to perform the layout given these window
+ *   and client settings.
+ * - FocusIndex: which card currently has the focus
+ * - CenterIndex: which card is currently at the center of the layout
+ * - IsLocked: flag when if set the cards do not move as the player browses through the cards
+ */
+export class CardCarouselComponent extends React.Component {
+    static createCard = (definition, startAnimation = null) => new CardProperties(definition, startAnimation);
+
     constructor(props) {
         super(props);
 
-        const centerCardIndex = props.isLocked ? this.calculateCenterCard(props.cards.length) : props.activeIndex;
+        const centerCardIndex = props.isLocked ? this.calculateCenterCard(props.cards.length) : props.focusIndex;
 
         this.ref = React.createRef();
         this.keyHandler = evt => this.handleKeyEvent(evt);
@@ -62,8 +52,8 @@ export class CardCarousel extends React.Component {
         this.state = {
             cards: props.cards,
             mediaConfig: props.mediaConfig,
+            focusIndex: props.focusIndex,
             centerCardIndex,
-            activeIndex: props.activeIndex,
             isLocked: props.isLocked,
         };
     }
@@ -78,7 +68,7 @@ export class CardCarousel extends React.Component {
             className: "carousel",
             ref: this.ref,
             // Use the tabIndex to listen for key events from the div in case the scope is not useGlobalEventScope
-            tabIndex: !this.props.useGlobalEventScope ? undefined : 0,
+            tabIndex: this.props.useGlobalEventScope ? undefined : 0,
             style: {
                 // take the height from the platform specific settings
                 height: `${innerHeight * 100}%`,
@@ -130,17 +120,16 @@ export class CardCarousel extends React.Component {
                 ref: cardReference.ref,
                 key: cardReference.key,
                 index,
-                keyReference: cardReference.key,
                 definition: cardReference.definition,
-                animation: cardReference.animation,
+                animation: cardReference.startAnimation,
                 eventHandler: this.cardEventHandler,
-                hasFocus: this.state.activeIndex === index,
+                hasFocus: this.state.focusIndex === index,
                 mediaConfig: config,
                 transform: this.calculateTransform(
                     config,
                     this.state.cards.length,
                     index,
-                    this.state.activeIndex,
+                    this.state.focusIndex,
                     this.state.centerCardIndex,
                     false
                 ),
@@ -161,10 +150,10 @@ export class CardCarousel extends React.Component {
      * Utility method to dispatch an event
      * @param {*} detail
      */
-    dispatchEvent(detail) {
+    dispatchEvent(detailName, detailParameters) {
         this.ref.current.dispatchEvent(
             new CustomEvent(CAROUSEL_EVENT_NAME, {
-                detail,
+                detail: new CardCarouselDetails(detailName, detailParameters),
                 bubbles: true,
                 cancelable: true,
                 composed: false,
@@ -180,7 +169,7 @@ export class CardCarousel extends React.Component {
         const keyCode = evt.keyCode;
 
         if (evt.type === "keyup") {
-            // wait for the animations to finish
+            // wait for the animations to finish, don't process events while animating (in the current implementation there's no clean way to deal with it)
             if (this.animationCount === 0) {
                 if (this.handleKeyUp(keyCode)) {
                     evt.preventDefault();
@@ -190,57 +179,44 @@ export class CardCarousel extends React.Component {
     }
 
     handleKeyUp(keyCode) {
-        // wait for the animations to finish, don't process events while animating (in the current implementation there's no clean way to deal with it)
-        if (this.animationCount > 0) {
-            return;
-        }
-
         switch (keyCode) {
             case KeyCode.KEY_LEFT:
-                if (this.state.activeIndex > 0) {
-                    this.dispatchEvent(
-                        new CardCarouselDetails(CARD_CAROUSEL_EVENT_TYPES.FOCUS, this.state.activeIndex - 1)
-                    );
+                if (this.state.focusIndex > 0) {
+                    this.dispatchEvent(CARD_CAROUSEL_EVENT_TYPES.FOCUS, this.state.focusIndex - 1);
                 }
                 break;
 
             case KeyCode.KEY_RIGHT:
-                if (this.state.activeIndex < this.state.cards.length) {
-                    this.dispatchEvent(
-                        new CardCarouselDetails(CARD_CAROUSEL_EVENT_TYPES.FOCUS, this.state.activeIndex + 1)
-                    );
+                if (this.state.focusIndex < this.state.cards.length) {
+                    this.dispatchEvent(CARD_CAROUSEL_EVENT_TYPES.FOCUS, this.state.focusIndex + 1);
                 }
                 break;
 
             case KeyCode.KEY_UP:
-                if (this.state.cards.length > 0 && !this.getCard(this.state.activeIndex).state.isSelected) {
-                    this.dispatchEvent(
-                        new CardCarouselDetails(CARD_CAROUSEL_EVENT_TYPES.SELECT, this.state.activeIndex)
-                    );
+                if (this.state.cards.length > 0 && !this.getCard(this.state.focusIndex).state.isSelected) {
+                    this.dispatchEvent(CARD_CAROUSEL_EVENT_TYPES.SELECT, this.state.focusIndex);
                 }
                 break;
 
             case KeyCode.KEY_DOWN:
-                if (this.state.cards.length > 0 && this.getCard(this.state.activeIndex).state.isSelected) {
-                    this.dispatchEvent(
-                        new CardCarouselDetails(CARD_CAROUSEL_EVENT_TYPES.DESELECT, this.state.activeIndex)
-                    );
+                if (this.state.cards.length > 0 && this.getCard(this.state.focusIndex).state.isSelected) {
+                    this.dispatchEvent(CARD_CAROUSEL_EVENT_TYPES.DESELECT, this.state.focusIndex);
                 }
                 break;
 
             case KeyCode.KEY_DELETE:
                 if (this.state.cards.length > 0 && this.countSelectedCards() > 0) {
-                    this.emitEvent(new CardCarouselDetails(CARD_CAROUSEL_EVENT_TYPES.REMOVE_SELECTED_CARDS));
+                    this.dispatchEvent(CARD_CAROUSEL_EVENT_TYPES.REMOVE_SELECTED_CARDS);
                 }
                 break;
 
             case KeyCode.KEY_RETURN:
-                this.dispatchEvent(new CardCarouselDetails(CARD_CAROUSEL_EVENT_TYPES.DRAW_CARDS));
+                this.dispatchEvent(CARD_CAROUSEL_EVENT_TYPES.DRAW_CARDS);
                 break;
 
             case KeyCode.KEY_SPACE:
-                if (this.state.cards.length > 0 && this.countSelectedCards() > 0) {
-                    this.dispatchEvent(new CardCarouselDetails(CARD_CAROUSEL_EVENT_TYPES.PLAY_SELECTED_CARDS));
+                if (this.countSelectedCards() > 0) {
+                    this.dispatchEvent(CARD_CAROUSEL_EVENT_TYPES.PLAY_SELECTED_CARDS);
                 }
                 break;
 
@@ -265,7 +241,7 @@ export class CardCarousel extends React.Component {
                 this.handleSwipe(evt.parameters.detail.dir, evt.card.state.index);
                 break;
             case CARD_EVENT_TYPES.FOCUS:
-                this.dispatchEvent(new CardCarouselDetails(CARD_CAROUSEL_EVENT_TYPES.HOVER, evt.card.state.index));
+                this.dispatchEvent(CARD_CAROUSEL_EVENT_TYPES.HOVER, evt.card.state.index);
                 break;
         }
     }
@@ -288,9 +264,7 @@ export class CardCarousel extends React.Component {
 
             // no more outstanding animations ?
             if (this.animationCount === 0) {
-                this.dispatchEvent(
-                    new CardCarouselDetails(CARD_CAROUSEL_EVENT_TYPES.ANIMATION_COMPLETE, evt.animation)
-                );
+                this.dispatchEvent(CARD_CAROUSEL_EVENT_TYPES.ANIMATION_COMPLETE, evt.animation);
             }
         }
     }
@@ -300,14 +274,14 @@ export class CardCarousel extends React.Component {
         if (this.animationCount === 0) {
             const idx = card.state.index;
 
-            if (idx !== this.state.activeIndex) {
-                this.dispatchEvent(new CardCarouselDetails(CARD_CAROUSEL_EVENT_TYPES.FOCUS_AND_SELECT, idx));
+            if (idx !== this.state.focusIndex) {
+                this.dispatchEvent(CARD_CAROUSEL_EVENT_TYPES.FOCUS_AND_SELECT, idx);
             } else {
                 // toggle
                 if (card.state.isSelected) {
-                    this.dispatchEvent(new CardCarouselDetails(CARD_CAROUSEL_EVENT_TYPES.DESELECT, idx));
+                    this.dispatchEvent(CARD_CAROUSEL_EVENT_TYPES.DESELECT, idx);
                 } else {
-                    this.dispatchEvent(new CardCarouselDetails(CARD_CAROUSEL_EVENT_TYPES.SELECT, idx));
+                    this.dispatchEvent(CARD_CAROUSEL_EVENT_TYPES.SELECT, idx);
                 }
             }
         }
@@ -326,9 +300,7 @@ export class CardCarousel extends React.Component {
                     break;
 
                 case SWIPE_DIRECTIONS.RIGHT:
-                    this.dispatchEvent(
-                        new CardCarouselDetails(CARD_CAROUSEL_EVENT_TYPES.FOCUS, this.state.activeIndex - 1)
-                    );
+                    this.dispatchEvent(CARD_CAROUSEL_EVENT_TYPES.FOCUS, this.state.focusIndex - 1);
                     break;
 
                 case SWIPE_DIRECTIONS.DOWN:
@@ -336,9 +308,7 @@ export class CardCarousel extends React.Component {
                     break;
 
                 case SWIPE_DIRECTIONS.LEFT:
-                    this.dispatchEvent(
-                        new CardCarouselDetails(CARD_CAROUSEL_EVENT_TYPES.FOCUS, this.state.activeIndex + 1)
-                    );
+                    this.dispatchEvent(CARD_CAROUSEL_EVENT_TYPES.FOCUS, this.state.focusIndex + 1);
                     break;
             }
         }
@@ -351,9 +321,9 @@ export class CardCarousel extends React.Component {
             if (index !== undefined) {
                 //If the card was already selected, and the user swipes up again play the cards
                 if (this.getCard(index).state.isSelected) {
-                    this.dispatchEvent(new CardCarouselDetails(CARD_CAROUSEL_EVENT_TYPES.PLAY_SELECTED_CARDS));
+                    this.dispatchEvent(CARD_CAROUSEL_EVENT_TYPES.PLAY_SELECTED_CARDS);
                 } else {
-                    this.dispatchEvent(new CardCarouselDetails(CARD_CAROUSEL_EVENT_TYPES.SELECT, index));
+                    this.dispatchEvent(CARD_CAROUSEL_EVENT_TYPES.SELECT, index);
                 }
             }
         }
@@ -363,19 +333,19 @@ export class CardCarousel extends React.Component {
         if (this.state.cards.length > 0) {
             // which card was swiped
             if (index !== undefined) {
-                this.dispatchEvent(new CardCarouselDetails(CARD_CAROUSEL_EVENT_TYPES.DESELECT, index));
+                this.dispatchEvent(CARD_CAROUSEL_EVENT_TYPES.DESELECT, index);
             }
         }
     }
 
     // --- State mutations & queries ----------------------------------------------------------------------------------
 
-    setCards(cards, activeIndex) {
-        const centerIndex = this.state.isLocked ? this.calculateCenterCard(cards.length) : activeIndex;
+    setCards(cards, focusIndex) {
+        const centerIndex = this.state.isLocked ? this.calculateCenterCard(cards.length) : focusIndex;
 
         this.setState({
             cards,
-            activeIndex,
+            focusIndex,
             centerCardIndex: centerIndex,
         });
 
@@ -384,57 +354,90 @@ export class CardCarousel extends React.Component {
 
             if (cardRef) {
                 cardRef.setIndex(idx);
-                cardRef.setHasFocus(idx === activeIndex);
-                this.updateCardTransform(cardRef, idx, activeIndex, centerIndex);
+                cardRef.setHasFocus(idx === focusIndex);
+                this.updateCardTransform(cardRef, idx, focusIndex, centerIndex);
             }
         });
     }
 
-    setMediaConfig = mediaConfig => {
+    setMediaConfig(mediaConfig) {
         this.setState({ mediaConfig });
         this.forEachCard(card =>
-            this.updateCardTransform(card, card.getIndex(), this.state.activeIndex, this.state.centerCardIndex)
+            this.updateCardTransform(card, card.getIndex(), this.state.focusIndex, this.state.centerCardIndex)
         );
-    };
+    }
 
-    setActiveIndex(activeIndex, updateCenterCard = true) {
+    /**
+     * 
+     * @param {number} focusIndex  which card should get focus
+     * @param {boolean} updateCenterCard if true (default) also recalculates the center card. False makes sense
+     * for cases like mouse over. 
+     */
+    setFocusIndex(focusIndex, updateCenterCard = true) {
         if (updateCenterCard) {
             const centerCardIndex = this.state.isLocked
                 ? this.calculateCenterCard(this.state.cards.length)
-                : activeIndex;
+                : focusIndex;
 
-            this.setState({ activeIndex, centerCardIndex });
+            this.setState({ focusIndex, centerCardIndex });
             this.forEachCard(card => {
-                this.updateCardTransform(card, card.getIndex(), activeIndex, centerCardIndex);
+                const cardIndex = card.getIndex();
+                this.updateCardTransform(card, cardIndex, focusIndex, centerCardIndex);
+                card.setHasFocus(cardIndex === focusIndex);
             });
         } else {
-            this.setState({ activeIndex });
+            this.setState({ focusIndex });
             this.forEachCard(card => {
-                this.updateCardTransform(card, card.getIndex(), activeIndex, this.state.centerCardIndex);
+                const cardIndex = card.getIndex();
+                this.updateCardTransform(card, cardIndex, focusIndex, this.state.centerCardIndex);
+                card.setHasFocus(cardIndex === focusIndex);
             });
         }
     }
 
-    setActiveAndCenterIndices = (activeIndex, centerCardIndex) => {
-        this.setState({ activeIndex, centerCardIndex });
-        this.forEachCard(card => {
-            this.updateCardTransform(card, card.getIndex(), activeIndex, centerCardIndex);
-        });
-    };
+    getCard = idx => (idx >= 0 && idx < this.state.cards.length ? this.state.cards[idx].ref?.current : null);
 
-    updateCardTransform(card, idx, activeIndex, centerIndex) {
+    /**
+     * Toggle the lock mode
+     */
+     setIsLocked(isLocked) {
+        const centerIndex = isLocked ? this.calculateCenterCard(this.state.cards.length) : this.state.focusIndex;
+
+        this.setState({
+            isLocked,
+            centerCardIndex: centerIndex,
+        });
+
+        this.forEachCard(card => this.updateCardTransform(card, card.getIndex(), this.state.focusIndex, centerIndex));
+    }
+
+    isLocked = () => this.state.isLocked;
+
+    setCardSelected(idx, isSelected) {
+        const card = this.getCard(idx);
+
+        // does the state change ?
+        if (card.state.isSelected != isSelected) {
+            card.setSelected(isSelected);
+            this.updateCardTransform(card, idx, this.state.focusIndex, this.state.centerCardIndex);
+        }
+    }
+
+    isCardSelected = idx => this.getCard(idx).state.isSelected;
+
+    // --- Utility methods  -------------------------------------------------------------------------------------------
+
+    updateCardTransform(card, idx, focusIndex, centerIndex) {
         card.setTransform(
             this.calculateTransform(
                 this.state.mediaConfig,
                 this.state.cards.length,
                 idx,
-                activeIndex,
+                focusIndex,
                 centerIndex,
                 card.state.isSelected
             )
         );
-
-        card.setHasFocus(idx === activeIndex);
     }
 
     /**
@@ -443,10 +446,10 @@ export class CardCarousel extends React.Component {
      * @param {boolean} immediatelyFoldCards  if set to true the remaining cards will fold back now. If false, they will
      * fold after the animation is complete and the cards are deleted.
      */
-    playSelectedCards(activeIndex, animation, immediatelyFoldCards) {
+    playSelectedCards(focusIndex, animation, immediatelyFoldCards) {
         let idx = 0;
         const cardsLeft = this.state.cards.length - this.countSelectedCards();
-        const centerIndex = this.state.isLocked ? this.calculateCenterCard(cardsLeft) : activeIndex;
+        const centerIndex = this.state.isLocked ? this.calculateCenterCard(cardsLeft) : focusIndex;
 
         this.forEachCard(card => {
             if (card.state.isSelected) {
@@ -454,20 +457,17 @@ export class CardCarousel extends React.Component {
             } else {
                 if (immediatelyFoldCards) {
                     card.setIndex(idx);
-                    this.updateCardTransform(card, idx, activeIndex, centerIndex);
+                    this.updateCardTransform(card, idx, focusIndex, centerIndex);
                 }
                 idx++;
             }
         });
 
         if (immediatelyFoldCards) {
-            this.setState({
-                activeIndex,
-            });
+            this.setState({focusIndex});
         }
     }
-
-    getCard = idx => (idx >= 0 && idx < this.state.cards.length ? this.state.cards[idx].ref?.current : null);
+   
 
     /**
      * Count the number of cards that have been selected.
@@ -495,47 +495,20 @@ export class CardCarousel extends React.Component {
         });
     }
 
-    /**
-     * Toggle the lock mode
-     */
-    setIsLocked(isLocked) {
-        const centerIndex = isLocked ? this.calculateCenterCard(this.state.cards.length) : this.state.activeIndex;
-
-        this.setState({
-            isLocked,
-            centerCardIndex: centerIndex,
-        });
-
-        this.forEachCard(card => this.updateCardTransform(card, card.getIndex(), this.state.activeIndex, centerIndex));
-    }
-
-    isLocked = () => this.state.isLocked;
 
     calculateCenterCard = cardCount => (cardCount % 2 == 0 ? cardCount / 2 - 0.5 : Math.floor(cardCount / 2));
-
-    setCardSelected(idx, isSelected) {
-        const card = this.getCard(idx);
-
-        // does the state change ?
-        if (card.state.isSelected != isSelected) {
-            card.setSelected(isSelected);
-            this.updateCardTransform(card, idx, this.state.activeIndex, this.state.centerCardIndex);
-        }
-    }
-
-    isCardSelected = idx => this.getCard(idx).state.isSelected;
 
     /**
      * Calculates the transformation (translation, rotation, scale) of the card on screen
      * @private
      * @param {PlatformConfiguration} config contains the settings relevant to the current media/device
      * @param {number} cardCount represents to the total number of cards in hand
-     * @param {number} activeIndex index of the card the player is currently looking at
+     * @param {number} focusIndex index of the card the player is currently looking at
      * @param {number} centerCardIndex index of the card which is the center of the hand
      * @param {boolean} isSelected indicates if the card is selected or not
      * @returns {Transform}
      */
-    calculateTransform(config, cardCount, index, activeIndex, centerCardIndex, isSelected) {
+    calculateTransform(config, cardCount, index, focusIndex, centerCardIndex, isSelected) {
         // short hand reference
         const values = config.values;
 
@@ -543,7 +516,7 @@ export class CardCarousel extends React.Component {
         const parentHeight = config.clientSize.height * values.innerHeight;
 
         // is the current card active (the one in the center which the user is working with) ?
-        const hasFocus = index === activeIndex;
+        const hasFocus = index === focusIndex;
 
         // center of the parent x axis
         const parentCenterX = config.clientSize.width / 2;

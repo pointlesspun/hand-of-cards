@@ -8,25 +8,18 @@
 import "../framework/math-extensions.js";
 
 import { ELEMENT_TYPES } from "../framework/element-types.js";
-import { PlatformConfiguration } from "../framework/media-configuration.js";
-import { ANIMATION_EVENT_TYPE } from "../framework/animation-utilities.js";
 import eventBus from "../framework/event-bus.js";
 
 import { pickRandomCardDefinitions } from "../model/card-util.js";
 
-import { CARD_EVENT_TYPES } from "./card-event.js";
-import { CardComponent, CARD_KEY_PREFIX } from "./card-component.js";
 // todo: fix this dependency
 import { ANIMATIONS } from "../animations.js";
 import { TOAST_TOPIC } from "./toast-component.js";
 import { IconButtonPanelComponent, IconButton } from "./icon-button-panel-component.js";
 import { IndicatorComponent } from "./indicator-component.js";
-import { CardCarousel, CARD_CAROUSEL_EVENT_TYPES, CAROUSEL_EVENT_NAME } from "./card-carousel.js";
-import { Player } from "../model/player.js";
+import { CardCarouselComponent } from "./card-carousel-component.js";
 import { CardGameModel } from "../model/card-game-model.js";
-
-// number of pixels of movement allowed before a tap becomes a swipe
-const TAP_THRESHOLD = 10;
+import { CARD_CAROUSEL_EVENT_TYPES, CAROUSEL_EVENT_NAME } from "./card-carousel-event.js";
 
 /**
  * What happens when the user selects a card when the max cards have been reached
@@ -47,15 +40,6 @@ export const FOLD_CARDS_POLICY = {
     IMMEDIATELY: "immediately",
 };
 
-class CardReference {
-    constructor(ref, key, definition, animation = null) {
-        this.ref = ref;
-        this.key = key;
-        this.definition = definition;
-        this.animation = animation;
-    }
-}
-
 export class HandComponent extends React.Component {
     /**
      *
@@ -68,34 +52,22 @@ export class HandComponent extends React.Component {
         // event handlers
         this.keyHandler = evt => this.handleKeyEvent(evt);
         this.resizeHandler = evt => this.handleResize();
-        this.cardEventHandler = evt => this.handleCardEvent(evt);
         this.carouselEventHandler = evt => this.handleCarouselEvent(evt);
 
         // transient properties
         this.ref = React.createRef();
         this.indicatorRef = React.createRef();
         this.carouselRef = React.createRef();
-        this.animationCount = 0;
-
-        // state properties
-        const activeIndex = props.initialIndex ?? 0;
-        const cardCount = props.hand ? props.hand.length : 0;
 
         this.state = {
             model: props.model,
-            //activeIndex,
             // is unknown until we have a ref
             mediaConfig: null,
             isLocked: props.isLocked,
             playButtonEnabled: false,
             drawButtonEnabled: false,
-            cardKeyCounter: cardCount,
             foldCardsPolicy: props.foldCardsPolicy ?? FOLD_CARDS_POLICY.AFTER_ANIMATION,
-            cards: props.hand
-                ? props.hand.map(
-                      (definition, idx) => new CardReference(React.createRef(), `${CARD_KEY_PREFIX}-${idx}`, definition)
-                  )
-                : undefined,
+            cards: props.hand ? props.hand.map(definition => CardCarouselComponent.createCard(definition)) : undefined,
         };
     }
 
@@ -156,14 +128,14 @@ export class HandComponent extends React.Component {
             key: "card-carousel",
             ref: this.carouselRef,
             cards: this.state.cards,
-            activeIndex: this.getActiveIndex(),
+            focusIndex: this.getActiveIndex(),
             mediaConfig: this.state.mediaConfig,
             // if set to true the carousel will listen for events on globalThis, otherwise
             // if will listen to events on its component
             useGlobalEventScope: true,
         };
 
-        return React.createElement(CardCarousel, carouselProperties);
+        return React.createElement(CardCarouselComponent, carouselProperties);
     }
 
     renderControlBar(config) {
@@ -214,7 +186,7 @@ export class HandComponent extends React.Component {
                     `button-panel-button refill-button ${
                         this.state.drawButtonEnabled ? "" : "button-panel-button-disabled"
                     }`,
-                    () => this.refill()
+                    () => this.drawCards()
                 ),
                 new IconButton(`button-panel-button ${this.isLocked() ? "lock-button" : "lock-button-open"}`, () =>
                     this.toggleLock()
@@ -246,7 +218,7 @@ export class HandComponent extends React.Component {
                 this.selectCard(parameters, false);
                 break;
             case CARD_CAROUSEL_EVENT_TYPES.DRAW_CARDS:
-                this.refill();
+                this.drawCards();
                 break;
             case CARD_CAROUSEL_EVENT_TYPES.REMOVE_SELECTED_CARDS:
                 this.removeSelectedItems();
@@ -307,7 +279,7 @@ export class HandComponent extends React.Component {
         this.setActiveIndexValue(activeIndex);
 
         this.indicatorRef.current.setActiveIndex(activeIndex);
-        this.carouselRef.current.setActiveIndex(activeIndex, updateCenterCard);
+        this.carouselRef.current.setFocusIndex(activeIndex, updateCenterCard);
     }
 
     selectCard(idx, isSelected) {
@@ -322,6 +294,20 @@ export class HandComponent extends React.Component {
                     this.setState({ playButtonEnabled });
                 }
             }
+        // do we want to deselect the oldest selected card?
+        } else if (this.props.maxCardsReachedPolicy === MAX_SELECTION_REACHED_POLICY.CYCLE_OLDEST) {
+            // find the card that was selected first (ie the oldest selected card)
+            const firstSelectedCard = this.state.cards
+                .filter(card => card.ref.current.state.isSelected)
+                .reduce((card, prev) =>
+                    prev.ref.current.state.lastUpdate < card.ref.current.state.lastUpdate ? prev : card
+                );
+
+            // deselect the oldest/first selected card
+            this.selectCard(firstSelectedCard.ref.current.state.index, false);
+
+            // select the current
+            this.selectCard(idx, true);
         } else if (isSelected) {
             this.dispatchMaxCardsSelectedWarning();
         }
@@ -344,7 +330,7 @@ export class HandComponent extends React.Component {
 
             // were any cards selected ?
             if (unselectedCards.length !== this.state.cards.length) {
-                // count all cards in front of the active index, to offset the active index after the cards have been 
+                // count all cards in front of the active index, to offset the active index after the cards have been
                 // removed
                 const deltaActiveIndex = this.state.cards.filter(
                     (card, idx) => card.ref.current.state.isSelected && idx < this.getActiveIndex()
@@ -365,13 +351,12 @@ export class HandComponent extends React.Component {
     }
 
     /**
-     * Play all cards currently selected. The cards will be removed from the internal array after the play-card 
+     * Play all cards currently selected. The cards will be removed from the internal array after the play-card
      * animation has been finished.
      */
     playSelectedCards() {
         if (this.state.cards.length > 0) {
-            this.animationCount = this.carouselRef.current.countSelectedCards();
-
+        
             const unselectedCards = this.state.cards.length - this.carouselRef.current.countSelectedCards();
             const deltaActiveIndex = this.state.cards.filter(
                 (card, idx) => card.ref.current.state.isSelected && idx < this.getActiveIndex()
@@ -395,7 +380,7 @@ export class HandComponent extends React.Component {
     /**
      * Refill the hand with new cards until the max number of cards has been reached
      */
-    refill() {
+    drawCards() {
         if (this.state.cards.length < this.props.maxCards) {
             const newCardCount = this.props.maxCards - this.state.cards.length;
             const cardDefinitions = pickRandomCardDefinitions(this.props.deck, newCardCount);
@@ -403,21 +388,10 @@ export class HandComponent extends React.Component {
             // create a new array of cards, consisting of old and new cards
             const cards = [
                 ...this.state.cards,
-                ...cardDefinitions.map(
-                    (definition, idx) =>
-                        new CardReference(
-                            React.createRef(),
-                            `${CARD_KEY_PREFIX}-${this.state.cardKeyCounter + idx}`,
-                            definition,
-                            ANIMATIONS.drawCard
-                        )
-                ),
+                ...cardDefinitions.map((definition) => CardCarouselComponent.createCard(definition, ANIMATIONS.drawCard)),
             ];
 
-            this.animationCount = cardDefinitions.length;
-
             this.setState({
-                cardKeyCounter: this.state.cardKeyCounter + newCardCount,
                 cards,
                 drawButtonEnabled: false,
             });
@@ -427,43 +401,11 @@ export class HandComponent extends React.Component {
         }
     }
 
-    toggleActiveItemSelected = () => this.toggleSelected(this.getActiveIndex());
-
-    toggleSelected(idx) {
-        // are there any cards ?
-        if (this.state.cards.length > 0) {
-            const isSelected = this.getCard(idx).state.isSelected;
-
-            // If the card is currently selected we can always deselect it. If it's currently
-            // not selected we need to check if more cards can be selected or the max is reached
-            if (isSelected || this.canSelectMoreCards()) {
-                this.selectCard(idx, !isSelected);
-            }
-            // do we want to deselect the oldest selected card?
-            else if (this.props.maxCardsReachedPolicy === MAX_SELECTION_REACHED_POLICY.CYCLE_OLDEST) {
-                // find the card that was selected first (ie the oldest selected card)
-                const firstSelectedCard = this.state.cards
-                    .filter(card => card.ref.current.state.isSelected)
-                    .reduce((card, prev) =>
-                        prev.ref.current.state.lastUpdate < card.ref.current.state.lastUpdate ? prev : card
-                    );
-
-                // deselect the oldest/first selected card
-                this.selectCard(firstSelectedCard.ref.current.state.index, false);
-
-                // select the current
-                this.selectCard(idx, true);
-            } else {
-                // let the user know the max is reached
-                this.dispatchMaxCardsSelectedWarning();
-            }
-        }
-    }
-
     toggleLock() {
         this.carouselRef.current.setIsLocked(!this.state.isLocked);
         this.setState({ isLocked: !this.state.isLocked });
     }
+
 
     isLocked = () => this.state.isLocked;
 

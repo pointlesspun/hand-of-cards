@@ -1,17 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Hand of cards demonstration</title>
+    <head>
+        <meta charset="UTF-8" />
+        <title>Hand of cards demonstration</title>
 
-    <!--
+        <!--
       Use during development (seems obvious but...)
     -->
-    <script crossorigin src="https://unpkg.com/react@17/umd/react.development.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
-    
+        <script crossorigin src="https://unpkg.com/react@17/umd/react.development.js"></script>
+        <script crossorigin src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
 
-    <!--
+        <!--
       Use during not-development (production?)
     
     <script
@@ -24,27 +23,24 @@
     ></script>
 -->
 
-    <script
-      crossorigin
-      src="https://unpkg.com/keycode-js@3.1.0/dist/keycode.min.js"
-    ></script>
+        <script crossorigin src="https://unpkg.com/keycode-js@3.1.0/dist/keycode.min.js"></script>
 
-    <script src="./src/lib/swiped-events.min.js"></script>
-    <link rel="stylesheet" href="./css/hand-of-cards.css" />
-    <link rel="stylesheet" href="./css/icon-button-panel.css" />
-    <link rel="stylesheet" href="./css/toast.css" />
-  </head>
-  <body>
-    <div
-      id="card-container"
-      class="app-container"
-      maxCards="9"
-      maxSelectedCards="3"
-      isLocked="false"
-      maxCardsReachedPolicy="cycle-oldest"
-      foldCardsPolicy="after-animation"
-    ></div>
+        <script src="./src/lib/swiped-events.min.js"></script>
+        <link rel="stylesheet" href="./css/hand-of-cards.css" />
+        <link rel="stylesheet" href="./css/icon-button-panel.css" />
+        <link rel="stylesheet" href="./css/toast.css" />
+    </head>
+    <body>
+        <div
+            id="card-container"
+            class="app-container"
+            maxCards="7"
+            maxSelectedCards="3"
+            isLocked="false"
+            maxCardsReachedPolicy="cycle-oldest"
+            foldCardsPolicy="after-animation"
+        ></div>
 
-    <script src="./src/app.js" type="module"></script>
-  </body>
+        <script src="./src/app.js" type="module"></script>
+    </body>
 </html>
