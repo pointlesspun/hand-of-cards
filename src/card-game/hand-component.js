@@ -151,7 +151,7 @@ export class HandComponent extends React.Component {
         };
 
         return React.createElement(ELEMENT_TYPES.DIV, properties, [
-            this.renderIndicators(this.state.cards),
+            this.renderIndicators(this.state.cards.length),
             this.renderButtons(),
         ]);
     }
@@ -160,11 +160,11 @@ export class HandComponent extends React.Component {
      * @private
      * @returns
      */
-    renderIndicators(cards) {
+    renderIndicators(dataCount) {
         return React.createElement(IndicatorComponent, {
             key: "indicators",
             ref: this.indicatorRef,
-            data: cards,
+            dataCount,
             activeIndex: this.getActiveIndex(),
             isDataSelected: (idx) => this.getCard(idx)?.state.isSelected,
             onClick: (idx) => this.setActiveIndex(idx),
@@ -281,6 +281,7 @@ export class HandComponent extends React.Component {
             if (this.carouselRef.current.isCardSelected(idx) != isSelected) {
                 this.carouselRef.current.setCardSelected(idx, isSelected);
                 this.buttonPanelRef.current.setEnablePlayButton(this.carouselRef.current.countSelectedCards() > 0);
+                this.indicatorRef.current.forceUpdate();
             }
             // do we want to deselect the oldest selected card?
         } else if (this.props.maxCardsReachedPolicy === MAX_SELECTION_REACHED_POLICY.CYCLE_OLDEST) {
@@ -325,16 +326,14 @@ export class HandComponent extends React.Component {
                 ).length;
                 const activeIndex = Math.clamp(this.getActiveIndex() - deltaActiveIndex, 0, unselectedCards.length);
 
-                this.indicatorRef.current.setData(unselectedCards);
+                this.indicatorRef.current.setDataCount(unselectedCards.length);
                 this.indicatorRef.current.setActiveIndex(activeIndex);
                 this.carouselRef.current.setCards(unselectedCards, activeIndex);
                 this.buttonPanelRef.current.setEnableDrawButton(true);
 
                 this.setActiveIndexValue(activeIndex);
 
-                this.setState({
-                    cards: unselectedCards,
-                });
+                this.setState({ cards: unselectedCards });
             }
         }
     }
@@ -386,7 +385,7 @@ export class HandComponent extends React.Component {
                 cards,
             });
 
-            this.indicatorRef.current.setData(cards);
+            this.indicatorRef.current.setDataCount(cards.length);
             this.carouselRef.current.setCards(cards, this.getActiveIndex());
         }
     }

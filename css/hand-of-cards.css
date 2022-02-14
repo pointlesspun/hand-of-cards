@@ -95,8 +95,7 @@ html, body {
 }
 
 .indicators > button {
-    margin: 5px;
-    border-radius: 50%;
+    margin: 2px;
 }
 
 .indicators > button.active {
@@ -105,12 +104,12 @@ html, body {
 }
 
 .indicator {
-    margin: 5px;
-    border-radius: 50%;
+    margin: 2px;
+    border-radius: 30%;
     min-width: 10px;
-    min-height: 10px;
+    min-height: 15px;
     max-width: 10px;
-    max-height: 10px;
+    max-height: 15px;
     background-color: rgba(255,255,255,0);
     border: 2px solid rgba(155,155,155,1);
 }
