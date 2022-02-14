@@ -41,7 +41,7 @@ export const FOLD_CARDS_POLICY = {
     IMMEDIATELY: "immediately",
 };
 
-export class HandComponent extends React.Component {
+export class CardGameComponent extends React.Component {
     /**
      *
      * @param {*} props

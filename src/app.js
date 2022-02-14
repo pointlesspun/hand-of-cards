@@ -14,13 +14,15 @@ import { Player } from "./model/player.js";
 import { Deck } from "./model/deck.js";
 import { Hand } from "./model/hand.js";
 
-import { FOLD_CARDS_POLICY, HandComponent, MAX_SELECTION_REACHED_POLICY } from "./card-game/hand-component.js";
+import { FOLD_CARDS_POLICY, CardGameComponent, MAX_SELECTION_REACHED_POLICY } from "./card-game/card-game-component.js";
 
 import { PLATFORM_CONFIGURATIONS } from "./platform-configurations.js";
 import { ANIMATIONS } from "./animations.js";
 import { ToastComponent } from "./framework/toast-component.js";
 
-console.log("starting card component 0.45");
+const version = '0.451';
+
+console.log(`starting card component ${version}`);
 
 const element = document.querySelector("#card-container");
 const maxCards = element.attributes?.maxCards?.value ? parseInt(element.attributes.maxCards.value) : 7;
@@ -65,9 +67,9 @@ ReactDOM.render(
     React.createElement(React.StrictMode, {}, [
         React.createElement(ToastComponent, {
             key: "toast-component",
-            initialMessages: ["<h2><u>Hand of cards, version 0.45</u></h2>"],
+            initialMessages: [`<h2><u>Hand of cards, version ${version}</u></h2>`],
         }),
-        React.createElement(HandComponent, properties),
+        React.createElement(CardGameComponent, properties),
     ]),
     element
 );

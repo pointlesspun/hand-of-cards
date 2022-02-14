@@ -1,4 +1,4 @@
-# hand-of-cards (v0.45)
+# hand-of-cards (v0.451)
 This is React front-end carousel imitating holding and browsing through a hand of cards. To start the app, run a webserver in the directory containing the index.html file. Latest demo can be found on the [github pages](https://pointlesspun.github.io/hand-of-cards/).
 
 For bugs and outstanding features see ['status'](#Status) below.
@@ -27,10 +27,20 @@ In the top level element one can currently set the following attributes:
 * "maxCards", maxium number of cards in the hand and initial set of cards
 * "maxSelectedCards", maximum number of cards which can be selected. After that the user cannot select any more cards
 * "isLocked", if set to true, the cards will not scroll but stay in place.
+* "maxCardsReachedPolicy" can have two values "blocked" and "cycle-oldest". When _blocked_ is applied, the user cannot select more than 'maxSelectedCards' and will get a warning when selecting more. When _cycle-oldest_ is applied the first selected card will be deselected and the current focused card will be selected when the 'maxSelectedCards' is reached.
+* "foldCardsPolicy" can have two values "after-animation" or "immediateley". When _after-animation_ is selected the remaining cards in the hand will be folded after the play card animation is complete, when _immediately_ is selected the remaining cards in the hand will be folded as soon as the play animation begin.
 
 Example:
 ```html
-  <div id="card-container" class="app-container" maxCards="9" maxSelectedCards="3" isLocked="false"></div>
+        <div
+            id="card-container"
+            class="app-container"
+            maxCards="7"
+            maxSelectedCards="3"
+            isLocked="false"
+            maxCardsReachedPolicy="cycle-oldest"
+            foldCardsPolicy="after-animation"
+        ></div>
 ```
 
 ## 'Design'
@@ -38,8 +48,10 @@ Example:
 The design (such as it is) of the element consists of the following:
 
 * App (app.js): entry point and configuration of the application.
-  * HandOfCardsComponent (hand-component.js): contains the event handlers and the carousel.
-    * Card (card-component.js): layout / transform of the actual card.
+  * ToastComponent (/framework/toast-component.js)
+  * CardGameComponent (/card-game/card-game-component.js): contains the card carousel event handlers and the carousel.
+    * CardCarousel (/card-game/card-carousel-component.js): contains the actual cards and deals with the card transforms and events
+        * Card (card-component.js): display of the actual card.
 
 ## Status
 
