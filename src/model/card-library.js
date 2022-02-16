@@ -31,4 +31,4 @@ const generateLibrary = (names, maxCardsPerName, atlas) => {
 export const DEFAULT_LIBRARY = [
     ...generateLibrary(CARD_COLOR_NAMES, 6, ATLAS_1_TO_6),
     ...generateLibrary(CARD_COLOR_NAMES, 7, ATLAS_7_TO_K),
-]
+];

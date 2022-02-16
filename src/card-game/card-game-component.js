@@ -21,6 +21,7 @@ import { CardCarouselComponent } from "./card-carousel-component.js";
 import { CardGameModel } from "../model/card-game-model.js";
 import { CARD_CAROUSEL_EVENT_TYPES, CAROUSEL_EVENT_NAME } from "./card-carousel-event.js";
 import { ButtonPanelComponent } from "./button-panel-component.js";
+import { countInArray } from "../framework/array.js";
 
 /**
  * What happens when the user selects a card when the max cards have been reached
@@ -60,15 +61,21 @@ export class CardGameComponent extends React.Component {
         this.buttonPanelRef = React.createRef();
         this.indicatorRef = React.createRef();
         this.carouselRef = React.createRef();
+        
+        /**
+         * Data model used. Not part of the state (state is the VM part).
+         * @type {CardGameModel}
+         * @public
+         */
+        this.model = props.model;
 
         this.state = {
-            model: props.model,
             // mediaConfig unknown until after the first render and we have a ref
             mediaConfig: null,
             foldCardsPolicy: props.foldCardsPolicy ?? FOLD_CARDS_POLICY.AFTER_ANIMATION,
-            cards: props.hand
+            /*cards: props.hand
                 ? props.hand.map((definition) => CardCarouselComponent.createCard(definition))
-                : undefined,
+                : undefined,*/
         };
     }
 
@@ -127,7 +134,7 @@ export class CardGameComponent extends React.Component {
         const carouselProperties = {
             key: "card-carousel",
             ref: this.carouselRef,
-            cards: this.state.cards,
+            cards: this.model.getCards(0).map((card) => CardCarouselComponent.createCard(card.definition)), //this.state.cards,
             focusIndex: this.getActiveIndex(),
             mediaConfig: this.state.mediaConfig,
             // if set to true the carousel will listen for events on globalThis, otherwise
@@ -151,7 +158,7 @@ export class CardGameComponent extends React.Component {
         };
 
         return React.createElement(ELEMENT_TYPES.DIV, properties, [
-            this.renderIndicators(this.state.cards.length),
+            this.renderIndicators(/*this.cards.length*/ this.model.getCards(0).length),
             this.renderButtons(),
         ]);
     }
@@ -267,42 +274,59 @@ export class CardGameComponent extends React.Component {
     // --- State mutations & queries ----------------------------------------------------------------------------------
 
     setActiveIndex(idx, updateCenterCard = true) {
-        const activeIndex = Math.clamp(idx, 0, this.state.cards.length);
+        const activeIndex = Math.clamp(idx, 0, this.model.getCards(0).length);
 
-        this.setActiveIndexValue(activeIndex);
+        //this.setActiveIndexValue(activeIndex);
+        this.model.setFocusIndex(activeIdex);
 
         this.indicatorRef.current.setActiveIndex(activeIndex);
         this.carouselRef.current.setFocusIndex(activeIndex, updateCenterCard);
     }
 
     selectCard(idx, isSelected) {
-        if (!isSelected || this.canSelectMoreCards()) {
+        /*const player = this.model.getPlayer(0);
+
+        if (!isSelected || player.canSelectMoreCards()) {
             // does the state change ?
-            if (this.carouselRef.current.isCardSelected(idx) != isSelected) {
+            if (player.isCardSelected(idx) != isSelected) {
+                player.setCardSelected(idx, isSelected);
+                
                 this.carouselRef.current.setCardSelected(idx, isSelected);
                 this.buttonPanelRef.current.setEnablePlayButton(this.carouselRef.current.countSelectedCards() > 0);
                 this.indicatorRef.current.forceUpdate();
             }
             // do we want to deselect the oldest selected card?
-        } else if (this.props.maxCardsReachedPolicy === MAX_SELECTION_REACHED_POLICY.CYCLE_OLDEST) {
+        } else if (this.model.maxCardsReachedPolicy === MAX_SELECTION_REACHED_POLICY.CYCLE_OLDEST) {
             // find the card that was selected first (ie the oldest selected card)
-            const firstSelectedCard = this.state.cards
-                .filter((card) => card.ref.current.state.isSelected)
-                .reduce((card, prev) =>
-                    prev.ref.current.state.lastUpdate < card.ref.current.state.lastUpdate ? prev : card
-                );
+            const firstSelectedCard = player.getFirstSelectedCard();
 
             // deselect the oldest/first selected card
-            this.selectCard(firstSelectedCard.ref.current.state.index, false);
+            this.selectCard(firstSelectedCard.index, false);
 
             // select the current
             this.selectCard(idx, true);
         } else if (isSelected) {
             this.dispatchMaxCardsSelectedWarning();
+        }*/
+
+        const updatedCards = this.model.setCardSelected(0, idx, isSelected);
+
+        if (updatedCards !== null) {
+            if (updatedCards.length > 0) {
+                updatedCards.forEach( card => {
+                    this.carouselRef.current.setCardSelected(card.index, card.isSelected());
+                });
+
+                this.buttonPanelRef.current.setEnablePlayButton(this.model.countSelectedCards() > 0);
+                this.indicatorRef.current.forceUpdate();
+            }
+        } else {
+            // null returned implies nothing could be selected
+            this.dispatchMaxCardsSelectedWarning();
         }
     }
 
-    canSelectMoreCards() {
+    /*canSelectMoreCards() {
         // any cards to select ?
         return (
             this.carouselRef.current &&
@@ -311,10 +335,10 @@ export class CardGameComponent extends React.Component {
                 // can still select more cards ?
                 this.carouselRef.current.countSelectedCards() < this.props.maxSelectedCards)
         );
-    }
+    }*/
 
     removeSelectedItems() {
-        if (this.state.cards.length > 0) {
+        /*if (this.state.cards.length > 0) {
             const unselectedCards = this.state.cards.filter((card) => !card.ref.current.state.isSelected);
 
             // were any cards selected ?
@@ -335,6 +359,26 @@ export class CardGameComponent extends React.Component {
 
                 this.setState({ cards: unselectedCards });
             }
+        }*/
+
+        const removedCards = this.model.removeSelectedCards(0);
+
+        if (removedCards.length > 0) {
+            // count all cards in front of the active index, to offset the active index after the cards have been
+            // removed
+            /*const deltaActiveIndex = this.state.cards.filter(
+                (card, idx) => card.ref.current.state.isSelected && idx < this.getActiveIndex()
+            ).length;
+            const activeIndex = Math.clamp(this.getActiveIndex() - deltaActiveIndex, 0, unselectedCards.length);*/
+
+            const newFocus = this.model.getFocusIndex(0);
+            this.indicatorRef.current.setDataCount(this.model.getCards(0).length);
+            this.indicatorRef.current.setActiveIndex(newFocus);
+            //this.carouselRef.current.setCards(unselectedCards, newFocus);
+            this.carouselRef.current.removedCards(removedCards.map( card => card.index));
+            this.buttonPanelRef.current.setEnableDrawButton(true);
+
+            //this.setActiveIndexValue(activeIndex);
         }
     }
 
@@ -343,23 +387,27 @@ export class CardGameComponent extends React.Component {
      * animation has been finished.
      */
     playSelectedCards() {
-        if (this.state.cards.length > 0) {
-            const unselectedCards = this.state.cards.length - this.carouselRef.current.countSelectedCards();
-            const deltaActiveIndex = this.state.cards.filter(
-                (card, idx) => card.ref.current.state.isSelected && idx < this.getActiveIndex()
-            ).length;
+        const selectedCardCount = this.model.countSelectedCards(0);
 
-            const activeIndex = Math.clamp(this.getActiveIndex() - deltaActiveIndex, 0, unselectedCards);
+        if (selectedCardCount > 0) {
+            const currentFocus = this.model.getFocusIndex(0);
+                                    
+            /*const deltaActiveIndex = this.state.cards.filter(
+                (card, idx) => card.ref.current.state.isSelected && idx < this.getActiveIndex()
+            ).length;*/
+
+            const focusIndex = Math.clamp(currentFocus - this.model.countSelectedCards(0, currentFocus), 0, this.model.getCards().length - selectedCardCount);
 
             this.carouselRef.current.playSelectedCards(
-                activeIndex,
+                focusIndex,
                 ANIMATIONS.playCard,
                 this.state.foldCardsPolicy === FOLD_CARDS_POLICY.IMMEDIATELY
             );
 
             this.buttonPanelRef.current.setEnablePlayButton(false);
 
-            this.setActiveIndexValue(activeIndex);
+            this.model.setFocusIndex(focusIndex);
+            //this.setActiveIndexValue(activeIndex);
         }
     }
 
@@ -400,14 +448,14 @@ export class CardGameComponent extends React.Component {
 
     getActiveCard = () => this.getCard(this.getActiveIndex());
 
-    getActiveIndex = () => this.state.model.players[0].hand.focusIdx;
+    //getActiveIndex = () => this.state.model.players[0].hand.focusIdx;
 
-    setActiveIndexValue(idx) {
+    /*setActiveIndexValue(idx) {
         const player = this.state.model.players[0];
         const model = new CardGameModel([player.clone({ hand: player.hand.clone({ focusIdx: idx }) })]);
 
         this.setState({ model });
-    }
+    }*/
 
     /**
      * Utility to iterate over the state's cards without having to deref the cards

@@ -22,8 +22,6 @@ export class CardComponent extends React.Component {
             hasFocus: props.hasFocus,
             transform: props.transform,
             isSelected: props.isSelected ?? false,
-            // xxx move to model
-            lastUpdate: Date.now(),
             mediaConfig: props.mediaConfig,
             // use an event handler rather than js events (add/remove event listener)
             // as it is slightly easier to deal with

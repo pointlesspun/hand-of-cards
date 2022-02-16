@@ -2,7 +2,7 @@
 
 export class Deck {
 
-    constructor(cards) {
+    constructor(cards = []) {
         this.cards = cards;
     }
 }

@@ -360,6 +360,15 @@ export class CardCarouselComponent extends React.Component {
         });
     }
 
+    /**
+     * 
+     * @param {[number]} cardIndices is an array of indices mapping to card.state.index
+     * @param {number} focusIndex new focus index after the cards have been removed
+     */
+    removeCards(cardIndices, focusIndex) {
+        this.setCards( this.state.cards.filter( card => cardIndices.findIndex(card.current.state.index) >= 0)), focusIndex);
+    }
+
     setMediaConfig(mediaConfig) {
         this.setState({ mediaConfig });
         this.forEachCard(card =>
