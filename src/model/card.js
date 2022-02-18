@@ -22,7 +22,15 @@ export class Card {
         this.lastSelectionChange = Date.now();   
     }
 
-    isSelected = () => this.isSelected;
+    isCardSelected = () => this.isSelected;
+
+    setHasFocus(hasFocus) {
+        this.hasFocus = hasFocus;
+    }
+
+    hasCardFocus = () => this.hasFocus;
+
+    getIndex = () => this.index;
 
     setIndex(idx) {
         this.index = idx;

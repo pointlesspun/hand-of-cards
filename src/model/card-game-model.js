@@ -1,6 +1,6 @@
 "use strict";
 
-import { countInArray, partitionArray } from "../framework/array.js";
+import { countInArray, partitionArray } from "../framework/arrays.js";
 import { Card } from "./card.js";
 import { Player } from "./player.js";
 
@@ -38,16 +38,37 @@ export class CardGameModel {
         return new CardGameModel(players ?? this.players);
     }
 
+    setMaxSelectedCards(playerIndex, max) {
+        this.players[playerIndex].setMaxSelectedCards(max);
+    }
+
+    getMaxSelectedCards = (playerIndex) => this.players[playerIndex].getMaxSelectedCards();
+
+    setMaxSelectionCyclePolicy(policy) {
+        this.maxCardsReachedPolicy = policy;
+    }
+
     getPlayerCount = () => this.players.length;
 
-    getFocusIndex = (playerIdx) => this.players[playerIdx].hand.getFocusIndex();
+    /**
+     * Returns what card the given player is focused on
+     * @param {number} playerIdx 
+     * @returns {number}
+     */
+    getFocusIndex = (playerIdx) => this.players[playerIdx].getFocusIndex();
 
+    
+    /**
+     * Sets the card the player is currently focusing on
+     * @param {number} playerIdx id of the player
+     * @param {focusIdx} playerIdx index of the card
+     */
     setFocusIndex(playerIdx, focusIdx) {
-        this.players[playerIdx].hand.setFocusIndex(focusIdx);
+        this.players[playerIdx].setFocusIndex(focusIdx);
     }
 
     /**
-     *
+     * 
      * @param {number} idx player index
      * @returns {Player}
      */
@@ -57,8 +78,8 @@ export class CardGameModel {
 
     hasCards = (playerIdx) => this.players[playerIdx].getCards()?.length > 0;
 
-    setCards(playerIdx, cards) {
-        this.players[playerIdx].setCards(cards);
+    setCards(playerIdx, cards, focusIndex) {
+        this.players[playerIdx].setCards(cards, focusIndex);
     }
 
     canPlayerSelectMoreCards = (playerIdx) =>
@@ -78,23 +99,28 @@ export class CardGameModel {
 
         const deselectedCards = partition[deselected];
 
+        // are there any cards left ?
+        if (deselectedCards === undefined) {
+            this.setCards(playerIdx, [], -1);
+            return partition[selected];
+        }
         // is the hand still the same ?
-        if (deselectedCards.length !== cards.length) {
+        else if (deselectedCards.length !== cards.length) {
             // hand has changed
             const currentFocus = this.getFocusIndex(playerIdx);
-            const cardCountInFrontOfFocus = countInArray(partion[selected], (card) => card.getIndex() < currentFocus);
+            const cardCountInFrontOfFocus = countInArray(partition[selected], (card) => card.getIndex() < currentFocus);
             
-            this.setCards(playerIdx, deselectedCards);
-            this.players[playerIdx].setFocusIndex(currentFocus - cardCountInFrontOfFocus);
+            this.setCards(playerIdx, deselectedCards, Math.clamp(currentFocus - cardCountInFrontOfFocus, 0, deselected.length));
+
+            return partition[selected];
         }
 
-        return partition[selected];
+        return [];
     }
 
     countSelectedCards = (playerIdx, maxIndex = -1) => 
-        countInArray(this.getCards(playerIdx), (card) => card.isSelected(), maxIndex);
+        countInArray(this.getCards(playerIdx), (card) => card.isCardSelected(), maxIndex);
     
-
     /**
      *
      * @param {number} playerIdx which player's card is going to be selected
@@ -103,7 +129,7 @@ export class CardGameModel {
      * @returns {[Card]|null} returns an array of all the cards affected by this method (can be empty) or null if no new
      * selection could be made (max selection reached)
      */
-    setCardSelected(playerIdx, cardIdx, isSelected) {
+    updateCardSelection(playerIdx, cardIdx, isSelected) {
         const player = this.players[playerIdx];
         const card = player.getCard(cardIdx);
 

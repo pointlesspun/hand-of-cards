@@ -19,7 +19,7 @@ export function partitionArray(array, predicate) {
 
 export function countInArray(array, predicate, maxIndex = -1) {
     let result = 0;
-    const max = maxIndex < 0 ? array.length : maxIndex;
+    const max = maxIndex < 0 ? array.length : Math.min(array.length, maxIndex);
 
     for (let i = 0; i < max; i++) {
         if (predicate(array[i], i)) {

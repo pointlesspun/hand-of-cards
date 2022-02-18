@@ -309,7 +309,7 @@ export class CardGameComponent extends React.Component {
             this.dispatchMaxCardsSelectedWarning();
         }*/
 
-        const updatedCards = this.model.setCardSelected(0, idx, isSelected);
+        const updatedCards = this.model.updateCardSelection(0, idx, isSelected);
 
         if (updatedCards !== null) {
             if (updatedCards.length > 0) {

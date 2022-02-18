@@ -40,8 +40,8 @@ export class Player {
 
     getCards = () => this.hand.cards;
 
-    setCards(cards) {
-        this.hand.setCards(cards);
+    setCards(cards, focusIndex) {
+        this.hand.setCards(cards, focusIndex);
     }
 
     /**
@@ -76,4 +76,10 @@ export class Player {
     setFocusIndex(idx) {
         this.hand.setFocusIndex(idx);
     }
+
+    setMaxSelectedCards(max) {
+        this.hand.setMaxSelectedCards(max);
+    }
+
+    getMaxSelectedCards = () => this.hand.getMaxSelectedCards();
 }

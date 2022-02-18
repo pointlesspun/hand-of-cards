@@ -1,13 +1,23 @@
 "use strict";
 
+import "../framework/math-extensions.js";
 import { Card } from "./card.js";
 
 export class Hand {
+    /**
+     * 
+     * @param {[Card]} cards cards currently in this hand
+     * @param {*} focusIdx 
+     * @param {*} maxCards 
+     * @param {*} maxSelectedCards 
+     */
     constructor(cards = [], focusIdx = 0, maxCards = -1, maxSelectedCards = -1) {
         this.cards = cards;
         this.focusIdx = focusIdx === undefined ? Math.floor(cards.length / 2) : focusIdx;
         this.maxCards = maxCards;
         this.maxSelectedCards = maxSelectedCards;
+
+        this.cards[focusIdx].setHasFocus(true);
     }
 
     clone = ({ cards, focusIdx, maxCards, maxSelectedCards} = {}) =>
@@ -21,7 +31,17 @@ export class Hand {
     getFocusIndex = () => this.focusIdx;
 
     setFocusIndex(idx) {
-        this.focusIdx = Math.clamp(idx, 0, this.cards.length);
+        // check if the current focus is still in the hand
+        if (this.focusIdx >= 0 && this.cards.length > this.focusIdx) {
+            this.cards[this.focusIdx].setHasFocus(false);    
+        }
+
+        if (this.cards.length > 0) {
+            this.focusIdx = Math.clamp(idx, 0, this.cards.length);
+            this.cards[this.focusIdx].setHasFocus(true);    
+        } else {
+            this.focusIdx = -1;
+        }
     }
 
     canSelectMoreCards = () =>
@@ -51,14 +71,25 @@ export class Hand {
      * the provided card's indices
      * @param {[Card]} cards 
      */
-    setCards(cards) {
+    setCards(cards, focusIndex) {
         this.cards = cards;
 
         cards.forEach( (card, idx) => card.setIndex(idx));
+
+        if (focusIndex !== undefined) {
+            this.setFocusIndex(focusIndex);
+        }
     }
 
     getFirstSelectedCard = () =>
         this.cards
             .filter((card) => card.isSelected())
             .reduce((card, prev) => (prev.lastSelectionChange < card.lastSelectionChange ? prev : card));
+
+
+    setMaxSelectedCards(max) {
+        this.maxSelectedCards = max;
+    }
+
+    getMaxSelectedCards = () => this.maxSelectedCards;
 }
