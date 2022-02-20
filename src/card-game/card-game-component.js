@@ -446,7 +446,7 @@ export class CardGameComponent extends React.Component {
 
     getCard = (idx) => (this.carouselRef.current ? this.carouselRef.current.getCard(idx) : null);
 
-    getActiveCard = () => this.getCard(this.getActiveIndex());
+    //getActiveCard = () => this.getCard(this.getActiveIndex());
 
     //getActiveIndex = () => this.state.model.players[0].hand.focusIdx;
 

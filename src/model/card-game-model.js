@@ -6,6 +6,7 @@ import { Player } from "./player.js";
 
 /**
  * What happens when the user selects a card when the max cards have been reached
+ * @enum {string}
  */
  export const MAX_SELECTION_REACHED_POLICY = {
     /** prevent the user from selecting more cards (default) */
@@ -15,6 +16,7 @@ import { Player } from "./player.js";
     CYCLE_OLDEST: "cycle-oldest",
 };
 export class CardGameModel {
+
     constructor(players, maxCardsPolicy = MAX_SELECTION_REACHED_POLICY.BLOCK) {
         /**
          * Players participating in this game
@@ -44,9 +46,15 @@ export class CardGameModel {
 
     getMaxSelectedCards = (playerIndex) => this.players[playerIndex].getMaxSelectedCards();
 
+    /**
+     * 
+     * @param {MAX_SELECTION_REACHED_POLICY} policy 
+     */
     setMaxSelectionCyclePolicy(policy) {
         this.maxCardsReachedPolicy = policy;
     }
+
+    getMaxSelectionCyclePolicy = () => this.maxCardsReachedPolicy;
 
     getPlayerCount = () => this.players.length;
 
@@ -57,7 +65,6 @@ export class CardGameModel {
      */
     getFocusIndex = (playerIdx) => this.players[playerIdx].getFocusIndex();
 
-    
     /**
      * Sets the card the player is currently focusing on
      * @param {number} playerIdx id of the player

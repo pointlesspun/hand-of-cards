@@ -83,9 +83,8 @@ export class Hand {
 
     getFirstSelectedCard = () =>
         this.cards
-            .filter((card) => card.isSelected())
+            .filter((card) => card.isCardSelected())
             .reduce((card, prev) => (prev.lastSelectionChange < card.lastSelectionChange ? prev : card));
-
 
     setMaxSelectedCards(max) {
         this.maxSelectedCards = max;

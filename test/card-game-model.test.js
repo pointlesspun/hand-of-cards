@@ -242,4 +242,57 @@ test("Remove selected cards with all cards selected.", () => {
     expect(model.getCards(0).length).toBe(0);
 });
 
-// xxx to do test cycle selection
+test("Remove select cards with cycle policy set to BLOCK.", () => {
+    const model = createCardGameModel();
+    
+    model.setMaxSelectionCyclePolicy(MAX_SELECTION_REACHED_POLICY.BLOCK);
+    model.setMaxSelectedCards(0, 2);
+
+    expect(model.getMaxSelectedCards(0)).toBe(2);
+    expect(model.getMaxSelectionCyclePolicy(0)).toBe(MAX_SELECTION_REACHED_POLICY.BLOCK);
+    expect(model.countSelectedCards(0)).toBe(0);
+
+    model.updateCardSelection(0, 0, true);
+    model.updateCardSelection(0, 1, true);
+
+    expect(model.countSelectedCards(0)).toBe(2);
+
+    expect(model.updateCardSelection(0, 2, true)).toBeNull();
+
+    expect(model.countSelectedCards(0)).toBe(2);
+    expect(model.getCards(0)[2].isCardSelected()).toBe(false);
+
+    model.updateCardSelection(0, 1, false);
+
+    expect(model.updateCardSelection(0, 2, true)[0]).toEqual(model.getCards(0)[2]);
+    expect(model.countSelectedCards(0)).toBe(2);
+    
+    expect(model.getCards(0)[0].isCardSelected()).toBe(true);
+    expect(model.getCards(0)[1].isCardSelected()).toBe(false);
+    expect(model.getCards(0)[2].isCardSelected()).toBe(true);    
+});
+
+test("Remove select cards with cycle policy set to CYCLE_OLDEST.", () => {
+    const model = createCardGameModel();
+    
+    model.setMaxSelectionCyclePolicy(MAX_SELECTION_REACHED_POLICY.CYCLE_OLDEST);
+    model.setMaxSelectedCards(0, 2);
+
+    expect(model.getMaxSelectedCards(0)).toBe(2);
+    expect(model.getMaxSelectionCyclePolicy(0)).toBe(MAX_SELECTION_REACHED_POLICY.CYCLE_OLDEST);
+    expect(model.countSelectedCards(0)).toBe(0);
+
+    model.updateCardSelection(0, 0, true);
+    model.updateCardSelection(0, 1, true);
+
+    expect(model.countSelectedCards(0)).toBe(2);
+
+    const updatedCards = model.updateCardSelection(0, 2, true);
+   
+    expect(updatedCards[0]).toEqual(model.getCards(0)[0]);
+    expect(updatedCards[1]).toEqual(model.getCards(0)[2]);
+
+    expect(model.getCards(0)[0].isCardSelected()).toBe(false);
+    expect(model.getCards(0)[1].isCardSelected()).toBe(true);
+    expect(model.getCards(0)[2].isCardSelected()).toBe(true);
+});
