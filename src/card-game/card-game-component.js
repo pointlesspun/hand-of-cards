@@ -21,7 +21,7 @@ import { CardCarouselComponent } from "./card-carousel-component.js";
 import { CardGameModel } from "../model/card-game-model.js";
 import { CARD_CAROUSEL_EVENT_TYPES, CAROUSEL_EVENT_NAME } from "./card-carousel-event.js";
 import { ButtonPanelComponent } from "./button-panel-component.js";
-import { countInArray } from "../framework/array.js";
+import { countInArray } from "../framework/arrays.js";
 
 /**
  * What happens when the user selects a card when the max cards have been reached
@@ -135,7 +135,7 @@ export class CardGameComponent extends React.Component {
             key: "card-carousel",
             ref: this.carouselRef,
             cards: this.model.getCards(0).map((card) => CardCarouselComponent.createCard(card.definition)), //this.state.cards,
-            focusIndex: this.getActiveIndex(),
+            focusIndex: this.model.getFocusIndex(0),
             mediaConfig: this.state.mediaConfig,
             // if set to true the carousel will listen for events on globalThis, otherwise
             // if will listen to events on its component
@@ -172,7 +172,7 @@ export class CardGameComponent extends React.Component {
             key: "indicators",
             ref: this.indicatorRef,
             dataCount,
-            activeIndex: this.getActiveIndex(),
+            activeIndex: this.model.getFocusIndex(0),
             isDataSelected: (idx) => this.getCard(idx)?.state.isSelected,
             onClick: (idx) => this.setActiveIndex(idx),
         });
@@ -274,13 +274,13 @@ export class CardGameComponent extends React.Component {
     // --- State mutations & queries ----------------------------------------------------------------------------------
 
     setActiveIndex(idx, updateCenterCard = true) {
-        const activeIndex = Math.clamp(idx, 0, this.model.getCards(0).length);
+        //const activeIndex = Math.clamp(idx, 0, this.model.getCards(0).length);
 
         //this.setActiveIndexValue(activeIndex);
-        this.model.setFocusIndex(activeIdex);
+        this.model.setFocusIndex(0, idx);
 
-        this.indicatorRef.current.setActiveIndex(activeIndex);
-        this.carouselRef.current.setFocusIndex(activeIndex, updateCenterCard);
+        this.indicatorRef.current.setActiveIndex(this.model.getFocusIndex(0));
+        this.carouselRef.current.setFocusIndex(this.model.getFocusIndex(0), updateCenterCard);
     }
 
     selectCard(idx, isSelected) {
@@ -314,10 +314,10 @@ export class CardGameComponent extends React.Component {
         if (updatedCards !== null) {
             if (updatedCards.length > 0) {
                 updatedCards.forEach( card => {
-                    this.carouselRef.current.setCardSelected(card.index, card.isSelected());
+                    this.carouselRef.current.setCardSelected(card.getIndex(), card.isCardSelected());
                 });
 
-                this.buttonPanelRef.current.setEnablePlayButton(this.model.countSelectedCards() > 0);
+                this.buttonPanelRef.current.setEnablePlayButton(this.model.countSelectedCards(0) > 0);
                 this.indicatorRef.current.forceUpdate();
             }
         } else {
@@ -375,7 +375,7 @@ export class CardGameComponent extends React.Component {
             this.indicatorRef.current.setDataCount(this.model.getCards(0).length);
             this.indicatorRef.current.setActiveIndex(newFocus);
             //this.carouselRef.current.setCards(unselectedCards, newFocus);
-            this.carouselRef.current.removedCards(removedCards.map( card => card.index));
+            this.carouselRef.current.removeCards(removedCards.map( card => card.index), this.model.getFocusIndex(0));
             this.buttonPanelRef.current.setEnableDrawButton(true);
 
             //this.setActiveIndexValue(activeIndex);
@@ -390,13 +390,14 @@ export class CardGameComponent extends React.Component {
         const selectedCardCount = this.model.countSelectedCards(0);
 
         if (selectedCardCount > 0) {
-            const currentFocus = this.model.getFocusIndex(0);
+            //const currentFocus = this.model.getFocusIndex(0);
                                     
             /*const deltaActiveIndex = this.state.cards.filter(
                 (card, idx) => card.ref.current.state.isSelected && idx < this.getActiveIndex()
             ).length;*/
 
-            const focusIndex = Math.clamp(currentFocus - this.model.countSelectedCards(0, currentFocus), 0, this.model.getCards().length - selectedCardCount);
+            const currentFocus = this.model.getFocusIndex(0);
+            const focusIndex = Math.clamp(currentFocus - this.model.countSelectedCards(0, currentFocus), 0, this.model.getCards(0).length);//Math.clamp(currentFocus - this.model.countSelectedCards(0, currentFocus), 0, this.model.getCards().length - selectedCardCount);
 
             this.carouselRef.current.playSelectedCards(
                 focusIndex,
@@ -406,7 +407,7 @@ export class CardGameComponent extends React.Component {
 
             this.buttonPanelRef.current.setEnablePlayButton(false);
 
-            this.model.setFocusIndex(focusIndex);
+            this.model.setFocusIndex(0, focusIndex);
             //this.setActiveIndexValue(activeIndex);
         }
     }
@@ -434,7 +435,7 @@ export class CardGameComponent extends React.Component {
             });
 
             this.indicatorRef.current.setDataCount(cards.length);
-            this.carouselRef.current.setCards(cards, this.getActiveIndex());
+            this.carouselRef.current.setCards(cards, this.model.getFocusIndex(0));
         }
     }
 

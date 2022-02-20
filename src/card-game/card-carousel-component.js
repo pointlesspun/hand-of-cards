@@ -50,7 +50,7 @@ export class CardCarouselComponent extends React.Component {
         this.animationCount = 0;
 
         this.state = {
-            cards: props.cards,
+            cards: props.cards ?? [],
             mediaConfig: props.mediaConfig,
             focusIndex: props.focusIndex,
             centerCardIndex,
@@ -366,7 +366,7 @@ export class CardCarouselComponent extends React.Component {
      * @param {number} focusIndex new focus index after the cards have been removed
      */
     removeCards(cardIndices, focusIndex) {
-        this.setCards( this.state.cards.filter( card => cardIndices.findIndex(card.current.state.index) >= 0)), focusIndex);
+        this.setCards( this.state.cards.filter( card => !cardIndices.includes(card.ref.current.state.index)), focusIndex);
     }
 
     setMediaConfig(mediaConfig) {

@@ -1,6 +1,7 @@
 "use strict";
 
 import { countInArray, partitionArray } from "../framework/arrays.js";
+import { contract } from "../framework/contract.js";
 import { Card } from "./card.js";
 import { Player } from "./player.js";
 
@@ -63,7 +64,12 @@ export class CardGameModel {
      * @param {number} playerIdx 
      * @returns {number}
      */
-    getFocusIndex = (playerIdx) => this.players[playerIdx].getFocusIndex();
+    getFocusIndex = (playerIdx) => {
+        contract.isDefined(playerIdx, "CardGameModel.getFocusIndex: playerIdx is not defined.");
+        contract.requires(playerIdx >= 0 || playerIdx < this.players.length, `CardGameModel.getFocusIndex: player index (${playerIdx}) is not in range (0-${this.players.length}).`);
+
+        return this.players[playerIdx].getFocusIndex();
+    }
 
     /**
      * Sets the card the player is currently focusing on
@@ -71,6 +77,10 @@ export class CardGameModel {
      * @param {focusIdx} playerIdx index of the card
      */
     setFocusIndex(playerIdx, focusIdx) {
+        contract.isDefined(playerIdx, "CardGameModel.setFocusIndex: playerIdx is not defined.");
+        contract.isDefined(focusIdx, "CardGameModel.setFocusIndex: focusIdx is not defined.");
+        contract.requires(playerIdx >= 0 || playerIdx < this.players.length, `CardGameModel.setFocusIndex: player index (${playerIdx}) is not in range (0-${this.players.length}).`);
+
         this.players[playerIdx].setFocusIndex(focusIdx);
     }
 
@@ -86,6 +96,11 @@ export class CardGameModel {
     hasCards = (playerIdx) => this.players[playerIdx].getCards()?.length > 0;
 
     setCards(playerIdx, cards, focusIndex) {
+        contract.isDefined(playerIdx, "CardGameModel.setCards: playerIdx is not defined.");
+        contract.isDefined(cards, "CardGameModel.setCards: cards is not defined.");
+        
+        contract.requires(playerIdx >= 0 || playerIdx < this.players.length, `CardGameModel.setCards: player index (${playerIdx}) is not in range (0-${this.players.length}).`);
+        
         this.players[playerIdx].setCards(cards, focusIndex);
     }
 
@@ -99,6 +114,8 @@ export class CardGameModel {
      * @returns {[Card]} an array of all cards removed (may be empty).
      */
     removeSelectedCards(playerIdx) {
+        contract.isDefined(playerIdx, "CardGameModel.removeSelectedCards: playerIdx is not defined.");
+
         const selected = "selected";
         const deselected = "deselected";
         const cards = this.getCards(playerIdx);
@@ -125,8 +142,11 @@ export class CardGameModel {
         return [];
     }
 
-    countSelectedCards = (playerIdx, maxIndex = -1) => 
-        countInArray(this.getCards(playerIdx), (card) => card.isCardSelected(), maxIndex);
+    countSelectedCards = (playerIdx, maxIndex = -1) => {
+        contract.isDefined(playerIdx, "CardGameModel.countSelectedCards: playerIdx is not defined.");
+        
+        return countInArray(this.getCards(playerIdx), (card) => card.isCardSelected(), maxIndex);
+    }
     
     /**
      *

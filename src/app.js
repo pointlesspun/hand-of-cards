@@ -19,6 +19,7 @@ import { FOLD_CARDS_POLICY, CardGameComponent, MAX_SELECTION_REACHED_POLICY } fr
 import { PLATFORM_CONFIGURATIONS } from "./platform-configurations.js";
 import { ANIMATIONS } from "./animations.js";
 import { ToastComponent } from "./framework/toast-component.js";
+import { createCardGameModel } from "./model/card-model-factory.js";
 
 const version = '0.451';
 
@@ -28,10 +29,12 @@ const element = document.querySelector("#card-container");
 const maxCards = element.attributes?.maxCards?.value ? parseInt(element.attributes.maxCards.value) : 7;
 const maxSelectedCards = element.attributes?.maxSelectedCards?.value ?? -1;
 const hand = pickRandomCardDefinitions(DEFAULT_LIBRARY, maxCards);
-const maxCardsReachedPolicy = element.attributes?.maxCardsReachedPolicy?.value ?? MAX_SELECTION_REACHED_POLICY.BLOCK;
+const selectionCyclePolicy = element.attributes?.maxCardsReachedPolicy?.value ?? MAX_SELECTION_REACHED_POLICY.BLOCK;
 const foldCardsPolicy = element.attributes?.foldCardsPolicy?.value ?? FOLD_CARDS_POLICY.AFTER_ANIMATION;
 
-const model = new CardGameModel([
+const model = createCardGameModel({maxSelectedCards, selectionCyclePolicy, cardCount: maxCards});
+
+/*new CardGameModel([
     new Player(
         "plr1",
         0,
@@ -42,17 +45,17 @@ const model = new CardGameModel([
             Math.floor(maxCards / 2),
             maxCards,
             maxSelectedCards,
-            maxCardsReachedPolicy
+            selectionCyclePolicy
         )
     ),
-]);
+]);*/
 
 const properties = {
     key: "hand-of-cards-container",
     model,
     hand,
     maxCards,
-    maxCardsReachedPolicy,
+    maxCardsReachedPolicy: selectionCyclePolicy,
     foldCardsPolicy,
     deck: DEFAULT_LIBRARY,
     initialIndex: Math.floor(hand.length / 2),

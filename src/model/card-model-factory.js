@@ -1,6 +1,6 @@
 "use strict";
 
-import { CardGameModel, MAX_SELECTION_REACHED_POLICY } from "./card-game-model";
+import { CardGameModel, MAX_SELECTION_REACHED_POLICY } from "./card-game-model.js";
 import { DEFAULT_LIBRARY } from "./card-library.js";
 import { pickRandomCards } from "./card-util.js";
 import { Deck } from "./deck.js";
