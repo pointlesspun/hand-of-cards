@@ -2,6 +2,7 @@
 
 import { countInArray, partitionArray } from "../framework/arrays.js";
 import { contract } from "../framework/contract.js";
+import { pickRandomCardDefinitions, pickRandomCards } from "./card-util.js";
 import { Card } from "./card.js";
 import { Player } from "./player.js";
 
@@ -46,6 +47,9 @@ export class CardGameModel {
     }
 
     getMaxSelectedCards = (playerIndex) => this.players[playerIndex].getMaxSelectedCards();
+
+
+    getMaxCards = (playerIndex) => this.players[playerIndex].getMaxCards();
 
     /**
      * 
@@ -104,6 +108,18 @@ export class CardGameModel {
         this.players[playerIdx].setCards(cards, focusIndex);
     }
 
+    /**
+     * 
+     * @param {number} playerIndex 
+     * @returns {[CardDefinition]} cardLibrary an array of card definitions available to the player. 
+     */
+    getLibrary = (playerIndex) => {
+        contract.isDefined(playerIndex, "CardGameModel.getLibrary: playerIndex is not defined.");
+        contract.requires(playerIndex >= 0 || playerIndex < this.players.length, `CardGameModel.getLibrary: player index (${playerIndex}) is not in range (0-${this.players.length}).`);
+
+        return this.players[playerIndex].getLibrary();
+    }
+
     canPlayerSelectMoreCards = (playerIdx) =>
         this.players[playerIdx].canSelectMoreCards() ||
         this.maxCardsReachedPolicy === MAX_SELECTION_REACHED_POLICY.CYCLE_OLDEST;
@@ -144,10 +160,26 @@ export class CardGameModel {
 
     countSelectedCards = (playerIdx, maxIndex = -1) => {
         contract.isDefined(playerIdx, "CardGameModel.countSelectedCards: playerIdx is not defined.");
-        
+
         return countInArray(this.getCards(playerIdx), (card) => card.isCardSelected(), maxIndex);
     }
     
+    drawRandomCards(playerIndex, cardCount) {
+        contract.isDefined(playerIndex, "CardGameModel.drawCards: playerIdx is not defined.");
+
+        const newCardCount = cardCount === undefined ? this.getMaxCards(playerIndex) - this.getCards(playerIndex).length : cardCount;
+
+        if(newCardCount > 0) {
+            const newCards = pickRandomCards(this.getLibrary(0), newCardCount);
+                    
+            this.players[playerIndex].addCards(newCards);
+
+            return newCards;
+        }
+
+        return null;
+    }
+
     /**
      *
      * @param {number} playerIdx which player's card is going to be selected

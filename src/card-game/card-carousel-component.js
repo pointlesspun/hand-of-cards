@@ -369,6 +369,10 @@ export class CardCarouselComponent extends React.Component {
         this.setCards( this.state.cards.filter( card => !cardIndices.includes(card.ref.current.state.index)), focusIndex);
     }
 
+    addCards(cards) {
+        this.setCards([...this.state.cards, ...cards], this.state.focusIndex);
+    }
+
     setMediaConfig(mediaConfig) {
         this.setState({ mediaConfig });
         this.forEachCard(card =>

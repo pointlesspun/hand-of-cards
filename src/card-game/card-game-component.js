@@ -416,26 +416,38 @@ export class CardGameComponent extends React.Component {
      * Refill the hand with new cards until the max number of cards has been reached
      */
     drawCards() {
-        if (this.state.cards.length < this.props.maxCards) {
-            const newCardCount = this.props.maxCards - this.state.cards.length;
-            const cardDefinitions = pickRandomCardDefinitions(this.props.deck, newCardCount);
+        const newCards = this.model.drawRandomCards(0);
+
+        if(newCards) {
+        //if (this.state.cards.length < this.props.maxCards) {
+            //const newCardCount = this.props.maxCards - this.state.cards.length;
+            //const cardDefinitions = pickRandomCardDefinitions(this.props.deck, newCardCount);
 
             // create a new array of cards, consisting of old and new cards
-            const cards = [
+            /*const cards = [
                 ...this.state.cards,
                 ...cardDefinitions.map((definition) =>
                     CardCarouselComponent.createCard(definition, ANIMATIONS.drawCard)
                 ),
-            ];
+            ];*/
+
+            /*const cards = [
+                ...this.state.cards,
+                ...newCards.map((card) =>
+                    CardCarouselComponent.createCard(card.definition, ANIMATIONS.drawCard)
+                ),
+            ];*/
 
             this.buttonPanelRef.current.setEnableDrawButton(false);
 
-            this.setState({
+            /*this.setState({
                 cards,
-            });
+            });*/
 
-            this.indicatorRef.current.setDataCount(cards.length);
-            this.carouselRef.current.setCards(cards, this.model.getFocusIndex(0));
+            this.indicatorRef.current.setDataCount(this.model.getCards(0).length);
+            this.carouselRef.current.addCards(newCards.map((card) =>
+                        CardCarouselComponent.createCard(card.definition, ANIMATIONS.drawCard)
+            ));
         }
     }
 

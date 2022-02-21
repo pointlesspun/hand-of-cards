@@ -28,6 +28,8 @@ export class Hand {
             maxSelectedCards === undefined ? this.maxSelectedCards : maxSelectedCards,
         );
 
+    getMaxCards = () => this.maxCards;
+
     getFocusIndex = () => this.focusIdx;
 
     setFocusIndex(idx) {
@@ -79,6 +81,13 @@ export class Hand {
         if (focusIndex !== undefined) {
             this.setFocusIndex(focusIndex);
         }
+    }
+
+    addCards(cards) {
+        cards.forEach( (card, idx) => {
+            card.setIndex(idx + this.cards.length);
+            this.cards.push(card);
+        });
     }
 
     getFirstSelectedCard = () =>

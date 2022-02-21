@@ -36,12 +36,18 @@ export class Player {
             hand ?? this.hand
         );
 
+    getLibrary = () => this.cardLibrary;
+
     canSelectMoreCards = () => this.hand.canSelectMoreCards();
 
     getCards = () => this.hand.cards;
 
     setCards(cards, focusIndex) {
         this.hand.setCards(cards, focusIndex);
+    }
+
+    addCards(cards) {
+        this.hand.addCards(cards);
     }
 
     /**
@@ -79,7 +85,9 @@ export class Player {
 
     setMaxSelectedCards(max) {
         this.hand.setMaxSelectedCards(max);
-    }
+    }    
 
     getMaxSelectedCards = () => this.hand.getMaxSelectedCards();
+
+    getMaxCards = () => this.hand.getMaxCards();
 }
