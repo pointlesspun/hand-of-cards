@@ -50,7 +50,7 @@ export class CardCarouselComponent extends React.Component {
         this.animationCount = 0;
 
         this.state = {
-            cards: props.cards,
+            cards: props.cards ?? [],
             mediaConfig: props.mediaConfig,
             focusIndex: props.focusIndex,
             centerCardIndex,
@@ -358,6 +358,19 @@ export class CardCarouselComponent extends React.Component {
                 this.updateCardTransform(cardRef, idx, focusIndex, centerIndex);
             }
         });
+    }
+
+    /**
+     * 
+     * @param {[number]} cardIndices is an array of indices mapping to card.state.index
+     * @param {number} focusIndex new focus index after the cards have been removed
+     */
+    removeCards(cardIndices, focusIndex) {
+        this.setCards( this.state.cards.filter( card => !cardIndices.includes(card.ref.current.state.index)), focusIndex);
+    }
+
+    addCards(cards) {
+        this.setCards([...this.state.cards, ...cards], this.state.focusIndex);
     }
 
     setMediaConfig(mediaConfig) {

@@ -1,31 +1,38 @@
-'use strict';
+"use strict";
 
 export class Card {
-    constructor(index, definition, hasFocus = false, isSelected = false, animation = null) {
-      this.index = index;
-      this.isSelected = isSelected;
-      this.hasFocus = hasFocus;
-      this.definition = definition;
-      this.animation = animation;
+    constructor(index, definition, hasFocus = false, isSelected = false) {
+        this.index = index;
+        this.isSelected = isSelected;
+        this.hasFocus = hasFocus;
+        this.definition = definition;
+        this.lastSelectionChange = Date.now();
     }
 
-    clone = ({
-      index,
-      definition,
-      hasFocus,
-      isSelected,
-      animation,
-    } = {}) =>
-      new Card(
-        index === undefined ? this.index : index,
-        definition ?? this.definition,
-        hasFocus === undefined ? this.hasFocus : hasFocus,
-        isSelected === undefined ? this.isSelected : isSelected,
-        animation ?? this.animation
+    clone = ({ index, definition, hasFocus, isSelected } = {}) =>
+        new Card(
+            index === undefined ? this.index : index,
+            definition ?? this.definition,
+            hasFocus === undefined ? this.hasFocus : hasFocus,
+            isSelected === undefined ? this.isSelected : isSelected
         );
 
-    next(modifier) {
-      return modifier(this.clone());
+    setSelected(isSelected) {
+        this.isSelected = isSelected;
+        this.lastSelectionChange = Date.now();   
     }
-  }
-  
+
+    isCardSelected = () => this.isSelected;
+
+    setHasFocus(hasFocus) {
+        this.hasFocus = hasFocus;
+    }
+
+    hasCardFocus = () => this.hasFocus;
+
+    getIndex = () => this.index;
+
+    setIndex(idx) {
+        this.index = idx;
+    }
+}
