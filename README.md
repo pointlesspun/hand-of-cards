@@ -1,4 +1,4 @@
-# hand-of-cards (v0.451)
+# hand-of-cards (v0.452)
 This is React front-end carousel imitating holding and browsing through a hand of cards. To start the app, run a webserver in the directory containing the index.html file. Latest demo can be found on the [github pages](https://pointlesspun.github.io/hand-of-cards/).
 
 For bugs and outstanding features see ['status'](#Status) below.
@@ -85,3 +85,8 @@ Deck of cards [by Дмитрий Фомин (Dmitry Fomin) on Wiki](https://en.w
 Keycode constants [Kabir Baidhya, Saugat Acharya](https://github.com/kabirbaidhya/keycode-js#usage)
 
 Message bus [Gaurav Singhal](https://www.pluralsight.com/guides/how-to-communicate-between-independent-components-in-reactjs)
+
+
+## Testing
+
+Testing is implemented via [Jest](https://jestjs.io/) currently limited to a few support functions and the model. To test the model run "npm run test".

@@ -2,7 +2,7 @@
 
 import { countInArray, partitionArray } from "../framework/arrays.js";
 import { contract } from "../framework/contract.js";
-import { pickRandomCardDefinitions, pickRandomCards } from "./card-util.js";
+import { pickRandomCards } from "./card-util.js";
 import { Card } from "./card.js";
 import { Player } from "./player.js";
 
@@ -10,15 +10,18 @@ import { Player } from "./player.js";
  * What happens when the user selects a card when the max cards have been reached
  * @enum {string}
  */
- export const MAX_SELECTION_REACHED_POLICY = {
+export const MAX_SELECTION_REACHED_POLICY = {
     /** prevent the user from selecting more cards (default) */
     BLOCK: "block",
 
     /** de-select the card selected first, then select the current card */
     CYCLE_OLDEST: "cycle-oldest",
 };
-export class CardGameModel {
 
+/**
+ * Main model capturing all information regarding a multiplayer card game.
+ */
+export class CardGameModel {
     constructor(players, maxCardsPolicy = MAX_SELECTION_REACHED_POLICY.BLOCK) {
         /**
          * Players participating in this game
@@ -27,7 +30,7 @@ export class CardGameModel {
          */
         this.players = players;
 
-        this.players.forEach( (player, index) => player.index = index);
+        this.players.forEach((player, index) => (player.index = index));
 
         /**
          * Describes what the model should do when the maximum number of selected cards have been
@@ -38,119 +41,180 @@ export class CardGameModel {
         this.maxCardsReachedPolicy = maxCardsPolicy;
     }
 
-    clone({ players } = {}) {
-        return new CardGameModel(players ?? this.players);
-    }
-
+    /**
+     * Sets the maximum number of cards the player can select.
+     *
+     * @param {number} playerIndex
+     * @param {number} max
+     */
     setMaxSelectedCards(playerIndex, max) {
+        contract.isInRange(playerIndex, 0, this.players.length);
         this.players[playerIndex].setMaxSelectedCards(max);
     }
 
-    getMaxSelectedCards = (playerIndex) => this.players[playerIndex].getMaxSelectedCards();
-
-
-    getMaxCards = (playerIndex) => this.players[playerIndex].getMaxCards();
+    /**
+     * Returns the maximum number of cards a player can select
+     * @param {number} playerIndex
+     * @returns {number}
+     */
+    getMaxSelectedCards = (playerIndex) => {
+        contract.isInRange(playerIndex, 0, this.players.length);
+        this.players[playerIndex].getMaxSelectedCards();
+    }
 
     /**
-     * 
-     * @param {MAX_SELECTION_REACHED_POLICY} policy 
+     * Returns the maximum number of cards the player can have in hand.
+     *
+     * @param {number} playerIndex
+     * @returns {number}
+     */
+    getMaxCards = (playerIndex) => {
+        contract.isInRange(playerIndex, 0, this.players.length);
+        return this.players[playerIndex].getMaxCards();
+    }
+
+    /**
+     * Sets the model's card selection cycle policy (see MAX_SELECTION_REACHED_POLICY).
+     *
+     * @param {MAX_SELECTION_REACHED_POLICY} policy
      */
     setMaxSelectionCyclePolicy(policy) {
         this.maxCardsReachedPolicy = policy;
     }
 
+    /**
+     * Gets the model's card selection cycle policy.
+     *
+     * @returns {string}
+     */
     getMaxSelectionCyclePolicy = () => this.maxCardsReachedPolicy;
 
+    /**
+     * Returns the number of players in this game.
+     * @returns {number}
+     */
     getPlayerCount = () => this.players.length;
 
     /**
      * Returns what card the given player is focused on
-     * @param {number} playerIdx 
+     * @param {number} playerIndex
      * @returns {number}
      */
-    getFocusIndex = (playerIdx) => {
-        contract.isDefined(playerIdx, "CardGameModel.getFocusIndex: playerIdx is not defined.");
-        contract.requires(playerIdx >= 0 || playerIdx < this.players.length, `CardGameModel.getFocusIndex: player index (${playerIdx}) is not in range (0-${this.players.length}).`);
-
-        return this.players[playerIdx].getFocusIndex();
-    }
+    getFocusIndex = (playerIndex) => {
+        contract.isInRange(playerIndex, 0, this.players.length);
+        return this.players[playerIndex].getFocusIndex();
+    };
 
     /**
      * Sets the card the player is currently focusing on
-     * @param {number} playerIdx id of the player
-     * @param {focusIdx} playerIdx index of the card
+     * @param {number} playerIndex id of the player
+     * @param {focusIdx} playerIndex index of the card
      */
-    setFocusIndex(playerIdx, focusIdx) {
-        contract.isDefined(playerIdx, "CardGameModel.setFocusIndex: playerIdx is not defined.");
-        contract.isDefined(focusIdx, "CardGameModel.setFocusIndex: focusIdx is not defined.");
-        contract.requires(playerIdx >= 0 || playerIdx < this.players.length, `CardGameModel.setFocusIndex: player index (${playerIdx}) is not in range (0-${this.players.length}).`);
+    setFocusIndex(playerIndex, focusIdx) {
+        contract.isNumber(focusIdx, "CardGameModel.setFocusIndex: focusIdx is not a number.");
+        contract.isInRange(playerIndex, 0, this.players.length);
 
-        this.players[playerIdx].setFocusIndex(focusIdx);
+        this.players[playerIndex].setFocusIndex(focusIdx);
     }
 
     /**
-     * 
-     * @param {number} idx player index
+     * Returns the player with the given index
+     * @param {number} playerIndex player index
      * @returns {Player}
      */
-    getPlayer = (idx) => this.players[idx];
-
-    getCards = (playerIdx) => this.players[playerIdx].getCards();
-
-    hasCards = (playerIdx) => this.players[playerIdx].getCards()?.length > 0;
-
-    setCards(playerIdx, cards, focusIndex) {
-        contract.isDefined(playerIdx, "CardGameModel.setCards: playerIdx is not defined.");
-        contract.isDefined(cards, "CardGameModel.setCards: cards is not defined.");
-        
-        contract.requires(playerIdx >= 0 || playerIdx < this.players.length, `CardGameModel.setCards: player index (${playerIdx}) is not in range (0-${this.players.length}).`);
-        
-        this.players[playerIdx].setCards(cards, focusIndex);
+    getPlayer = (playerIndex) => {
+        contract.isInRange(playerIndex, 0, this.players.length);
+        return this.players[playerIndex];
     }
 
     /**
-     * 
-     * @param {number} playerIndex 
-     * @returns {[CardDefinition]} cardLibrary an array of card definitions available to the player. 
+     * Returns the cards belonging to the given player
+     * @param {number} playerIndex
+     * @returns {[Card]}
+     */
+    getCards = (playerIndex) => {
+        contract.isInRange(playerIndex, 0, this.players.length);
+        return this.players[playerIndex].getCards();
+    }
+
+    /**
+     * Checks if the given player has any cards
+     * @param {number} playerIndex
+     * @returns {boolean}
+     */
+    hasCards = (playerIndex) => {
+        contract.isInRange(playerIndex, 0, this.players.length);
+        return this.players[playerIndex].getCards()?.length > 0;
+    }
+
+    /**
+     * Sets the cards of the given player
+     * @param {number} playerIndex
+     * @param {[Card]} cards
+     * @param {number} focusIndex
+     */
+    setCards(playerIndex, cards, focusIndex) {
+        contract.isArray(cards, "CardGameModel.setCards: cards is not an array.");
+        contract.isInRange(playerIndex, 0, this.players.length);
+
+        this.players[playerIndex].setCards(cards, focusIndex);
+    }
+
+    /**
+     * Returns the library of cards available to the player with the given index.
+     * @param {number} playerIndex
+     * @returns {[CardDefinition]} cardLibrary an array of card definitions available to the player.
      */
     getLibrary = (playerIndex) => {
-        contract.isDefined(playerIndex, "CardGameModel.getLibrary: playerIndex is not defined.");
-        contract.requires(playerIndex >= 0 || playerIndex < this.players.length, `CardGameModel.getLibrary: player index (${playerIndex}) is not in range (0-${this.players.length}).`);
+        contract.isInRange(playerIndex, 0, this.players.length);
 
         return this.players[playerIndex].getLibrary();
-    }
-
-    canPlayerSelectMoreCards = (playerIdx) =>
-        this.players[playerIdx].canSelectMoreCards() ||
-        this.maxCardsReachedPolicy === MAX_SELECTION_REACHED_POLICY.CYCLE_OLDEST;
+    };
 
     /**
-     * 
-     * @param {number} playerIdx the index of the player to remove the cards from
+     * Checks if the player can select more cards or if the cycle policy is such that
+     * the player can always select more cards
+     * @param {number} playerIndex
+     * @returns {boolean}
+     */
+    canPlayerSelectMoreCards = (playerIndex) => {
+        contract.isInRange(playerIndex, 0, this.players.length);
+
+        return this.players[playerIndex].canSelectMoreCards() ||
+        this.maxCardsReachedPolicy === MAX_SELECTION_REACHED_POLICY.CYCLE_OLDEST;
+    }
+
+    /**
+     * Remove all cards marked as selected
+     * @param {number} playerIndex the index of the player to remove the cards from
      * @returns {[Card]} an array of all cards removed (may be empty).
      */
-    removeSelectedCards(playerIdx) {
-        contract.isDefined(playerIdx, "CardGameModel.removeSelectedCards: playerIdx is not defined.");
+    removeSelectedCards(playerIndex) {
+        contract.isInRange(playerIndex, 0, this.players.length);
 
         const selected = "selected";
         const deselected = "deselected";
-        const cards = this.getCards(playerIdx);
+        const cards = this.getCards(playerIndex);
         const partition = partitionArray(cards, (card) => (card.isSelected ? selected : deselected));
 
         const deselectedCards = partition[deselected];
 
         // are there any cards left ?
         if (deselectedCards === undefined) {
-            this.setCards(playerIdx, [], -1);
+            this.setCards(playerIndex, [], -1);
             return partition[selected];
         }
         // is the hand still the same ?
         else if (deselectedCards.length !== cards.length) {
             // hand has changed
-            const currentFocus = this.getFocusIndex(playerIdx);
+            const currentFocus = this.getFocusIndex(playerIndex);
             const cardCountInFrontOfFocus = countInArray(partition[selected], (card) => card.getIndex() < currentFocus);
-            
-            this.setCards(playerIdx, deselectedCards, Math.clamp(currentFocus - cardCountInFrontOfFocus, 0, deselected.length));
+
+            this.setCards(
+                playerIndex,
+                deselectedCards,
+                Math.clamp(currentFocus - cardCountInFrontOfFocus, 0, deselected.length)
+            );
 
             return partition[selected];
         }
@@ -158,20 +222,33 @@ export class CardGameModel {
         return [];
     }
 
-    countSelectedCards = (playerIdx, maxIndex = -1) => {
-        contract.isDefined(playerIdx, "CardGameModel.countSelectedCards: playerIdx is not defined.");
+    /**
+     * Count the number of cards selected in the hand of the player with the given index
+     * @param {number} playerIndex id of the player
+     * @param {number} [maxIndex=-1] count cards up until maxIndex
+     * @returns {number}
+     */
+    countSelectedCards = (playerIndex, maxIndex = -1) => {
+        contract.isInRange(playerIndex, 0, this.players.length);
 
-        return countInArray(this.getCards(playerIdx), (card) => card.isCardSelected(), maxIndex);
-    }
-    
+        return countInArray(this.getCards(playerIndex), (card) => card.isCardSelected(), maxIndex);
+    };
+
+    /**
+     * Draw a number of random cards and add them to the hand of the player with the given index
+     * @param {number} playerIndex id of the player
+     * @param {number} [cardCount] number of cards to draw, if undefined cards until the hand is full
+     * @returns {[Card]} the cards drawn or null when no cards can be drawn
+     */
     drawRandomCards(playerIndex, cardCount) {
-        contract.isDefined(playerIndex, "CardGameModel.drawCards: playerIdx is not defined.");
+        contract.isInRange(playerIndex, 0, this.players.length);
 
-        const newCardCount = cardCount === undefined ? this.getMaxCards(playerIndex) - this.getCards(playerIndex).length : cardCount;
+        const newCardCount =
+            cardCount === undefined ? this.getMaxCards(playerIndex) - this.getCards(playerIndex).length : cardCount;
 
-        if(newCardCount > 0) {
+        if (newCardCount > 0) {
             const newCards = pickRandomCards(this.getLibrary(0), newCardCount);
-                    
+
             this.players[playerIndex].addCards(newCards);
 
             return newCards;
@@ -182,35 +259,39 @@ export class CardGameModel {
 
     /**
      * Checks if the card with the cardIndex of the given playerIndex is selected.
-     * 
-     * @param {number} playerIndex 
-     * @param {number} cardIndex 
+     *
+     * @param {number} playerIndex
+     * @param {number} cardIndex
      * @returns {boolean} true the card is selected, false otherwise.
      */
     isCardSelected = (playerIndex, cardIndex) => {
-        contract.isDefined(playerIndex, "CardGameModel.isCardSelected: playerIndex is not defined.");
-        contract.isDefined(cardIndex, "CardGameModel.isCardSelected: cardIndex is not defined.");
+        contract.isNumber(cardIndex, "CardGameModel.isCardSelected: cardIndex is not defined.");
+        contract.isInRange(playerIndex, 0, this.players.length);
 
         return this.players[playerIndex].isCardSelected(cardIndex);
-    }
+    };
 
     /**
      *
-     * @param {number} playerIdx which player's card is going to be selected
-     * @param {number} cardIdx which card index selection state is going to be changed
+     * @param {number} playerIndex which player's card is going to be selected
+     * @param {number} cardIndex which card index selection state is going to be changed
      * @param {boolean} isSelected new selection state
      * @returns {[Card]|null} returns an array of all the cards affected by this method (can be empty) or null if no new
      * selection could be made (max selection reached)
      */
-    updateCardSelection(playerIdx, cardIdx, isSelected) {
-        const player = this.players[playerIdx];
-        const card = player.getCard(cardIdx);
+    updateCardSelection(playerIndex, cardIndex, isSelected) {
+        contract.isNumber(cardIndex, "CardGameModel.updateCardSelection: cardIndex is not a number.");
+        contract.isBoolean(isSelected, "CardGameModel.updateCardSelection: isSelected is not a boolean.");
+        contract.isInRange(playerIndex, 0, this.players.length);
+
+        const player = this.players[playerIndex];
+        const card = player.getCard(cardIndex);
 
         // is there a state change ?
         if (card.isSelected !== isSelected) {
             // Trying to deselect a card or can still select more cards ?
             if (!isSelected || player.canSelectMoreCards()) {
-                player.setCardSelected(cardIdx, isSelected);
+                player.setCardSelected(cardIndex, isSelected);
                 return [card];
                 // Trying to select a card but the max selected card limit is reached. If the maxCardsReachedPolicy
                 // is CYCLE_OLDEST, deselect the card which was selected first then select the current card.
@@ -218,7 +299,7 @@ export class CardGameModel {
                 const firstSelectedCard = player.getFirstSelectedCard();
 
                 firstSelectedCard.setSelected(false);
-                player.setCardSelected(cardIdx, isSelected);
+                player.setCardSelected(cardIndex, isSelected);
                 return [firstSelectedCard, card];
             }
 
@@ -229,4 +310,5 @@ export class CardGameModel {
         // nothing changed
         return [];
     }
+
 }
