@@ -45,20 +45,19 @@ Example:
 
 ## 'Design'
 
-The design (such as it is) of the element consists of the following:
+The design (such as it is) of the element consists of the following implementing a MVP with MVVM elements (sort of, I guess):
 
 * App (app.js): entry point and configuration of the application.
-  * ToastComponent (/framework/toast-component.js)
-  * CardGameComponent (/card-game/card-game-component.js): contains the card carousel event handlers and the carousel.
-    * CardCarousel (/card-game/card-carousel-component.js): contains the actual cards and deals with the card transforms and events
-        * Card (card-component.js): display of the actual card.
+  * ToastComponent (/framework/toast-component.js) for all the toasts - independent from all the other components, communicates via a message bus.
+  * CardGameModel (/model/card-game-model.js) contains the Model of the application
+  * CardGameComponent (/card-game/card-game-component.js) is the Presenter, taking data from the model and events from the view / viewmodel.
+  * CardCarouselComponent, ButtonPanelComponent, IndicatorComponent contain their own VewModels and implement the other View-parts.
 
 ## Status
 
 This project was created while learning React and is currently very much under development. Clean-up and refactoring are very much in order. Outstanding features (in no particular order):
 
 * [bug] resize is not always captured on mobile it seems
-* Split data from front-end
 * Create class for config.values.
 * Refactor & add documentation.
 * Add jsx (or htm) variation.
@@ -73,6 +72,9 @@ This project was created while learning React and is currently very much under d
 * Add (example) rule to card allowing cards to be played (or not)
 * Try some optimization(s) for less powerful devices (aka phones).
 * Test custom card layout other than a sprite atlas.
+* Test multiple players
+* Add 3d
+* Add cardbacks
 
 ## Credits
 
