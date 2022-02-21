@@ -181,6 +181,20 @@ export class CardGameModel {
     }
 
     /**
+     * Checks if the card with the cardIndex of the given playerIndex is selected.
+     * 
+     * @param {number} playerIndex 
+     * @param {number} cardIndex 
+     * @returns {boolean} true the card is selected, false otherwise.
+     */
+    isCardSelected = (playerIndex, cardIndex) => {
+        contract.isDefined(playerIndex, "CardGameModel.isCardSelected: playerIndex is not defined.");
+        contract.isDefined(cardIndex, "CardGameModel.isCardSelected: cardIndex is not defined.");
+
+        return this.players[playerIndex].isCardSelected(cardIndex);
+    }
+
+    /**
      *
      * @param {number} playerIdx which player's card is going to be selected
      * @param {number} cardIdx which card index selection state is going to be changed

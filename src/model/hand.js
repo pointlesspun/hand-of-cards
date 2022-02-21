@@ -84,8 +84,9 @@ export class Hand {
     }
 
     addCards(cards) {
+        const baseIdx = this.cards.length;
         cards.forEach( (card, idx) => {
-            card.setIndex(idx + this.cards.length);
+            card.setIndex(idx + baseIdx);
             this.cards.push(card);
         });
     }

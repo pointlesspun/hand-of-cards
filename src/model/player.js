@@ -57,7 +57,7 @@ export class Player {
      */
     getCard = (idx) => this.hand.cards[idx];
 
-    isCardSelected = (idx) => this.hand.cards[idx].isSelected();
+    isCardSelected = (idx) => this.hand.cards[idx].isCardSelected();
 
     /**
      *
