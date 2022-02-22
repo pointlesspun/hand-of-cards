@@ -1,4 +1,4 @@
-# hand-of-cards (v0.452)
+# hand-of-cards (v0.453)
 This is React front-end carousel imitating holding and browsing through a hand of cards. To start the app, run a webserver in the directory containing the index.html file. Latest demo can be found on the [github pages](https://pointlesspun.github.io/hand-of-cards/).
 
 For bugs and outstanding features see ['status'](#Status) below.
@@ -26,6 +26,7 @@ In the top level element one can currently set the following attributes:
 
 * "maxCards", maxium number of cards in the hand and initial set of cards
 * "maxSelectedCards", maximum number of cards which can be selected. After that the user cannot select any more cards
+* "initialCardCount" how many cards does the player start with 
 * "isLocked", if set to true, the cards will not scroll but stay in place.
 * "maxCardsReachedPolicy" can have two values "blocked" and "cycle-oldest". When _blocked_ is applied, the user cannot select more than 'maxSelectedCards' and will get a warning when selecting more. When _cycle-oldest_ is applied the first selected card will be deselected and the current focused card will be selected when the 'maxSelectedCards' is reached.
 * "foldCardsPolicy" can have two values "after-animation" or "immediateley". When _after-animation_ is selected the remaining cards in the hand will be folded after the play card animation is complete, when _immediately_ is selected the remaining cards in the hand will be folded as soon as the play animation begin.
@@ -35,6 +36,7 @@ Example:
         <div
             id="card-container"
             class="app-container"
+            initialCardCount="5"
             maxCards="7"
             maxSelectedCards="3"
             isLocked="false"
@@ -58,23 +60,21 @@ The design (such as it is) of the element consists of the following implementing
 This project was created while learning React and is currently very much under development. Clean-up and refactoring are very much in order. Outstanding features (in no particular order):
 
 * [bug] resize is not always captured on mobile it seems
-* Create class for config.values.
-* Refactor & add documentation.
-* Add jsx (or htm) variation.
 * Deal truly random cards or one from a deck of 52 cards.
 * Dynamic spacing and rotation as the number of cards increase (see hearthstone)
 * Adjust animations on mobile device
-* // todo: fix this dependency 
-    import { ANIMATIONS } from "../animations.js";
 * fix wobble in the animation when browsing and selecting at the same time
 * Overview at the start of application including which platforms are supported
 * Indicate if platforms are supported or not
 * Add (example) rule to card allowing cards to be played (or not)
 * Try some optimization(s) for less powerful devices (aka phones).
 * Test custom card layout other than a sprite atlas.
+* Add 3d & cardbacks
 * Test multiple players
-* Add 3d
-* Add cardbacks
+* Create class for config.values.
+* Refactor & add documentation.
+* Add jsx (or htm) variation.
+
 
 ## Credits
 

@@ -16,7 +16,7 @@ import { FOLD_CARDS_POLICY, CardGameComponent } from "./card-game/card-game-comp
 import { PLATFORM_CONFIGURATIONS } from "./platform-configurations.js";
 import { ANIMATIONS } from "./animations.js";
 
-const version = "0.452";
+const version = "0.453";
 
 console.log(`starting card component ${version}`);
 
@@ -25,12 +25,14 @@ const maxCards = element.attributes?.maxCards?.value ? parseInt(element.attribut
 const maxSelectedCards = element.attributes?.maxSelectedCards?.value ?? -1;
 const selectionCyclePolicy = element.attributes?.maxCardsReachedPolicy?.value ?? MAX_SELECTION_REACHED_POLICY.BLOCK;
 const foldCardsPolicy = element.attributes?.foldCardsPolicy?.value ?? FOLD_CARDS_POLICY.AFTER_ANIMATION;
+const initialCardCount = element.attributes?.initialCardCount?.value ? parseInt(element.attributes.initialCardCount.value) : maxCards;
 
-const model = createCardGameModel({ maxSelectedCards, selectionCyclePolicy, cardCount: maxCards });
+const model = createCardGameModel({ maxSelectedCards, selectionCyclePolicy, initialCardCount : 0 });
 
 const properties = {
     key: "hand-of-cards-container",
     model,
+    initialCardCount,
     foldCardsPolicy,
     initialIndex: Math.floor(model.getMaxCards(0).length / 2),
     isLocked: element.attributes?.isLocked?.value === "true" ?? false,

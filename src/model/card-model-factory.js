@@ -14,6 +14,7 @@ import { Player } from "./player.js";
  * @property {number} [cardCount=52] max cards in a deck
  * @property {number} [maxCards=7] max cards in a hand
  * @property {number} [maxSelectedCards=3] max cards that can be selected at the same time
+ * @property {number} [initialCardCount=-1] how many cards should the player start with, if set to -1 it will be set to maxCards
  * @property {String} [selectionCyclePolicy=MAX_SELECTION_REACHED_POLICY.CYCLE_OLDEST] what to do when the player has 
  * selected max cards and then selects another (see MAX_SELECTION_REACHED_POLICY).
  */
@@ -30,9 +31,12 @@ export function createCardGameModel({
     cardCount = 52,
     maxCards = 7,
     maxSelectedCards = 3,
+    initialCardCount = -1,
     selectionCyclePolicy = MAX_SELECTION_REACHED_POLICY.CYCLE_OLDEST,
 } = {}) {
     const players = [];
+    const handSize = initialCardCount < 0 ? maxCards : initialCardCount;
+    const focusIndex = handSize > 0 ? Math.floor(maxCards / 2) : -1;
 
     for (let i = 0; i < playerCount; i++) {
         players.push(
@@ -42,8 +46,8 @@ export function createCardGameModel({
                 library,
                 new Deck(pickRandomCards(library, cardCount)),
                 new Hand(
-                    pickRandomCards(DEFAULT_LIBRARY, maxCards),
-                    Math.floor(maxCards / 2),
+                    pickRandomCards(DEFAULT_LIBRARY, handSize),
+                    focusIndex,
                     maxCards,
                     maxSelectedCards
                 )

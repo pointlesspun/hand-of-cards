@@ -10,7 +10,6 @@ import "../framework/math-extensions.js";
 import { ELEMENT_TYPES } from "../framework/element-types.js";
 import eventBus from "../framework/event-bus.js";
 
-// todo: fix this dependency
 import { ANIMATIONS } from "../animations.js";
 import { TOAST_TOPIC } from "../framework/toast-component.js";
 import { IndicatorComponent } from "../framework/indicator-component.js";
@@ -94,6 +93,12 @@ export class CardGameComponent extends React.Component {
 
         // after the initial mount we've got a ref and media config
         this.handleResize();
+
+        // fill the hand with cards, 'showing off' the initial animation
+        if (this.props.initialCardCount === 0 || this.model.getCards(0).length < this.props.initialCardCount) {
+            this.drawCards(this.props.initialCardCount);
+            this.buttonPanelRef.current.setEnableDrawButton(this.props.initialCardCount < this.model.getMaxCards(0));
+        }
     }
 
     /**
@@ -203,14 +208,14 @@ export class CardGameComponent extends React.Component {
                 this.drawCards();
                 break;
             case CARD_CAROUSEL_EVENT_TYPES.REMOVE_SELECTED_CARDS:
-                this.removeSelectedItems();
+                this.removeSelectedCards();
                 break;
             case CARD_CAROUSEL_EVENT_TYPES.PLAY_SELECTED_CARDS:
                 this.playSelectedCards();
                 break;
             case CARD_CAROUSEL_EVENT_TYPES.ANIMATION_COMPLETE:
                 if (parameters.name === ANIMATIONS.playCard.name) {
-                    this.removeSelectedItems();
+                    this.removeSelectedCards();
                 }
                 break;
         }
@@ -265,6 +270,7 @@ export class CardGameComponent extends React.Component {
     selectCard(idx, isSelected) {
         const updatedCards = this.model.updateCardSelection(0, idx, isSelected);
 
+        // did any of the cards change state ?
         if (updatedCards !== null) {
             if (updatedCards.length > 0) {
                 updatedCards.forEach((card) => {
@@ -280,7 +286,10 @@ export class CardGameComponent extends React.Component {
         }
     }
 
-    removeSelectedItems() {
+    /**
+     * Removes all selected cards from this component.
+     */
+    removeSelectedCards() {
         const removedCards = this.model.removeSelectedCards(0);
 
         if (removedCards.length > 0) {
@@ -323,16 +332,17 @@ export class CardGameComponent extends React.Component {
     }
 
     /**
-     * Refill the hand with new cards until the max number of cards has been reached
+     * Refill the hand with new cards until the max number of cards has been reached.
      */
-    drawCards() {
-        const newCards = this.model.drawRandomCards(0);
+    drawCards(count) {
+        const newCards = this.model.drawRandomCards(0, count);
 
         if (newCards) {
             this.buttonPanelRef.current.setEnableDrawButton(false);
             this.indicatorRef.current.setDataCount(this.model.getCards(0).length);
             this.carouselRef.current.addCards(
-                newCards.map((card) => CardCarouselComponent.createCard(card.definition, ANIMATIONS.drawCard))
+                newCards.map((card) => CardCarouselComponent.createCard(card.definition, ANIMATIONS.drawCard)),
+                this.model.getFocusIndex(0)
             );
         }
     }
@@ -343,9 +353,15 @@ export class CardGameComponent extends React.Component {
         this.buttonPanelRef.current.setIsLocked(isLocked);
     }
 
-    dispatchMaxCardsSelectedWarning = () =>
+    /**
+     * Sends an event to the toast to notify the user has reached the max selected cards and 
+     * cannot select any more.
+     * @private
+     */
+    dispatchMaxCardsSelectedWarning() {
         eventBus.dispatch(TOAST_TOPIC, {
             message: "<h3>Maximum selected cards reached</h3>",
             id: "max-card-selected-warning",
         });
+    }
 }

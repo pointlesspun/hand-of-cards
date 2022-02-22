@@ -5,44 +5,46 @@ import { Card } from "./card.js";
 
 export class Hand {
     /**
-     * 
+     *
      * @param {[Card]} cards cards currently in this hand
-     * @param {*} focusIdx 
-     * @param {*} maxCards 
-     * @param {*} maxSelectedCards 
+     * @param {*} focusIdx
+     * @param {*} maxCards
+     * @param {*} maxSelectedCards
      */
     constructor(cards = [], focusIdx = 0, maxCards = -1, maxSelectedCards = -1) {
         this.cards = cards;
-        this.focusIdx = focusIdx === undefined ? Math.floor(cards.length / 2) : focusIdx;
+        this.focusIndex = focusIdx === undefined ? Math.floor(cards.length / 2) : focusIdx;
         this.maxCards = maxCards;
         this.maxSelectedCards = maxSelectedCards;
 
-        this.cards[focusIdx].setHasFocus(true);
+        if (focusIdx >= 0) {
+            this.cards[focusIdx].setHasFocus(true);
+        }
     }
 
-    clone = ({ cards, focusIdx, maxCards, maxSelectedCards} = {}) =>
+    clone = ({ cards, focusIdx, maxCards, maxSelectedCards } = {}) =>
         new Hand(
             cards ?? this.cards,
-            focusIdx === undefined ? this.focusIdx : focusIdx,
+            focusIdx === undefined ? this.focusIndex : focusIdx,
             maxCards === undefined ? this.maxCards : maxCards,
-            maxSelectedCards === undefined ? this.maxSelectedCards : maxSelectedCards,
+            maxSelectedCards === undefined ? this.maxSelectedCards : maxSelectedCards
         );
 
     getMaxCards = () => this.maxCards;
 
-    getFocusIndex = () => this.focusIdx;
+    getFocusIndex = () => this.focusIndex;
 
     setFocusIndex(idx) {
         // check if the current focus is still in the hand
-        if (this.focusIdx >= 0 && this.cards.length > this.focusIdx) {
-            this.cards[this.focusIdx].setHasFocus(false);    
+        if (this.focusIndex >= 0 && this.cards.length > this.focusIndex) {
+            this.cards[this.focusIndex].setHasFocus(false);
         }
 
         if (this.cards.length > 0) {
-            this.focusIdx = Math.clamp(idx, 0, this.cards.length);
-            this.cards[this.focusIdx].setHasFocus(true);    
+            this.focusIndex = Math.clamp(idx, 0, this.cards.length);
+            this.cards[this.focusIndex].setHasFocus(true);
         } else {
-            this.focusIdx = -1;
+            this.focusIndex = -1;
         }
     }
 
@@ -69,14 +71,14 @@ export class Hand {
     };
 
     /**
-     * Replaces the cards in the hand with the given cards and updates 
+     * Replaces the cards in the hand with the given cards and updates
      * the provided card's indices
-     * @param {[Card]} cards 
+     * @param {[Card]} cards
      */
     setCards(cards, focusIndex) {
         this.cards = cards;
 
-        cards.forEach( (card, idx) => card.setIndex(idx));
+        cards.forEach((card, idx) => card.setIndex(idx));
 
         if (focusIndex !== undefined) {
             this.setFocusIndex(focusIndex);
@@ -85,10 +87,14 @@ export class Hand {
 
     addCards(cards) {
         const baseIdx = this.cards.length;
-        cards.forEach( (card, idx) => {
+        const newFocusIndex = this.focusIndex >= 0 ? this.focusIndex : Math.floor(cards.length / 2);
+
+        cards.forEach((card, idx) => {
             card.setIndex(idx + baseIdx);
             this.cards.push(card);
         });
+
+        this.focusIndex = newFocusIndex;
     }
 
     getFirstSelectedCard = () =>

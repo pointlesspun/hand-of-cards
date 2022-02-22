@@ -248,7 +248,7 @@ export class CardGameModel {
 
         if (newCardCount > 0) {
             const newCards = pickRandomCards(this.getLibrary(0), newCardCount);
-
+          
             this.players[playerIndex].addCards(newCards);
 
             return newCards;
