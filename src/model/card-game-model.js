@@ -5,7 +5,7 @@ import { contract } from "../framework/contract.js";
 import { pickRandomCards } from "./card-util.js";
 import { Card } from "./card.js";
 import { Deck } from "./deck.js";
-import { Player } from "./player.js";
+import { DECK_NAME, Player } from "./player.js";
 
 /**
  * What happens when the user selects a card when the max cards have been reached
@@ -212,7 +212,7 @@ export class CardGameModel {
      * @param {number} playerIndex the index of the player to remove the cards from
      * @returns {[Card]} an array of all cards removed (may be empty).
      */
-    removeSelectedCards(playerIndex) {
+    removeSelectedCards(playerIndex, destinationPile = DECK_NAME.LIBRARY) {
         contract.isInRange(playerIndex, 0, this.players.length);
 
         const selected = "selected";
@@ -261,12 +261,13 @@ export class CardGameModel {
      * Draw a number of random cards and add them to the hand of the player with the given index
      * @param {number} playerIndex id of the player
      * @param {number} [cardCount] number of cards to draw, if undefined cards until the hand is full
+     * @param {string} drawpile pile to draw cards from
      * @returns {[Card]} the cards drawn or null when no cards can be drawn
      */
-    drawRandomCards(playerIndex, cardCount) {
+    drawRandomCards(playerIndex, cardCount, drawpile = DECK_NAME.LIBRARY) {
         contract.isInRange(playerIndex, 0, this.players.length);
 
-        return this.players[playerIndex].drawRandomCards(cardCount);
+        return this.players[playerIndex].drawRandomCards(cardCount, drawpile);
     }
 
     /**

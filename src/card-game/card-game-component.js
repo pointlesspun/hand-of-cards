@@ -18,6 +18,7 @@ import { CardGameModel } from "../model/card-game-model.js";
 import { CARD_CAROUSEL_EVENT_TYPES, CAROUSEL_EVENT_NAME } from "./card-carousel-event.js";
 import { ButtonPanelComponent } from "./button-panel-component.js";
 import { CounterComponent, INCREMENT_UNITS } from "../framework/counter-component.js";
+import { DECK_NAME } from "../model/player.js";
 
 export const FOLD_CARDS_POLICY = {
     /** Fold cards after the play cards animation has finished */
@@ -46,6 +47,8 @@ export class CardGameComponent extends React.Component {
         this.buttonPanelRef = React.createRef();
         this.indicatorRef = React.createRef();
         this.carouselRef = React.createRef();
+        this.drawCounterRef = React.createRef();
+        this.discardCounterRef = React.createRef();
 
         /**
          * Data model used. Not part of the state (state is the VM part).
@@ -185,6 +188,7 @@ export class CardGameComponent extends React.Component {
 
     renderDeckCounter() {
         return React.createElement(CounterComponent, {
+            ref: this.drawCounterRef,
             key: "deck-counter",
             className: "card-counter deck",
             startValue: 0,
@@ -197,6 +201,7 @@ export class CardGameComponent extends React.Component {
 
     renderDiscardCounter() {
         return React.createElement(CounterComponent, {
+            ref: this.discardCounterRef,
             key: "discard-pile-counter",
             className: "card-counter discard-pile",
             startValue: 0,
@@ -360,7 +365,7 @@ export class CardGameComponent extends React.Component {
      * Refill the hand with new cards until the max number of cards has been reached.
      */
     drawCards(count) {
-        const newCards = this.model.drawRandomCards(0, count);
+        const newCards = this.model.drawRandomCards(0, count, DECK_NAME.DECK);
 
         if (newCards) {
             this.buttonPanelRef.current.setEnableDrawButton(false);
@@ -369,6 +374,7 @@ export class CardGameComponent extends React.Component {
                 newCards.map((card) => CardCarouselComponent.createCard(card.definition, ANIMATIONS.drawCard)),
                 this.model.getFocusIndex(0)
             );
+            this.drawCounterRef.current.setGoalValue(this.model.getDeck(0).getLength());
         }
     }
 
