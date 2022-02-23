@@ -4,6 +4,7 @@ import { countInArray, partitionArray } from "../framework/arrays.js";
 import { contract } from "../framework/contract.js";
 import { pickRandomCards } from "./card-util.js";
 import { Card } from "./card.js";
+import { Deck } from "./deck.js";
 import { Player } from "./player.js";
 
 /**
@@ -60,7 +61,7 @@ export class CardGameModel {
     getMaxSelectedCards = (playerIndex) => {
         contract.isInRange(playerIndex, 0, this.players.length);
         return this.players[playerIndex].getMaxSelectedCards();
-    }
+    };
 
     /**
      * Returns the maximum number of cards the player can have in hand.
@@ -71,7 +72,7 @@ export class CardGameModel {
     getMaxCards = (playerIndex) => {
         contract.isInRange(playerIndex, 0, this.players.length);
         return this.players[playerIndex].getMaxCards();
-    }
+    };
 
     /**
      * Sets the model's card selection cycle policy (see MAX_SELECTION_REACHED_POLICY).
@@ -125,7 +126,7 @@ export class CardGameModel {
     getPlayer = (playerIndex) => {
         contract.isInRange(playerIndex, 0, this.players.length);
         return this.players[playerIndex];
-    }
+    };
 
     /**
      * Returns the cards belonging to the given player
@@ -135,7 +136,27 @@ export class CardGameModel {
     getCards = (playerIndex) => {
         contract.isInRange(playerIndex, 0, this.players.length);
         return this.players[playerIndex].getCards();
-    }
+    };
+
+    /**
+     * Returns the deck belonging to the given player
+     * @param {number} playerIndex
+     * @returns {[Deck]}
+     */
+    getDeck = (playerIndex) => {
+        contract.isInRange(playerIndex, 0, this.players.length);
+        return this.players[playerIndex].getDeck();
+    };
+
+    /**
+     * Returns the discard pile belonging to the given player
+     * @param {number} playerIndex
+     * @returns {[Deck]}
+     */
+     getDiscardPile = (playerIndex) => {
+        contract.isInRange(playerIndex, 0, this.players.length);
+        return this.players[playerIndex].getDiscardPile();
+    };
 
     /**
      * Checks if the given player has any cards
@@ -145,7 +166,7 @@ export class CardGameModel {
     hasCards = (playerIndex) => {
         contract.isInRange(playerIndex, 0, this.players.length);
         return this.players[playerIndex].getCards()?.length > 0;
-    }
+    };
 
     /**
      * Sets the cards of the given player
@@ -180,9 +201,11 @@ export class CardGameModel {
     canPlayerSelectMoreCards = (playerIndex) => {
         contract.isInRange(playerIndex, 0, this.players.length);
 
-        return this.players[playerIndex].canSelectMoreCards() ||
-        this.maxCardsReachedPolicy === MAX_SELECTION_REACHED_POLICY.CYCLE_OLDEST;
-    }
+        return (
+            this.players[playerIndex].canSelectMoreCards() ||
+            this.maxCardsReachedPolicy === MAX_SELECTION_REACHED_POLICY.CYCLE_OLDEST
+        );
+    };
 
     /**
      * Remove all cards marked as selected
@@ -242,7 +265,7 @@ export class CardGameModel {
      */
     drawRandomCards(playerIndex, cardCount) {
         contract.isInRange(playerIndex, 0, this.players.length);
-       
+
         return this.players[playerIndex].drawRandomCards(cardCount);
     }
 
@@ -299,5 +322,4 @@ export class CardGameModel {
         // nothing changed
         return [];
     }
-
 }

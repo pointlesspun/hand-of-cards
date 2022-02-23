@@ -17,6 +17,7 @@ import { CardCarouselComponent } from "./card-carousel-component.js";
 import { CardGameModel } from "../model/card-game-model.js";
 import { CARD_CAROUSEL_EVENT_TYPES, CAROUSEL_EVENT_NAME } from "./card-carousel-event.js";
 import { ButtonPanelComponent } from "./button-panel-component.js";
+import { CounterComponent, INCREMENT_UNITS } from "../framework/counter-component.js";
 
 export const FOLD_CARDS_POLICY = {
     /** Fold cards after the play cards animation has finished */
@@ -73,7 +74,7 @@ export class CardGameComponent extends React.Component {
                 className: "hand",
                 ref: this.ref,
             },
-            [this.renderCarousel(), this.renderControlBar(this.state.mediaConfig)]
+            [this.renderCarousel(), this.renderControlBar(this.state.mediaConfig), this.renderDeckCounter(), this.renderDiscardCounter()]
         );
 
     /**
@@ -179,6 +180,30 @@ export class CardGameComponent extends React.Component {
             playHandler: () => this.playSelectedCards(),
             drawCardsHandler: () => this.drawCards(),
             toggleLockHandler: () => this.toggleLock(),
+        });
+    }
+
+    renderDeckCounter() {
+        return React.createElement(CounterComponent, {
+            key: "deck-counter",
+            className: "card-counter deck",
+            startValue: 0,
+            goalValue: this.model.getDeck(0).getLength(),
+            minIncrement: 1.0,
+            increment: 0.15,
+            digits: 0
+        });
+    }
+
+    renderDiscardCounter() {
+        return React.createElement(CounterComponent, {
+            key: "discard-pile-counter",
+            className: "card-counter discard-pile",
+            startValue: 0,
+            goalValue: this.model.getDiscardPile(0).getLength(),
+            minIncrement: 1.0,
+            increment: 0.15,
+            digits: 0
         });
     }
 
@@ -353,6 +378,8 @@ export class CardGameComponent extends React.Component {
         this.buttonPanelRef.current.setIsLocked(isLocked);
     }
 
+    // --- Utility methods  -------------------------------------------------------------------------------------------
+    
     /**
      * Sends an event to the toast to notify the user has reached the max selected cards and 
      * cannot select any more.

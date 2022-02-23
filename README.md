@@ -77,6 +77,7 @@ This project was created while learning React and is currently very much under d
 * Add 3d & cardbacks
 * Test multiple players
 * Create class for config.values.
+* Mouse drag cards like Slay the Spire/ Hardstone
 * Refactor & add documentation.
 * Minify
 * Add jsx (or htm) variation.

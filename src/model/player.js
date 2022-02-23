@@ -57,7 +57,7 @@ export class Player {
     }
 
     getDeck = () => this.deck;
-
+    
     getDiscardPile = () => this.discardPile;
 
     getLibrary = () => this.cardLibrary;
