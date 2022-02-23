@@ -1,5 +1,6 @@
 'use strict';
 
+import { CardDefinition } from "./card-definition.js";
 import { Card } from "./card.js";
 
 export const pickRandomCardDefinitions = (library, count) => {
@@ -12,6 +13,12 @@ export const pickRandomCardDefinitions = (library, count) => {
     return result;
 } 
 
+/**
+ * Creates cards based on a random definition.
+ * @param {[CardDefinition]} library 
+ * @param {number} count 
+ * @returns [Card]
+ */
 export const pickRandomCards = (library, count) => 
     pickRandomCardDefinitions(library, count).map( (definition, idx) => new Card(idx, definition));
     

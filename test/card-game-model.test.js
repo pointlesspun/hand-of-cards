@@ -6,7 +6,7 @@ import { pickRandomCards } from "../src/model/card-util.js";
 import { Card } from "../src/model/card.js";
 import { Deck } from "../src/model/deck.js";
 import { Hand } from "../src/model/hand.js";
-import { Player } from "../src/model/player.js";
+import { DECK_NAME, Player } from "../src/model/player.js";
 
 test("Test default CardGameModel constructor with no players.", () => {
     const model = new CardGameModel([]);
@@ -295,4 +295,77 @@ test("Remove select cards with cycle policy set to CYCLE_OLDEST.", () => {
     expect(model.getCards(0)[0].isCardSelected()).toBe(false);
     expect(model.getCards(0)[1].isCardSelected()).toBe(true);
     expect(model.getCards(0)[2].isCardSelected()).toBe(true);
+});
+
+function isCardDefined (card){
+    expect(card).not.toBeNull();
+    expect(card.definition).not.toBeNull();
+    expect(card.isCardSelected()).toBe(false);
+    expect(card.hasCardFocus()).toBe(false);
+}
+
+test("Get cards from player library.", () => {
+    const model = createCardGameModel();
+    const player = model.getPlayer(0);
+
+    const cards = player.getCardsFrom(2, DECK_NAME.LIBRARY);
+
+    expect(cards.length).toBe(2);
+
+    cards.forEach(c => isCardDefined(c));
+});
+
+test("Get cards from player deck.", () => {
+    const model = createCardGameModel({cardCount : 4});
+    const player = model.getPlayer(0);
+
+    expect(player.getDeck().getLength()).toBe(4);
+
+    // draw more cards from the deck than there are in the deck
+    const cards = player.getCardsFrom(8, DECK_NAME.DECK);
+
+    expect(cards.length).toBe(4);
+
+    expect(player.getDeck().getLength()).toBe(0);
+
+    // expect the cards to have some value
+    cards.forEach(c => isCardDefined(c));
+
+});
+
+test("Get cards from player discard pile.", () => {
+    const model = createCardGameModel({cardCount : 4});
+    const player = model.getPlayer(0); 
+
+    expect(player.getDiscardPile().getLength()).toBe(0);
+
+    // draw more cards from the deck than there are in the deck
+    let cards = player.getCardsFrom(8, DECK_NAME.DISCARD_PILE);
+
+    expect(cards.length).toBe(0);
+    
+    player.getDiscardPile().addCards(pickRandomCards(DEFAULT_LIBRARY, 12));
+    expect(player.getDiscardPile().getLength()).toBe(12);
+
+    cards = player.getCardsFrom(8, DECK_NAME.DISCARD_PILE);
+
+    expect(player.getDiscardPile().getLength()).toBe(4);
+
+    expect(cards.length).toBe(8);
+
+    // expect the cards to have some value
+    cards.forEach(c => isCardDefined(c));
+});
+
+test("Draw cards from player library.", () => {
+    const model = createCardGameModel({initialCardCount: 0});
+    const player = model.getPlayer(0);
+
+    const cards = player.drawRandomCards(4, DECK_NAME.LIBRARY);
+
+    expect(cards.length).toBe(4);
+
+    cards.forEach(c => isCardDefined(c));
+
+    cards.forEach((c,index) => expect(c).toEqual(player.getCards()[index]));
 });

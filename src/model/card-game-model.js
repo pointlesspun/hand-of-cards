@@ -59,7 +59,7 @@ export class CardGameModel {
      */
     getMaxSelectedCards = (playerIndex) => {
         contract.isInRange(playerIndex, 0, this.players.length);
-        this.players[playerIndex].getMaxSelectedCards();
+        return this.players[playerIndex].getMaxSelectedCards();
     }
 
     /**
@@ -242,19 +242,8 @@ export class CardGameModel {
      */
     drawRandomCards(playerIndex, cardCount) {
         contract.isInRange(playerIndex, 0, this.players.length);
-
-        const newCardCount =
-            cardCount === undefined ? this.getMaxCards(playerIndex) - this.getCards(playerIndex).length : cardCount;
-
-        if (newCardCount > 0) {
-            const newCards = pickRandomCards(this.getLibrary(0), newCardCount);
-          
-            this.players[playerIndex].addCards(newCards);
-
-            return newCards;
-        }
-
-        return null;
+       
+        return this.players[playerIndex].drawRandomCards(cardCount);
     }
 
     /**

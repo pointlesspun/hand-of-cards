@@ -22,14 +22,6 @@ export class Hand {
         }
     }
 
-    clone = ({ cards, focusIdx, maxCards, maxSelectedCards } = {}) =>
-        new Hand(
-            cards ?? this.cards,
-            focusIdx === undefined ? this.focusIndex : focusIdx,
-            maxCards === undefined ? this.maxCards : maxCards,
-            maxSelectedCards === undefined ? this.maxSelectedCards : maxSelectedCards
-        );
-
     getMaxCards = () => this.maxCards;
 
     getFocusIndex = () => this.focusIndex;

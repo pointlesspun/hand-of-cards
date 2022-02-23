@@ -45,6 +45,7 @@ export function createCardGameModel({
                 i,
                 library,
                 new Deck(pickRandomCards(library, cardCount)),
+                new Deck([]),
                 new Hand(
                     pickRandomCards(DEFAULT_LIBRARY, handSize),
                     focusIndex,
