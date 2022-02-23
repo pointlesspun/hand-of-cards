@@ -16,12 +16,12 @@ const ATLAS_7_TO_K = new SpriteAtlas('./data/Atlasnye-playing-cards-7-to-K.png',
 
 export const CARD_COLOR_NAMES = ["Hearts", "Diamonds", "Clovers", "Spades"];
 
-const generateLibrary = (names, maxCardsPerName, atlas) => {
+const generateLibrary = (names, maxCardsPerName, atlas, baseOffset) => {
     let result = [];
 
     for (let i = 0; i < names.length; i++) {
         for (let j = 0; j < maxCardsPerName; j++) {
-            result.push(new CardDefinition(`{${names[i]}}-${j+1}`, atlas, i, j));
+            result.push(new CardDefinition(`{${names[i]}}-${j+baseOffset}`, atlas, i, j));
         }    
     }
 
@@ -29,6 +29,6 @@ const generateLibrary = (names, maxCardsPerName, atlas) => {
 }
 
 export const DEFAULT_LIBRARY = [
-    ...generateLibrary(CARD_COLOR_NAMES, 6, ATLAS_1_TO_6),
-    ...generateLibrary(CARD_COLOR_NAMES, 7, ATLAS_7_TO_K),
+    ...generateLibrary(CARD_COLOR_NAMES, 6, ATLAS_1_TO_6, 1), 
+    ...generateLibrary(CARD_COLOR_NAMES, 7, ATLAS_7_TO_K, 7),
 ];

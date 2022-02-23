@@ -15,4 +15,10 @@ export class Deck {
     addCards(cards) {
         this.cards = this.cards.concat(cards);
     }
+
+    getCards = () => this.cards;
+
+    clear() {
+        this.cards = [];
+    }
 }

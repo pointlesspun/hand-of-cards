@@ -320,7 +320,7 @@ export class CardGameComponent extends React.Component {
      * Removes all selected cards from this component.
      */
     removeSelectedCards() {
-        const removedCards = this.model.removeSelectedCards(0);
+        const removedCards = this.model.removeSelectedCards(0, DECK_NAME.DISCARD_PILE);
 
         if (removedCards.length > 0) {
             this.indicatorRef.current.setDataCount(this.model.getCards(0).length);
@@ -331,6 +331,7 @@ export class CardGameComponent extends React.Component {
                 this.model.getFocusIndex(0)
             );
             this.buttonPanelRef.current.setEnableDrawButton(true);
+            this.discardCounterRef.current.setGoalValue(this.model.getDiscardPile(0).getLength());
         }
     }
 
@@ -365,17 +366,25 @@ export class CardGameComponent extends React.Component {
      * Refill the hand with new cards until the max number of cards has been reached.
      */
     drawCards(count) {
+        const deck = this.model.getDeck(0);
+
+        if (deck.getLength() === 0) {
+            this.model.shuffleDiscardPile(0);
+            this.discardCounterRef.current.setGoalValue(this.model.getDiscardPile(0).getLength());
+        }
+
         const newCards = this.model.drawRandomCards(0, count, DECK_NAME.DECK);
 
         if (newCards) {
-            this.buttonPanelRef.current.setEnableDrawButton(false);
+            this.buttonPanelRef.current.setEnableDrawButton(this.model.getCards(0).length < this.model.getMaxCards(0));
             this.indicatorRef.current.setDataCount(this.model.getCards(0).length);
             this.carouselRef.current.addCards(
                 newCards.map((card) => CardCarouselComponent.createCard(card.definition, ANIMATIONS.drawCard)),
                 this.model.getFocusIndex(0)
             );
-            this.drawCounterRef.current.setGoalValue(this.model.getDeck(0).getLength());
+            this.drawCounterRef.current.setGoalValue(deck.getLength());
         }
+        
     }
 
     toggleLock() {

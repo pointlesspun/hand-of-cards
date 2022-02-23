@@ -27,4 +27,8 @@ export class Card {
     setIndex(idx) {
         this.index = idx;
     }
+
+    toString() {
+        return `${this.index}: ${this.definition.toString()}`;
+    }
 }

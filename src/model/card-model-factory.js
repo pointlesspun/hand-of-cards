@@ -29,6 +29,7 @@ export function createCardGameModel({
     playerCount = 1,
     library = DEFAULT_LIBRARY,
     cardCount = 52,
+    cardsInDeck = null,
     maxCards = 7,
     maxSelectedCards = 3,
     initialCardCount = -1,
@@ -44,7 +45,7 @@ export function createCardGameModel({
                 `plr${i}`,
                 i,
                 library,
-                new Deck(pickRandomCards(library, cardCount)),
+                new Deck(cardsInDeck ?? pickRandomCards(library, cardCount)),
                 new Deck([]),
                 new Hand(
                     pickRandomCards(DEFAULT_LIBRARY, handSize),

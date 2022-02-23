@@ -23,4 +23,8 @@ export class CardDefinition {
     toCss() {
         return this.atlas.toCss(this.row, this.column);
     }
+
+    toString() {
+        return this.name;
+    }
 }

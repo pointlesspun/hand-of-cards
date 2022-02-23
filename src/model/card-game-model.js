@@ -1,8 +1,7 @@
 "use strict";
 
-import { countInArray, partitionArray } from "../framework/arrays.js";
+import { countInArray } from "../framework/arrays.js";
 import { contract } from "../framework/contract.js";
-import { pickRandomCards } from "./card-util.js";
 import { Card } from "./card.js";
 import { Deck } from "./deck.js";
 import { DECK_NAME, Player } from "./player.js";
@@ -129,7 +128,8 @@ export class CardGameModel {
     };
 
     /**
-     * Returns the cards belonging to the given player
+     * Returns the cards belonging to the given player.
+     *
      * @param {number} playerIndex
      * @returns {[Card]}
      */
@@ -153,7 +153,7 @@ export class CardGameModel {
      * @param {number} playerIndex
      * @returns {[Deck]}
      */
-     getDiscardPile = (playerIndex) => {
+    getDiscardPile = (playerIndex) => {
         contract.isInRange(playerIndex, 0, this.players.length);
         return this.players[playerIndex].getDiscardPile();
     };
@@ -215,34 +215,7 @@ export class CardGameModel {
     removeSelectedCards(playerIndex, destinationPile = DECK_NAME.LIBRARY) {
         contract.isInRange(playerIndex, 0, this.players.length);
 
-        const selected = "selected";
-        const deselected = "deselected";
-        const cards = this.getCards(playerIndex);
-        const partition = partitionArray(cards, (card) => (card.isSelected ? selected : deselected));
-
-        const deselectedCards = partition[deselected];
-
-        // are there any cards left ?
-        if (deselectedCards === undefined) {
-            this.setCards(playerIndex, [], -1);
-            return partition[selected];
-        }
-        // is the hand still the same ?
-        else if (deselectedCards.length !== cards.length) {
-            // hand has changed
-            const currentFocus = this.getFocusIndex(playerIndex);
-            const cardCountInFrontOfFocus = countInArray(partition[selected], (card) => card.getIndex() < currentFocus);
-
-            this.setCards(
-                playerIndex,
-                deselectedCards,
-                Math.clamp(currentFocus - cardCountInFrontOfFocus, 0, deselected.length)
-            );
-
-            return partition[selected];
-        }
-
-        return [];
+        return this.getPlayer(playerIndex).removeSelectedCards(destinationPile);
     }
 
     /**
@@ -268,6 +241,12 @@ export class CardGameModel {
         contract.isInRange(playerIndex, 0, this.players.length);
 
         return this.players[playerIndex].drawRandomCards(cardCount, drawpile);
+    }
+
+    shuffleDiscardPile(playerIndex) {
+        contract.isInRange(playerIndex, 0, this.players.length);
+
+        this.players[playerIndex].shuffleDiscardPile();
     }
 
     /**

@@ -5,7 +5,6 @@ import { createCardGameModel } from "../src/model/card-model-factory.js";
 import { pickRandomCards } from "../src/model/card-util.js";
 import { Card } from "../src/model/card.js";
 import { Deck } from "../src/model/deck.js";
-import { Hand } from "../src/model/hand.js";
 import { DECK_NAME, Player } from "../src/model/player.js";
 
 test("Test default CardGameModel constructor with no players.", () => {
@@ -369,3 +368,31 @@ test("Draw cards from player library.", () => {
 
     cards.forEach((c,index) => expect(c).toEqual(player.getCards()[index]));
 });
+
+test("Move cards to draw pile.", () => {
+    const model = createCardGameModel({cardCount: 0, initialCardCount: 0});
+    
+    expect(model.getDeck(0).getLength()).toBe(0);
+    expect(model.getDiscardPile(0).getLength()).toBe(0);
+    expect(model.getCards(0).length).toBe(0);
+
+    model.getPlayer(0).moveCardsTo(pickRandomCards(DEFAULT_LIBRARY, 4), DECK_NAME.DECK);
+
+    expect(model.getDeck(0).getLength()).toBe(4);
+    expect(model.getCards(0).length).toBe(0);
+    expect(model.getDiscardPile(0).getLength()).toBe(0);
+})
+
+test("Move cards to discard pile.", () => {
+    const model = createCardGameModel({cardCount: 0, initialCardCount: 0});
+    
+    expect(model.getDeck(0).getLength()).toBe(0);
+    expect(model.getCards(0).length).toBe(0);
+    expect(model.getDiscardPile(0).getLength()).toBe(0);
+
+    model.getPlayer(0).moveCardsTo(pickRandomCards(DEFAULT_LIBRARY, 4), DECK_NAME.DISCARD_PILE);
+
+    expect(model.getDeck(0).getLength()).toBe(0);
+    expect(model.getCards(0).length).toBe(0);
+    expect(model.getDiscardPile(0).getLength()).toBe(4);
+})
