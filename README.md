@@ -1,10 +1,10 @@
-# hand-of-cards (v0.453)
+# hand-of-cards (v0.454)
 This is React front-end carousel imitating holding and browsing through a hand of cards. To start the app, run a webserver in the directory containing the index.html file. Latest demo can be found on the [github pages](https://pointlesspun.github.io/hand-of-cards/).
 
 For bugs and outstanding features see ['status'](#Status) below.
 
 <center>
-    <img src="./data/screenshot.png" width="640" height="480"/>
+    <img src="./data/screenshot.png" width="768" height="480"/>
 </center>
 
 ## Controls:
