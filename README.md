@@ -60,9 +60,7 @@ The design (such as it is) of the element consists of the following implementing
 This project was created while learning React and is currently very much under development. Clean-up and refactoring are very much in order. Outstanding features (in no particular order):
 
 * [bug] resize is not always captured on mobile it seems
-* Deal truly random cards or one from a deck of 52 cards.
 * Dynamic spacing and rotation as the number of cards increase (see hearthstone)
-* Adjust animations on mobile device
 * fix wobble in the animation when browsing and selecting at the same time
 * Overview at the start of application including which platforms are supported
 * Indicate if platforms are supported or not
@@ -72,7 +70,9 @@ This project was created while learning React and is currently very much under d
 * Add 3d & cardbacks
 * Test multiple players
 * Create class for config.values.
+* Mouse drag cards like Slay the Spire/ Hardstone
 * Refactor & add documentation.
+* Minify
 * Add jsx (or htm) variation.
 
 

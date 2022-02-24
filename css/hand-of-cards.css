@@ -41,7 +41,7 @@ html, body {
 .card-item {
     display: inline-flex;
     align-items: stretch;
-    transition: transform 0.25s;
+    transition: transform 0.25s, opacity 0.25s;
     transition-timing-function: ease-in-out;
     justify-content: center;   
     color: white;
@@ -87,3 +87,28 @@ html, body {
     will-change: transform;
 }
 
+.card-counter {
+    width: 64px;
+    height: 84px;
+    position: absolute;
+    z-index: 200;
+    color: white;
+    font-weight: bold;
+    font-size: xx-large;
+    background: rgba(0, 0, 0, 0.65);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 10%;
+    border: 2px solid rgba(155,155,155,1);
+}
+
+.deck {
+    left: 5%;
+    top: 50%;
+}
+
+.discard-pile {
+    right: 5%;
+    top: 50%;
+}

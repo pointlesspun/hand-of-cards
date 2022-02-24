@@ -25,8 +25,20 @@ export function countInArray(array, predicate, maxIndex = -1) {
         if (predicate(array[i], i)) {
             result++;
         }
-
     }
 
     return result;
+}
+
+/**
+ * Expertly lifted from https://stackoverflow.com/a/12646864
+ * @param {[any]} array 
+ */
+export function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+
+    return array;
 }

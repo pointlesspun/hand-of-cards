@@ -1,10 +1,10 @@
 "use strict";
 
-import { countInArray, partitionArray } from "../framework/arrays.js";
+import { countInArray } from "../framework/arrays.js";
 import { contract } from "../framework/contract.js";
-import { pickRandomCards } from "./card-util.js";
 import { Card } from "./card.js";
-import { Player } from "./player.js";
+import { Deck } from "./deck.js";
+import { DECK_NAME, Player } from "./player.js";
 
 /**
  * What happens when the user selects a card when the max cards have been reached
@@ -59,8 +59,8 @@ export class CardGameModel {
      */
     getMaxSelectedCards = (playerIndex) => {
         contract.isInRange(playerIndex, 0, this.players.length);
-        this.players[playerIndex].getMaxSelectedCards();
-    }
+        return this.players[playerIndex].getMaxSelectedCards();
+    };
 
     /**
      * Returns the maximum number of cards the player can have in hand.
@@ -71,7 +71,7 @@ export class CardGameModel {
     getMaxCards = (playerIndex) => {
         contract.isInRange(playerIndex, 0, this.players.length);
         return this.players[playerIndex].getMaxCards();
-    }
+    };
 
     /**
      * Sets the model's card selection cycle policy (see MAX_SELECTION_REACHED_POLICY).
@@ -125,17 +125,38 @@ export class CardGameModel {
     getPlayer = (playerIndex) => {
         contract.isInRange(playerIndex, 0, this.players.length);
         return this.players[playerIndex];
-    }
+    };
 
     /**
-     * Returns the cards belonging to the given player
+     * Returns the cards belonging to the given player.
+     *
      * @param {number} playerIndex
      * @returns {[Card]}
      */
     getCards = (playerIndex) => {
         contract.isInRange(playerIndex, 0, this.players.length);
         return this.players[playerIndex].getCards();
-    }
+    };
+
+    /**
+     * Returns the deck belonging to the given player
+     * @param {number} playerIndex
+     * @returns {[Deck]}
+     */
+    getDeck = (playerIndex) => {
+        contract.isInRange(playerIndex, 0, this.players.length);
+        return this.players[playerIndex].getDeck();
+    };
+
+    /**
+     * Returns the discard pile belonging to the given player
+     * @param {number} playerIndex
+     * @returns {[Deck]}
+     */
+    getDiscardPile = (playerIndex) => {
+        contract.isInRange(playerIndex, 0, this.players.length);
+        return this.players[playerIndex].getDiscardPile();
+    };
 
     /**
      * Checks if the given player has any cards
@@ -145,7 +166,7 @@ export class CardGameModel {
     hasCards = (playerIndex) => {
         contract.isInRange(playerIndex, 0, this.players.length);
         return this.players[playerIndex].getCards()?.length > 0;
-    }
+    };
 
     /**
      * Sets the cards of the given player
@@ -180,46 +201,21 @@ export class CardGameModel {
     canPlayerSelectMoreCards = (playerIndex) => {
         contract.isInRange(playerIndex, 0, this.players.length);
 
-        return this.players[playerIndex].canSelectMoreCards() ||
-        this.maxCardsReachedPolicy === MAX_SELECTION_REACHED_POLICY.CYCLE_OLDEST;
-    }
+        return (
+            this.players[playerIndex].canSelectMoreCards() ||
+            this.maxCardsReachedPolicy === MAX_SELECTION_REACHED_POLICY.CYCLE_OLDEST
+        );
+    };
 
     /**
      * Remove all cards marked as selected
      * @param {number} playerIndex the index of the player to remove the cards from
      * @returns {[Card]} an array of all cards removed (may be empty).
      */
-    removeSelectedCards(playerIndex) {
+    removeSelectedCards(playerIndex, destinationPile = DECK_NAME.LIBRARY) {
         contract.isInRange(playerIndex, 0, this.players.length);
 
-        const selected = "selected";
-        const deselected = "deselected";
-        const cards = this.getCards(playerIndex);
-        const partition = partitionArray(cards, (card) => (card.isSelected ? selected : deselected));
-
-        const deselectedCards = partition[deselected];
-
-        // are there any cards left ?
-        if (deselectedCards === undefined) {
-            this.setCards(playerIndex, [], -1);
-            return partition[selected];
-        }
-        // is the hand still the same ?
-        else if (deselectedCards.length !== cards.length) {
-            // hand has changed
-            const currentFocus = this.getFocusIndex(playerIndex);
-            const cardCountInFrontOfFocus = countInArray(partition[selected], (card) => card.getIndex() < currentFocus);
-
-            this.setCards(
-                playerIndex,
-                deselectedCards,
-                Math.clamp(currentFocus - cardCountInFrontOfFocus, 0, deselected.length)
-            );
-
-            return partition[selected];
-        }
-
-        return [];
+        return this.getPlayer(playerIndex).removeSelectedCards(destinationPile);
     }
 
     /**
@@ -238,23 +234,19 @@ export class CardGameModel {
      * Draw a number of random cards and add them to the hand of the player with the given index
      * @param {number} playerIndex id of the player
      * @param {number} [cardCount] number of cards to draw, if undefined cards until the hand is full
+     * @param {string} drawpile pile to draw cards from
      * @returns {[Card]} the cards drawn or null when no cards can be drawn
      */
-    drawRandomCards(playerIndex, cardCount) {
+    drawRandomCards(playerIndex, cardCount, drawpile = DECK_NAME.LIBRARY) {
         contract.isInRange(playerIndex, 0, this.players.length);
 
-        const newCardCount =
-            cardCount === undefined ? this.getMaxCards(playerIndex) - this.getCards(playerIndex).length : cardCount;
+        return this.players[playerIndex].drawRandomCards(cardCount, drawpile);
+    }
 
-        if (newCardCount > 0) {
-            const newCards = pickRandomCards(this.getLibrary(0), newCardCount);
-          
-            this.players[playerIndex].addCards(newCards);
+    shuffleDiscardPile(playerIndex) {
+        contract.isInRange(playerIndex, 0, this.players.length);
 
-            return newCards;
-        }
-
-        return null;
+        this.players[playerIndex].shuffleDiscardPile();
     }
 
     /**
@@ -310,5 +302,4 @@ export class CardGameModel {
         // nothing changed
         return [];
     }
-
 }

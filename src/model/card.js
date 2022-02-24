@@ -9,14 +9,6 @@ export class Card {
         this.lastSelectionChange = Date.now();
     }
 
-    clone = ({ index, definition, hasFocus, isSelected } = {}) =>
-        new Card(
-            index === undefined ? this.index : index,
-            definition ?? this.definition,
-            hasFocus === undefined ? this.hasFocus : hasFocus,
-            isSelected === undefined ? this.isSelected : isSelected
-        );
-
     setSelected(isSelected) {
         this.isSelected = isSelected;
         this.lastSelectionChange = Date.now();   
@@ -34,5 +26,9 @@ export class Card {
 
     setIndex(idx) {
         this.index = idx;
+    }
+
+    toString() {
+        return `${this.index}: ${this.definition.toString()}`;
     }
 }

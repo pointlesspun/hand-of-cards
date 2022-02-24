@@ -10,13 +10,15 @@ import "../framework/math-extensions.js";
 import { ELEMENT_TYPES } from "../framework/element-types.js";
 import eventBus from "../framework/event-bus.js";
 
-import { ANIMATIONS } from "../animations.js";
+import { ANIMATIONS, updateDrawAnimationStartTransform, updatePlayAnimationEndTransform } from "../animations.js";
 import { TOAST_TOPIC } from "../framework/toast-component.js";
 import { IndicatorComponent } from "../framework/indicator-component.js";
 import { CardCarouselComponent } from "./card-carousel-component.js";
 import { CardGameModel } from "../model/card-game-model.js";
 import { CARD_CAROUSEL_EVENT_TYPES, CAROUSEL_EVENT_NAME } from "./card-carousel-event.js";
 import { ButtonPanelComponent } from "./button-panel-component.js";
+import { CounterComponent, INCREMENT_UNITS } from "../framework/counter-component.js";
+import { DECK_NAME } from "../model/player.js";
 
 export const FOLD_CARDS_POLICY = {
     /** Fold cards after the play cards animation has finished */
@@ -45,6 +47,8 @@ export class CardGameComponent extends React.Component {
         this.buttonPanelRef = React.createRef();
         this.indicatorRef = React.createRef();
         this.carouselRef = React.createRef();
+        this.drawCounterRef = React.createRef();
+        this.discardCounterRef = React.createRef();
 
         /**
          * Data model used. Not part of the state (state is the VM part).
@@ -73,7 +77,7 @@ export class CardGameComponent extends React.Component {
                 className: "hand",
                 ref: this.ref,
             },
-            [this.renderCarousel(), this.renderControlBar(this.state.mediaConfig)]
+            [this.renderCarousel(), this.renderControlBar(this.state.mediaConfig), this.renderDeckCounter(), this.renderDiscardCounter()]
         );
 
     /**
@@ -182,6 +186,32 @@ export class CardGameComponent extends React.Component {
         });
     }
 
+    renderDeckCounter() {
+        return React.createElement(CounterComponent, {
+            ref: this.drawCounterRef,
+            key: "deck-counter",
+            className: "card-counter deck",
+            startValue: 0,
+            goalValue: this.model.getDeck(0).getLength(),
+            minIncrement: 1.0,
+            increment: 0.15,
+            digits: 0
+        });
+    }
+
+    renderDiscardCounter() {
+        return React.createElement(CounterComponent, {
+            ref: this.discardCounterRef,
+            key: "discard-pile-counter",
+            className: "card-counter discard-pile",
+            startValue: 0,
+            goalValue: this.model.getDiscardPile(0).getLength(),
+            minIncrement: 1.0,
+            increment: 0.15,
+            digits: 0
+        });
+    }
+
     // --- Event handlers ---------------------------------------------------------------------------------------------
 
     handleCarouselEvent(evt) {
@@ -251,8 +281,14 @@ export class CardGameComponent extends React.Component {
 
         this.setState({ mediaConfig });
 
+        // update the media config in the carousel
         if (this.carouselRef.current) {
-            this.carouselRef.current.setMediaConfig(mediaConfig);
+            this.carouselRef.current.setMediaConfig(mediaConfig);   
+        }
+
+        if (this.drawCounterRef.current && this.discardCounterRef.current) {
+            updateDrawAnimationStartTransform(mediaConfig, this.drawCounterRef.current.getBoundingClientRect());
+            updatePlayAnimationEndTransform(mediaConfig, this.discardCounterRef.current.getBoundingClientRect());
         }
 
         eventBus.dispatch(TOAST_TOPIC, { message, id: "platform-changed" });
@@ -290,7 +326,7 @@ export class CardGameComponent extends React.Component {
      * Removes all selected cards from this component.
      */
     removeSelectedCards() {
-        const removedCards = this.model.removeSelectedCards(0);
+        const removedCards = this.model.removeSelectedCards(0, DECK_NAME.DISCARD_PILE);
 
         if (removedCards.length > 0) {
             this.indicatorRef.current.setDataCount(this.model.getCards(0).length);
@@ -301,6 +337,7 @@ export class CardGameComponent extends React.Component {
                 this.model.getFocusIndex(0)
             );
             this.buttonPanelRef.current.setEnableDrawButton(true);
+            this.discardCounterRef.current.setGoalValue(this.model.getDiscardPile(0).getLength());
         }
     }
 
@@ -335,16 +372,25 @@ export class CardGameComponent extends React.Component {
      * Refill the hand with new cards until the max number of cards has been reached.
      */
     drawCards(count) {
-        const newCards = this.model.drawRandomCards(0, count);
+        const deck = this.model.getDeck(0);
+
+        if (deck.getLength() === 0) {
+            this.model.shuffleDiscardPile(0);
+            this.discardCounterRef.current.setGoalValue(this.model.getDiscardPile(0).getLength());
+        }
+
+        const newCards = this.model.drawRandomCards(0, count, DECK_NAME.DECK);
 
         if (newCards) {
-            this.buttonPanelRef.current.setEnableDrawButton(false);
+            this.buttonPanelRef.current.setEnableDrawButton(this.model.getCards(0).length < this.model.getMaxCards(0));
             this.indicatorRef.current.setDataCount(this.model.getCards(0).length);
             this.carouselRef.current.addCards(
                 newCards.map((card) => CardCarouselComponent.createCard(card.definition, ANIMATIONS.drawCard)),
                 this.model.getFocusIndex(0)
             );
+            this.drawCounterRef.current.setGoalValue(deck.getLength());
         }
+        
     }
 
     toggleLock() {
@@ -353,6 +399,8 @@ export class CardGameComponent extends React.Component {
         this.buttonPanelRef.current.setIsLocked(isLocked);
     }
 
+    // --- Utility methods  -------------------------------------------------------------------------------------------
+    
     /**
      * Sends an event to the toast to notify the user has reached the max selected cards and 
      * cannot select any more.
@@ -364,4 +412,6 @@ export class CardGameComponent extends React.Component {
             id: "max-card-selected-warning",
         });
     }
+
+    
 }
