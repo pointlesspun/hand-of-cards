@@ -19,7 +19,7 @@ import { createCardsFromLibrary } from "./model/card-util.js";
 import { DEFAULT_LIBRARY } from "./model/card-library.js";
 import { shuffleArray } from "./framework/arrays.js";
 
-const version = "0.453";
+const version = "0.454";
 
 console.log(`starting card component ${version}`);
 

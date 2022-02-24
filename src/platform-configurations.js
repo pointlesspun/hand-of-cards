@@ -30,7 +30,11 @@ export const PLATFORM_CONFIGURATIONS = [
         yActiveOffset: -80,
 
         cardWidth : 360,
-        cardHeight : 540
+        cardHeight : 540,
+
+        // animation relative (to card height) y offset above the position in hand when playing or drawing
+        // a card
+        playAnimationY: 0.11,
     }),
 
     new PlatformConfiguration("phone-portrait", ORIENTATION_NAMES.PORTRAIT, 480, 900, {
@@ -55,7 +59,11 @@ export const PLATFORM_CONFIGURATIONS = [
         yActiveOffset: -100,
 
         cardWidth : 360,
-        cardHeight : 540
+        cardHeight : 540,
+
+        // animation relative (to card height) y offset above the position in hand when playing or drawing
+        // a card
+        playAnimationY: 0.5,
     }),
 
     new PlatformConfiguration("laptop/desktop", ORIENTATION_NAMES.LANDSCAPE, 999999, 999999, {
@@ -79,7 +87,12 @@ export const PLATFORM_CONFIGURATIONS = [
         yActiveOffset: -82,
 
         cardWidth : 360,
-        cardHeight : 540
+        cardHeight : 540,
+
+        // animation relative (to card height) y offset above the position in hand when playing or drawing
+        // a card
+        playAnimationY: 0.4,
+
     })
 ]
 

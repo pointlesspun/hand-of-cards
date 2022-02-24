@@ -13,6 +13,7 @@ export class CounterComponent extends React.Component {
         super(props);
 
         this.timerHandle = -1;
+        this.divRef = React.createRef();
 
         this.state = {
             currentValue: props.startValue ?? 0,
@@ -40,6 +41,7 @@ export class CounterComponent extends React.Component {
         return React.createElement(
             ELEMENT_TYPES.DIV,
             {
+                ref: this.divRef,
                 className: this.state.className,
             },
             this.state.currentValue.toFixed(this.state.digits)
@@ -56,6 +58,8 @@ export class CounterComponent extends React.Component {
 
     // --- Utility methods  -------------------------------------------------------------------------------------------
 
+    getBoundingClientRect = () => this.divRef.current.getBoundingClientRect();
+        
     update() {
         const difference = this.state.goalValue - this.state.currentValue;
         const distance = Math.abs(difference);
@@ -74,8 +78,6 @@ export class CounterComponent extends React.Component {
             }
         }
     }
-
-    
 
     calculateDelta(distance) {
         const deltaIncrement =

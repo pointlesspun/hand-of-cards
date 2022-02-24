@@ -13,8 +13,19 @@ import { Vector3 } from "./vector3.js";
 export class Transform {
 
     constructor(translation = new Vector3(), scale = new Vector3(1,1,1), rotation = 0) {
+        /**
+         * @type {Vector3}
+         */
         this.translation = translation.clone();
+
+        /**
+         * @type {Vector3}
+         */
         this.scale = scale.clone();
+
+        /**
+         * @type {number}
+         */
         this.rotation = rotation;
     }
 

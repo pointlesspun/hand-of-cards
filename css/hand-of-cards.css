@@ -41,7 +41,7 @@ html, body {
 .card-item {
     display: inline-flex;
     align-items: stretch;
-    transition: transform 0.25s;
+    transition: transform 0.25s, opacity 0.25s;
     transition-timing-function: ease-in-out;
     justify-content: center;   
     color: white;

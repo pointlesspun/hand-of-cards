@@ -10,7 +10,7 @@ import "../framework/math-extensions.js";
 import { ELEMENT_TYPES } from "../framework/element-types.js";
 import eventBus from "../framework/event-bus.js";
 
-import { ANIMATIONS } from "../animations.js";
+import { ANIMATIONS, updateDrawAnimationStartTransform, updatePlayAnimationEndTransform } from "../animations.js";
 import { TOAST_TOPIC } from "../framework/toast-component.js";
 import { IndicatorComponent } from "../framework/indicator-component.js";
 import { CardCarouselComponent } from "./card-carousel-component.js";
@@ -281,8 +281,14 @@ export class CardGameComponent extends React.Component {
 
         this.setState({ mediaConfig });
 
+        // update the media config in the carousel
         if (this.carouselRef.current) {
-            this.carouselRef.current.setMediaConfig(mediaConfig);
+            this.carouselRef.current.setMediaConfig(mediaConfig);   
+        }
+
+        if (this.drawCounterRef.current && this.discardCounterRef.current) {
+            updateDrawAnimationStartTransform(mediaConfig, this.drawCounterRef.current.getBoundingClientRect());
+            updatePlayAnimationEndTransform(mediaConfig, this.discardCounterRef.current.getBoundingClientRect());
         }
 
         eventBus.dispatch(TOAST_TOPIC, { message, id: "platform-changed" });
@@ -406,4 +412,6 @@ export class CardGameComponent extends React.Component {
             id: "max-card-selected-warning",
         });
     }
+
+    
 }

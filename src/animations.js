@@ -25,20 +25,68 @@ export const ANIMATIONS = {
     playCard: {
         name: "playCard",
         // function which creates a play card animation
-        createAnimation: createPlayCardAnimation
+        createAnimation: createPlayCardAnimation,
+
+        // The default end transform ends somewhere off-screen
+        endTransform: new Transform(new Vector3(2000, -19), new Vector3(1,1), 0)
+        
     },
     drawCard: {
         name: "drawCard",
         // function which creates a draw card animation
-        createAnimation: createDrawCardAnimation
+        createAnimation: createDrawCardAnimation,
+
+        // The default start transform starts somewhere left off-screen
+        startTransform: new Transform(new Vector3(-2000, -19), new Vector3(1,1), -90)
     }
 };
+
+/**
+ * Update the "draw card animation" initial transform to match the current
+ * position of the draw pile counter.
+ * @param {PlatformConfiguration} mediaConfig the current configuration
+ * @param {DOMRect} rect the start rectangle
+ */
+export function updateDrawAnimationStartTransform(mediaConfig, rect) {
+    const newTransform = ANIMATIONS.drawCard.startTransform.clone();  
+    const cardWidth = mediaConfig.values.cardWidth;
+    const cardHeight = mediaConfig.values.cardHeight;
+
+    newTransform.translation.x = (rect.x + rect.width / 2) - cardWidth/2;
+    newTransform.translation.y = (rect.y + rect.height) - cardHeight;
+    newTransform.scale.x = rect.width / cardWidth;
+    newTransform.scale.y = rect.height / cardHeight;
+    newTransform.rotation = 0;
+
+    ANIMATIONS.drawCard.startTransform = newTransform;
+}
+
+/**
+ * Update the "play card animation" final transform to match the current
+ * position of the given rect.
+ * @param {PlatformConfiguration} mediaConfig the current configuration
+ * @param {DOMRect} rect the end rectangle
+ */
+ export function updatePlayAnimationEndTransform(mediaConfig, rect) {
+    const newTransform = ANIMATIONS.playCard.endTransform.clone();
+    const cardWidth = mediaConfig.values.cardWidth;
+    const cardHeight = mediaConfig.values.cardHeight;
+
+    newTransform.translation.x = (rect.x + rect.width / 2) - cardWidth/2;
+    newTransform.translation.y = (rect.y + rect.height) - cardHeight;
+    newTransform.scale.x = rect.width / cardWidth;
+    newTransform.scale.y = rect.height / cardHeight;
+    newTransform.rotation = -45;
+
+    ANIMATIONS.playCard.endTransform = newTransform;
+}
+
 
 /**
  * Create a custom play card animation. Starts at the current element position, goes slightly down
  * for a bounce then jumps up.
  * 
- * @param {*} param0 
+ * @param {number} idx 
  * @returns 
  */
 function createPlayCardAnimation({idx, config, targetTransform} = {}) {
@@ -47,14 +95,16 @@ function createPlayCardAnimation({idx, config, targetTransform} = {}) {
     const style = {};
 
     transform1.translation.y += 30 + Math.random() * 15;
-    transform1.scale.x += 0.1;
-    transform1.scale.y -= 0.1;
-    transform2.translation.y = -2 * config.values.cardHeight;
+    transform1.scale.x += 0.09;
+    transform1.scale.y -= 0.09;
+    transform2.translation.y -= config.values.playAnimationY * config.values.cardHeight;
 
     const text = `
         0% {transform: ${targetTransform.toCss()}}
         15% {transform: ${transform1.toCss()}}
-        100% {transform: ${transform2.toCss()}}
+        40% {transform: ${transform2.toCss()}}
+        70% {transform: ${transform2.toCss()}; opacity: 1.0}
+        100% {transform: ${ANIMATIONS.playCard.endTransform.toCss()}; opacity: 0.2}
     `;
 
     updateKeyframes(ANIMATIONS.playCard.name, idx, text);      
@@ -62,8 +112,8 @@ function createPlayCardAnimation({idx, config, targetTransform} = {}) {
     const animationId = createAnimationId(ANIMATIONS.playCard.name, idx); 
 
     style.animationName = animationId;
-    style.animationDuration = `${Math.random() * 0.2 + 0.2}s`;
-    style.animationDelay = `${Math.random() * 0.3}s`;
+    style.animationDuration = `${Math.random() * 0.1 + 0.5}s`;
+    style.animationDelay = `${Math.random() * 0.1}s`;
 
     // maintain the last frame of the animation
     style.animationFillMode = 'forwards';
@@ -74,26 +124,24 @@ function createPlayCardAnimation({idx, config, targetTransform} = {}) {
 }
 
 function createDrawCardAnimation({idx, config, targetTransform} = {}) {
-    const transform0 = new Transform(new Vector3(-2000, -19), new Vector3(1,1), -90);
+        
+    const transform0 = ANIMATIONS.drawCard.startTransform;
     const transform1 = targetTransform.clone();
     const transform2 = targetTransform.clone();
     const style = {};
 
-    transform1.translation.x += 155;
-    transform1.translation.y = config.clientSize.height * 0.1;
-    transform1.scale.x -= 0.2;
-    transform1.scale.y += 0.2;
-    transform1.rotation = 45;
-
-    transform2.translation.x = targetTransform.translation.x;
-    transform2.translation.y = transform1.translation.y;
+    transform1.translation.y -= config.values.playAnimationY * config.values.cardHeight;
+    
+    transform2.translation.y += 30 + Math.random() * 15;
+    transform2.scale.x += 0.09;
+    transform2.scale.y -= 0.09;
     
     const text = `
-        0% {transform: ${transform0.toCss()}}
-        35% {transform: ${transform1.toCss()}}
-        55% {transform: ${transform2.toCss()}}
-        75% {transform: ${transform2.toCss()}}
-        100% {transform: ${targetTransform.toCss()}}
+        0% {transform: ${transform0.toCss()}; opacity: 0.2}
+        15% {transform: ${transform1.toCss()}; opacity: 1.0}
+        40% {transform: ${transform1.toCss()}}
+        70% {transform: ${transform2.toCss()}}
+        100% {transform: ${targetTransform.toCss()}
     `;
 
     updateKeyframes(ANIMATIONS.drawCard.name, idx, text);      
@@ -101,8 +149,8 @@ function createDrawCardAnimation({idx, config, targetTransform} = {}) {
     const animationId = createAnimationId(ANIMATIONS.drawCard.name, idx); 
 
     style.animationName = animationId;
-    style.animationDuration = `${Math.random() * 0.2 + 0.7}s`;
-    style.animationDelay = `${Math.random() * 0.3}s`;
+    style.animationDuration = `${Math.random() * 0.1 + 0.5}s`;
+    style.animationDelay = `${Math.random() * 0.1}s`;
     
     // set the initial transform to be off screen otherwise we will have one frame
     // where the card is in the hand

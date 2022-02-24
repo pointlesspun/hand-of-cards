@@ -380,9 +380,10 @@ export class CardCarouselComponent extends React.Component {
 
     setMediaConfig(mediaConfig) {
         this.setState({ mediaConfig });
-        this.forEachCard(card =>
-            this.updateCardTransform(card, card.getIndex(), this.state.focusIndex, this.state.centerCardIndex)
-        );
+        this.forEachCard(card => {
+            this.updateCardTransform(card, card.getIndex(), this.state.focusIndex, this.state.centerCardIndex);
+            card.setMediaConfig(mediaConfig);
+        });
     }
 
     /**
