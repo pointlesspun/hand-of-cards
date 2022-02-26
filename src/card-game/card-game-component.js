@@ -11,7 +11,7 @@ import { ELEMENT_TYPES } from "../framework/element-types.js";
 import eventBus from "../framework/event-bus.js";
 
 import { ANIMATIONS, updateDrawAnimationStartTransform, updatePlayAnimationEndTransform } from "../animations.js";
-import { TOAST_TOPIC } from "../framework/toast-component.js";
+import { ToastMessage, TOAST_TOPIC } from "../framework/toast-component.js";
 import { IndicatorComponent } from "../framework/indicator-component.js";
 import { CardCarouselComponent } from "./card-carousel-component.js";
 import { CardGameModel } from "../model/card-game-model.js";
@@ -77,7 +77,12 @@ export class CardGameComponent extends React.Component {
                 className: "hand",
                 ref: this.ref,
             },
-            [this.renderCarousel(), this.renderControlBar(this.state.mediaConfig), this.renderDeckCounter(), this.renderDiscardCounter()]
+            [
+                this.renderCarousel(),
+                this.renderControlBar(this.state.mediaConfig),
+                this.renderDeckCounter(),
+                this.renderDiscardCounter(),
+            ]
         );
 
     /**
@@ -195,7 +200,7 @@ export class CardGameComponent extends React.Component {
             goalValue: this.model.getDeck(0).getLength(),
             minIncrement: 1.0,
             increment: 0.15,
-            digits: 0
+            digits: 0,
         });
     }
 
@@ -208,7 +213,7 @@ export class CardGameComponent extends React.Component {
             goalValue: this.model.getDiscardPile(0).getLength(),
             minIncrement: 1.0,
             increment: 0.15,
-            digits: 0
+            digits: 0,
         });
     }
 
@@ -283,7 +288,7 @@ export class CardGameComponent extends React.Component {
 
         // update the media config in the carousel
         if (this.carouselRef.current) {
-            this.carouselRef.current.setMediaConfig(mediaConfig);   
+            this.carouselRef.current.setMediaConfig(mediaConfig);
         }
 
         if (this.drawCounterRef.current && this.discardCounterRef.current) {
@@ -291,7 +296,7 @@ export class CardGameComponent extends React.Component {
             updatePlayAnimationEndTransform(mediaConfig, this.discardCounterRef.current.getBoundingClientRect());
         }
 
-        eventBus.dispatch(TOAST_TOPIC, { message, id: "platform-changed" });
+        eventBus.dispatch(TOAST_TOPIC, new ToastMessage(message, 2.0, "platform-changed"));
     }
 
     // --- State mutations & queries ----------------------------------------------------------------------------------
@@ -390,7 +395,6 @@ export class CardGameComponent extends React.Component {
             );
             this.drawCounterRef.current.setGoalValue(deck.getLength());
         }
-        
     }
 
     toggleLock() {
@@ -400,18 +404,16 @@ export class CardGameComponent extends React.Component {
     }
 
     // --- Utility methods  -------------------------------------------------------------------------------------------
-    
+
     /**
-     * Sends an event to the toast to notify the user has reached the max selected cards and 
+     * Sends an event to the toast to notify the user has reached the max selected cards and
      * cannot select any more.
      * @private
      */
     dispatchMaxCardsSelectedWarning() {
-        eventBus.dispatch(TOAST_TOPIC, {
-            message: "<h3>Maximum selected cards reached</h3>",
-            id: "max-card-selected-warning",
-        });
+        eventBus.dispatch(
+            TOAST_TOPIC,
+            new ToastMessage("<h3>Maximum selected cards reached</h3>", 2.0, "max-card-selected-warning")
+        );
     }
-
-    
 }

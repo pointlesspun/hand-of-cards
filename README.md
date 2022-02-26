@@ -1,4 +1,4 @@
-# hand-of-cards (v0.454)
+# hand-of-cards (v0.5)
 This is React front-end carousel imitating holding and browsing through a hand of cards. To start the app, run a webserver in the directory containing the index.html file. Latest demo can be found on the [github pages](https://pointlesspun.github.io/hand-of-cards/).
 
 For bugs and outstanding features see ['status'](#Status) below.
@@ -59,11 +59,15 @@ The design (such as it is) of the element consists of the following implementing
 
 This project was created while learning React and is currently very much under development. Clean-up and refactoring are very much in order. Outstanding features (in no particular order):
 
-* [bug] resize is not always captured on mobile it seems
+### KNOWN BUGS
+* A screen resize event is not always captured on mobile it seems however I can't reliably reproduce this.
+* There's a 'wobble' in the animation when browsing and selecting at the same time. The wobble occurs because the transition time is reset when a new transform is set in
+  the card. However this only occurs in some cases. When moving left to right in quick succession the transition is NOT reset. However moving to left/right and selecting/deselecting causes a transition reset. Why this happens is not immediately clear to me at this point. This can be addressed somewhat by calculating the remaining transition time and then updating the transition duration accordingly when the card is selected. Sadly this still causes issues with the animation as the card seems to pause and then move again causing a different 'wobble' (regardless of the transition function). The additional complexity in the code is not worth this minor improvement imho so we'll have to live with this bug. 
+* There is an issue with firefox and CSS transitions see [this bug report](https://bugzilla.mozilla.org/show_bug.cgi?id=1757164).
+
+### TODO 
+
 * Dynamic spacing and rotation as the number of cards increase (see hearthstone)
-* fix wobble in the animation when browsing and selecting at the same time
-* Overview at the start of application including which platforms are supported
-* Indicate if platforms are supported or not
 * Add (example) rule to card allowing cards to be played (or not)
 * Try some optimization(s) for less powerful devices (aka phones).
 * Test custom card layout other than a sprite atlas.
@@ -88,6 +92,7 @@ Keycode constants [Kabir Baidhya, Saugat Acharya](https://github.com/kabirbaidhy
 
 Message bus [Gaurav Singhal](https://www.pluralsight.com/guides/how-to-communicate-between-independent-components-in-reactjs)
 
+Google [Material Design Icons](https://google.github.io/material-design-icons/)
 
 ## Testing
 

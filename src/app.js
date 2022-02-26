@@ -4,9 +4,9 @@
  * Main application which configures a HandOfCardsComponent and renders the component.
  */
 
-import { MediaConfiguration } from "./framework/media-configuration.js";
+import { detectBrowser, MediaConfiguration } from "./framework/media-configuration.js";
 import { allocAnimations } from "./framework/animation-utilities.js";
-import { ToastComponent } from "./framework/toast-component.js";
+import { ToastComponent, ToastMessage } from "./framework/toast-component.js";
 
 import { MAX_SELECTION_REACHED_POLICY } from "./model/card-game-model.js";
 import { createCardGameModel } from "./model/card-model-factory.js";
@@ -19,7 +19,7 @@ import { createCardsFromLibrary } from "./model/card-util.js";
 import { DEFAULT_LIBRARY } from "./model/card-library.js";
 import { shuffleArray } from "./framework/arrays.js";
 
-const version = "0.454";
+const version = "0.5";
 
 console.log(`starting card component ${version}`);
 
@@ -36,7 +36,7 @@ const model = createCardGameModel({
     maxSelectedCards,
     selectionCyclePolicy,
     initialCardCount: 0,
-    cardsInDeck : shuffleArray(createCardsFromLibrary(DEFAULT_LIBRARY))
+    cardsInDeck: shuffleArray(createCardsFromLibrary(DEFAULT_LIBRARY)),
 });
 
 const properties = {
@@ -51,11 +51,23 @@ const properties = {
 
 allocAnimations([ANIMATIONS.playCard.name, ANIMATIONS.drawCard.name], maxCards);
 
+const initialMessages = [];
+
+initialMessages.push(`<h2><u>Hand of cards, version ${version}</u></h2>`);
+
+// firefox is having issues with transitions see readme.md
+if (detectBrowser().isFirefox) {
+    const text ='<i class="material-icons">warning</i><span style="color: rgb(180, 0, 0)"> ' 
+                + 'The current implementation is having transition issues in Firefox. '
+                + 'Please consider using Chrome, Opera or Edge.</span>';
+    initialMessages.push(new ToastMessage(text, 20.0));
+}
+
 ReactDOM.render(
     React.createElement(React.StrictMode, {}, [
         React.createElement(ToastComponent, {
             key: "toast-component",
-            initialMessages: [`<h2><u>Hand of cards, version ${version}</u></h2>`],
+            initialMessages,
         }),
         React.createElement(CardGameComponent, properties),
     ]),
