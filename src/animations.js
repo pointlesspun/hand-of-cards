@@ -49,13 +49,12 @@ export const ANIMATIONS = {
  */
 export function updateDrawAnimationStartTransform(mediaConfig, rect) {
     const newTransform = ANIMATIONS.drawCard.startTransform.clone();  
-    const cardWidth = mediaConfig.values.cardWidth;
-    const cardHeight = mediaConfig.values.cardHeight;
+    const cardSize = mediaConfig.layoutSettings.cardSize;
 
-    newTransform.translation.x = (rect.x + rect.width / 2) - cardWidth/2;
-    newTransform.translation.y = (rect.y + rect.height) - cardHeight;
-    newTransform.scale.x = rect.width / cardWidth;
-    newTransform.scale.y = rect.height / cardHeight;
+    newTransform.translation.x = (rect.x + rect.width / 2) - cardSize.width/2;
+    newTransform.translation.y = (rect.y + rect.height) - cardSize.height;
+    newTransform.scale.x = rect.width / cardSize.width;
+    newTransform.scale.y = rect.height / cardSize.height;
     newTransform.rotation = 0;
 
     ANIMATIONS.drawCard.startTransform = newTransform;
@@ -69,13 +68,12 @@ export function updateDrawAnimationStartTransform(mediaConfig, rect) {
  */
  export function updatePlayAnimationEndTransform(mediaConfig, rect) {
     const newTransform = ANIMATIONS.playCard.endTransform.clone();
-    const cardWidth = mediaConfig.values.cardWidth;
-    const cardHeight = mediaConfig.values.cardHeight;
-
-    newTransform.translation.x = (rect.x + rect.width / 2) - cardWidth/2;
-    newTransform.translation.y = (rect.y + rect.height) - cardHeight;
-    newTransform.scale.x = rect.width / cardWidth;
-    newTransform.scale.y = rect.height / cardHeight;
+    const cardSize = mediaConfig.layoutSettings.cardSize;
+    
+    newTransform.translation.x = (rect.x + rect.width / 2) - cardSize.width/2;
+    newTransform.translation.y = (rect.y + rect.height) - cardSize.height;
+    newTransform.scale.x = rect.width / cardSize.width;
+    newTransform.scale.y = rect.height / cardSize.height;
     newTransform.rotation = -45;
 
     ANIMATIONS.playCard.endTransform = newTransform;
@@ -97,7 +95,7 @@ function createPlayCardAnimation({idx, config, targetTransform} = {}) {
     transform1.translation.y += 30 + Math.random() * 15;
     transform1.scale.x += 0.09;
     transform1.scale.y -= 0.09;
-    transform2.translation.y -= config.values.playAnimationY * config.values.cardHeight;
+    transform2.translation.y -= config.layoutSettings.playAnimationY * config.layoutSettings.cardSize.height;
 
     const text = `
         0% {transform: ${targetTransform.toCss()}}
@@ -130,7 +128,7 @@ function createDrawCardAnimation({idx, config, targetTransform} = {}) {
     const transform2 = targetTransform.clone();
     const style = {};
 
-    transform1.translation.y -= config.values.playAnimationY * config.values.cardHeight;
+    transform1.translation.y -= config.layoutSettings.playAnimationY * config.layoutSettings.cardSize.height;
     
     transform2.translation.y += 30 + Math.random() * 15;
     transform2.scale.x += 0.09;

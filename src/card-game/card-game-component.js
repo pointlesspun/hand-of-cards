@@ -142,7 +142,7 @@ export class CardGameComponent extends React.Component {
     }
 
     renderControlBar(config) {
-        const height = config === null ? 0 : config.values.innerHeight;
+        const height = config === null ? 0 : config.layoutSettings.innerHeight;
 
         const properties = {
             key: "controlbar",

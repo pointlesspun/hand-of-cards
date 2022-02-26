@@ -83,7 +83,7 @@ export class MediaConfiguration {
         const matchingConfig = platformConfigurations.find(c => c.matchesSize(this.orientation, this.screenSize)) ??
                                 platformConfigurations.at(platformConfigurations.length -1);
 
-        this.values = matchingConfig.config;
+        this.layoutSettings = matchingConfig.config;
         this.name = matchingConfig.name;
     } 
 }

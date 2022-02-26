@@ -73,7 +73,7 @@ This project was created while learning React and is currently very much under d
 * Test custom card layout other than a sprite atlas.
 * Add 3d & cardbacks
 * Test multiple players
-* Create class for config.values.
+* Create class for config.layoutSettings.
 * Mouse drag cards like Slay the Spire/ Hardstone
 * Refactor & add documentation.
 * Minify

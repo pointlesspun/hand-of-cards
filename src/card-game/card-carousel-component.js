@@ -62,7 +62,7 @@ export class CardCarouselComponent extends React.Component {
 
     render() {
         const config = this.state.mediaConfig;
-        const innerHeight = config ? config.values.innerHeight : 1.0;
+        const innerHeight = config ? config.layoutSettings.innerHeight : 1.0;
 
         const carouselProperties = {
             className: "carousel",
@@ -529,10 +529,10 @@ export class CardCarouselComponent extends React.Component {
      */
     calculateTransform(config, cardCount, index, focusIndex, centerCardIndex, isSelected) {
         // short hand reference
-        const values = config.values;
+        const settings = config.layoutSettings;
 
         // size of the div containing these cards
-        const parentHeight = config.clientSize.height * values.innerHeight;
+        const parentHeight = config.clientSize.height * settings.innerHeight;
 
         // is the current card active (the one in the center which the user is working with) ?
         const hasFocus = index === focusIndex;
@@ -546,33 +546,33 @@ export class CardCarouselComponent extends React.Component {
         const maxDeltaIdx = Math.abs(deltaCenterIdx) / cardCount;
 
         // try to scale down items further away from the center somewhat more
-        const itemScale = values.baseScale + values.dynamicScale * (1 - maxDeltaIdx);
+        const itemScale = settings.baseScale + settings.dynamicScale * (1 - maxDeltaIdx);
 
         // if the item is selected raise the y position
-        const itemSelectedOffset = isSelected ? values.ySelectedOffset : 0;
+        const itemSelectedOffset = isSelected ? settings.ySelectedOffset : 0;
 
         // if the item is active raise the y position
-        const itemActiveOffset = hasFocus ? values.yActiveOffset : 0;
+        const itemActiveOffset = hasFocus ? settings.yActiveOffset : 0;
 
         // move the card to the bottom of the parent
-        const yOffset = parentHeight - values.cardHeight + values.yBaseOffset;
+        const yOffset = parentHeight - settings.cardSize.height + settings.yBaseOffset;
 
-        // move the card further down, the further it is from the center card to produce a curved hand illusion
-        const yOffsetWrtActive = hasFocus
+        // move the card further away, the further it is from the center card to produce a curved hand illusion
+        const yOffsetWrtFocus = hasFocus
             ? 0
-            : Math.abs(deltaCenterIdx) * Math.abs(deltaCenterIdx) * values.yTranslation;
+            : Math.abs(deltaCenterIdx) * Math.abs(deltaCenterIdx) * settings.yTranslation;
 
-        const cardCenterX = values.cardWidth / 2;
+        const cardCenterX = settings.cardSize.width / 2;
 
         return new Transform(
             new Vector3(
-                parentCenterX - cardCenterX + deltaCenterIdx * values.xTranslation,
-                yOffset + itemSelectedOffset + itemActiveOffset + yOffsetWrtActive,
+                parentCenterX - cardCenterX + deltaCenterIdx * settings.xTranslation,
+                yOffset + itemSelectedOffset + itemActiveOffset + yOffsetWrtFocus,
                 // make sure the cards closer to the center overlap cards further away
                 hasFocus ? 200 : 100 - Math.abs(deltaCenterIdx)
             ),
             new Vector3(itemScale, itemScale),
-            hasFocus ? 0 : values.rotation * deltaCenterIdx
+            hasFocus ? 0 : settings.rotation * deltaCenterIdx
         );
     }
 }
