@@ -1,5 +1,6 @@
 'use strict';
 
+import { contract } from "./contract.js";
 /*
  * Configuration definitions for a given media and its dimensions.
  */
@@ -50,11 +51,19 @@ export function detectBrowser() {
 }
 
 export class PlatformConfiguration {
-    constructor(name, orientation, maxScreenWidth, maxScreenHeight, config) {
+    /**
+     * 
+     * @param {string} name 
+     * @param {*} orientation 
+     * @param {number} maxScreenWidth 
+     * @param {number} maxScreenHeight 
+     * @param {*} settings 
+     */
+    constructor(name, orientation, maxScreenWidth, maxScreenHeight, settings) {
         this.name = name;
         this.size = new Size(maxScreenWidth, maxScreenHeight);
         this.orientation = orientation;
-        this.config = config;
+        this.settings = settings;
     }
 
     matches(orientation, width, height) {
@@ -71,19 +80,27 @@ export class PlatformConfiguration {
 }
 
 export class MediaConfiguration {
-    constructor(elementRef, platformConfigurations) {
-        this.elementRef = elementRef;
+
+    constructor(clientSize, platformConfig) {
+        contract.isDefined(clientSize, "MediaConfiguration requires a valid clientSize (but was undefined or null).");
+        contract.isDefined(platformConfig, "MediaConfiguration requires valid settings (but was undefined or null).");
+
         this.screenSize = new Size(window.screen.width, window.screen.height);
-        this.clientSize = new Size(elementRef.current.clientWidth, elementRef.current.clientHeight);
+        this.clientSize = clientSize;
 
         const orientation = window.matchMedia("(orientation: portrait)");
         this.orientation = orientation.matches ? ORIENTATION_NAMES.PORTRAIT :  ORIENTATION_NAMES.LANDSCAPE;
 
-        // take the first config which matches the given orientation and size or default to the last config in the list
-        const matchingConfig = platformConfigurations.find(c => c.matchesSize(this.orientation, this.screenSize)) ??
-                                platformConfigurations.at(platformConfigurations.length -1);
-
-        this.layoutSettings = matchingConfig.config;
-        this.name = matchingConfig.name;
+        this.platformConfig = platformConfig;
+        this.settings = platformConfig.settings;
+        this.name = platformConfig.name;
     } 
 }
+
+export function selectPlatformConfiguration( configurations) {
+    const screenSize = new Size(window.screen.width, window.screen.height);
+    const orientation = window.matchMedia("(orientation: portrait)").matches ? ORIENTATION_NAMES.PORTRAIT :  ORIENTATION_NAMES.LANDSCAPE;
+    
+    return configurations.find((config) => config.matchesSize(orientation, screenSize)) ?? configurations.at(configurations.length - 1);
+}
+

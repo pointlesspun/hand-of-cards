@@ -47,8 +47,8 @@ export class CardComponent extends React.Component {
             className: this.createClassName(this.state.hasFocus),
             ref: this.ref,
             style: {
-                width: this.state.mediaConfig.layoutSettings.cardSize.width + "px",
-                height: this.state.mediaConfig.layoutSettings.cardSize.height + "px",
+                width: this.state.mediaConfig.settings.getCardSize().width + "px",
+                height: this.state.mediaConfig.settings.getCardSize().height + "px",
                 transformOrigin: "center bottom",
                 background: this.state.definition.toCss(),
             },

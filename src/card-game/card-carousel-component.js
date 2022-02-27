@@ -62,7 +62,11 @@ export class CardCarouselComponent extends React.Component {
 
     render() {
         const config = this.state.mediaConfig;
-        const innerHeight = config ? config.layoutSettings.innerHeight : 1.0;
+        const innerHeight = config ? config.settings.getInnerHeight() : 1.0;
+
+        if (config) {
+            config.settings.updateSelectedLayout(this.state.cards.length);
+        }
 
         const carouselProperties = {
             className: "carousel",
@@ -125,8 +129,8 @@ export class CardCarouselComponent extends React.Component {
                 eventHandler: this.cardEventHandler,
                 hasFocus: this.state.focusIndex === index,
                 mediaConfig: config,
-                transform: this.calculateTransform(
-                    config,
+                transform: config.settings.calculateTransform(
+                    config.clientSize,
                     this.state.cards.length,
                     index,
                     this.state.focusIndex,
@@ -349,6 +353,10 @@ export class CardCarouselComponent extends React.Component {
             centerCardIndex: centerIndex,
         });
 
+        /*if (this.state.mediaConfig) {
+            this.state.mediaConfig.settings.updateSelectedLayout(cards.length);
+        }*/
+
         cards.forEach((card, idx) => {
             const cardRef = card.ref.current;
 
@@ -379,6 +387,9 @@ export class CardCarouselComponent extends React.Component {
     }
 
     setMediaConfig(mediaConfig) {
+        
+        //mediaConfig.settings.updateSelectedLayout(this.state.cards.length);
+
         this.setState({ mediaConfig });
         this.forEachCard(card => {
             this.updateCardTransform(card, card.getIndex(), this.state.focusIndex, this.state.centerCardIndex);
@@ -448,8 +459,8 @@ export class CardCarouselComponent extends React.Component {
 
     updateCardTransform(card, idx, focusIndex, centerIndex) {
         card.setTransform(
-            this.calculateTransform(
-                this.state.mediaConfig,
+            this.state.mediaConfig.settings.calculateTransform(
+                this.state.mediaConfig.clientSize,
                 this.state.cards.length,
                 idx,
                 focusIndex,
@@ -514,65 +525,5 @@ export class CardCarouselComponent extends React.Component {
         });
     }
 
-
     calculateCenterCard = cardCount => (cardCount % 2 == 0 ? cardCount / 2 - 0.5 : Math.floor(cardCount / 2));
-
-    /**
-     * Calculates the transformation (translation, rotation, scale) of the card on screen
-     * @private
-     * @param {PlatformConfiguration} config contains the settings relevant to the current media/device
-     * @param {number} cardCount represents to the total number of cards in hand
-     * @param {number} focusIndex index of the card the player is currently looking at
-     * @param {number} centerCardIndex index of the card which is the center of the hand
-     * @param {boolean} isSelected indicates if the card is selected or not
-     * @returns {Transform}
-     */
-    calculateTransform(config, cardCount, index, focusIndex, centerCardIndex, isSelected) {
-        // short hand reference
-        const settings = config.layoutSettings;
-
-        // size of the div containing these cards
-        const parentHeight = config.clientSize.height * settings.innerHeight;
-
-        // is the current card active (the one in the center which the user is working with) ?
-        const hasFocus = index === focusIndex;
-
-        // center of the parent x axis
-        const parentCenterX = config.clientSize.width / 2;
-
-        // how far is this card from the center cards ?
-        const deltaCenterIdx = index - centerCardIndex;
-
-        const maxDeltaIdx = Math.abs(deltaCenterIdx) / cardCount;
-
-        // try to scale down items further away from the center somewhat more
-        const itemScale = settings.baseScale + settings.dynamicScale * (1 - maxDeltaIdx);
-
-        // if the item is selected raise the y position
-        const itemSelectedOffset = isSelected ? settings.ySelectedOffset : 0;
-
-        // if the item is active raise the y position
-        const itemActiveOffset = hasFocus ? settings.yActiveOffset : 0;
-
-        // move the card to the bottom of the parent
-        const yOffset = parentHeight - settings.cardSize.height + settings.yBaseOffset;
-
-        // move the card further away, the further it is from the center card to produce a curved hand illusion
-        const yOffsetWrtFocus = hasFocus
-            ? 0
-            : Math.abs(deltaCenterIdx) * Math.abs(deltaCenterIdx) * settings.yTranslation;
-
-        const cardCenterX = settings.cardSize.width / 2;
-
-        return new Transform(
-            new Vector3(
-                parentCenterX - cardCenterX + deltaCenterIdx * settings.xTranslation,
-                yOffset + itemSelectedOffset + itemActiveOffset + yOffsetWrtFocus,
-                // make sure the cards closer to the center overlap cards further away
-                hasFocus ? 200 : 100 - Math.abs(deltaCenterIdx)
-            ),
-            new Vector3(itemScale, itemScale),
-            hasFocus ? 0 : settings.rotation * deltaCenterIdx
-        );
-    }
 }

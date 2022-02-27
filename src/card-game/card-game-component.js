@@ -19,6 +19,9 @@ import { CARD_CAROUSEL_EVENT_TYPES, CAROUSEL_EVENT_NAME } from "./card-carousel-
 import { ButtonPanelComponent } from "./button-panel-component.js";
 import { CounterComponent, INCREMENT_UNITS } from "../framework/counter-component.js";
 import { DECK_NAME } from "../model/player.js";
+import { Size } from "../framework/size.js";
+import { PlatformConfiguration, selectPlatformConfiguration } from "../framework/media-configuration.js";
+import { PLATFORM_CONFIGURATIONS } from "../platform-configurations.js";
 
 export const FOLD_CARDS_POLICY = {
     /** Fold cards after the play cards animation has finished */
@@ -136,13 +139,13 @@ export class CardGameComponent extends React.Component {
             // if set to true the carousel will listen for events on globalThis, otherwise
             // if will listen to events on its component
             useGlobalEventScope: true,
-        };
+        };        
 
         return React.createElement(CardCarouselComponent, carouselProperties);
     }
 
     renderControlBar(config) {
-        const height = config === null ? 0 : config.layoutSettings.innerHeight;
+        const height = config === null ? 0 : config.settings.getInnerHeight();
 
         const properties = {
             key: "controlbar",
@@ -281,7 +284,7 @@ export class CardGameComponent extends React.Component {
      * Callback from when the window resizes and we have to re render
      */
     handleResize() {
-        const mediaConfig = this.props.getLayoutConfiguration(this.ref);
+        const mediaConfig = this.props.getMediaConfiguration(this.ref, this.areCurrentCardsBelowMax);
         const message = `${mediaConfig.name} ${mediaConfig.screenSize.width}x${mediaConfig.screenSize.height}`;
 
         this.setState({ mediaConfig });
@@ -386,7 +389,7 @@ export class CardGameComponent extends React.Component {
 
         const newCards = this.model.drawRandomCards(0, count, DECK_NAME.DECK);
 
-        if (newCards) {
+        if (newCards) {                       
             this.buttonPanelRef.current.setEnableDrawButton(this.model.getCards(0).length < this.model.getMaxCards(0));
             this.indicatorRef.current.setDataCount(this.model.getCards(0).length);
             this.carouselRef.current.addCards(

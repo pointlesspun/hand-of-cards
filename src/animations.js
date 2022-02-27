@@ -17,6 +17,7 @@
 import { Transform } from "./framework/transform.js";
 import { Vector3 } from "./framework/vector3.js";
 import { updateKeyframes, createAnimationId } from "./framework/animation-utilities.js";
+import { contract } from "./framework/contract.js";
 
 /**
  * All the animations used in the application
@@ -44,12 +45,16 @@ export const ANIMATIONS = {
 /**
  * Update the "draw card animation" initial transform to match the current
  * position of the draw pile counter.
- * @param {PlatformConfiguration} mediaConfig the current configuration
+ * @param {MediaConfiguration} config the current configuration
  * @param {DOMRect} rect the start rectangle
  */
-export function updateDrawAnimationStartTransform(mediaConfig, rect) {
+export function updateDrawAnimationStartTransform(config, rect) {
+    contract.isDefined(config, "Animations requires a valid mediaConfig (was null or undefined).");
+    contract.isDefined(config.settings, "Animations requires a valid settings (was null or undefined).");
+    contract.isDefined(rect, "Animations requires a valid rect (was null or undefined).");
+
     const newTransform = ANIMATIONS.drawCard.startTransform.clone();  
-    const cardSize = mediaConfig.layoutSettings.cardSize;
+    const cardSize = config.settings.getCardSize();
 
     newTransform.translation.x = (rect.x + rect.width / 2) - cardSize.width/2;
     newTransform.translation.y = (rect.y + rect.height) - cardSize.height;
@@ -63,12 +68,16 @@ export function updateDrawAnimationStartTransform(mediaConfig, rect) {
 /**
  * Update the "play card animation" final transform to match the current
  * position of the given rect.
- * @param {PlatformConfiguration} mediaConfig the current configuration
- * @param {DOMRect} rect the end rectangle
+ * @param {MediaConfiguration} config the current configuration
+ * @param {DOMRect} rect the start rectangle
  */
- export function updatePlayAnimationEndTransform(mediaConfig, rect) {
+ export function updatePlayAnimationEndTransform(config, rect) {
+    contract.isDefined(config, "Animations requires a valid mediaConfig (was null or undefined).");
+    contract.isDefined(config.settings, "Animations requires a valid settings (was null or undefined).");
+    contract.isDefined(rect, "Animations requires a valid rect (was null or undefined).");
+
     const newTransform = ANIMATIONS.playCard.endTransform.clone();
-    const cardSize = mediaConfig.layoutSettings.cardSize;
+    const cardSize = config.settings.getCardSize();
     
     newTransform.translation.x = (rect.x + rect.width / 2) - cardSize.width/2;
     newTransform.translation.y = (rect.y + rect.height) - cardSize.height;
@@ -95,7 +104,7 @@ function createPlayCardAnimation({idx, config, targetTransform} = {}) {
     transform1.translation.y += 30 + Math.random() * 15;
     transform1.scale.x += 0.09;
     transform1.scale.y -= 0.09;
-    transform2.translation.y -= config.layoutSettings.playAnimationY * config.layoutSettings.cardSize.height;
+    transform2.translation.y -= config.settings.getPlayAnimationY() * config.settings.getCardSize().height;
 
     const text = `
         0% {transform: ${targetTransform.toCss()}}
@@ -128,7 +137,7 @@ function createDrawCardAnimation({idx, config, targetTransform} = {}) {
     const transform2 = targetTransform.clone();
     const style = {};
 
-    transform1.translation.y -= config.layoutSettings.playAnimationY * config.layoutSettings.cardSize.height;
+    transform1.translation.y -= config.settings.getPlayAnimationY() * config.settings.getCardSize().height;
     
     transform2.translation.y += 30 + Math.random() * 15;
     transform2.scale.x += 0.09;

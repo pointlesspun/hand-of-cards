@@ -1,12 +1,75 @@
 "use strict";
 
 import { Size } from "../framework/size.js";
+import { Transform } from "../framework/transform.js";
+import { Vector3 } from "../framework/vector3.js";
+
+export class CardLayoutSet {
+    
+    constructor(layouts) {
+        /**
+         * @type {[CardLayout]}
+         */
+        this.layouts = layouts;
+
+        /**
+         * @type {CardLayout}
+         */
+        this.selectedLayout = null;
+
+        this.updateSelectedLayout(0);
+    }
+
+    getCardSize = () => this.selectedLayout.cardSize;
+
+    getPlayAnimationY = () => this.selectedLayout.playAnimationY;
+
+    getInnerHeight = () => this.selectedLayout.innerHeight;
+
+    updateSelectedLayout(cardCount) {
+
+        this.selectedLayout = null;
+
+        for (let i = 0; i < this.layouts.length; i++) {
+            const layout = this.layouts[i];
+
+            if (layout.maxCardCount < 0 || cardCount < layout.maxCardCount) {
+                if (this.selectedLayout === null || this.isMoreSpecific(layout, this.selectedLayout)) {
+                    this.selectedLayout = layout;
+                } 
+            }
+        }
+    }
+    
+    /**
+     * 
+     * @param {CardLayout} layoutA 
+     * @param {CardLayout} layoutB 
+     * @returns {boolean} true A is more specific than B, false otherwise
+     */
+
+    isMoreSpecific(layoutA, layoutB) {
+        return layoutA.maxCardCount > 0 &&  (layoutA.maxCardCount < layoutB.maxCardCount);
+    }
+
+    calculateTransform = (clientSize, cardCount, index, focusIndex, centerCardIndex, isSelected) =>
+        this.selectedLayout.calculateTransform(clientSize, cardCount, index, focusIndex, centerCardIndex, isSelected);
+    
+}
+
 
 /**
  * Values defining how layout is applied to the cards in the hands of a player.
- * See also CardCarouselComponent.calculateTransform.
+ * See CardLayout.calculateTransform for more details.
  */
 export class CardLayout {
+
+    /**
+     * Layouts apply up to a certain number of cards (when this value is -1 there is no maximum)
+     * above this value applying the layout may not be optimal for the screen space.
+     */
+    maxCardCount = -1; 
+
     /**
      * Card container referred to as inner takes up % of the client height
      * @type {number}
@@ -79,6 +142,7 @@ export class CardLayout {
     yActiveOffset = 0;
 
     constructor({
+        maxCardCount = -1,
         innerHeight = 0.845,
         playAnimationY = 0.4,
         cardSize = new Size(360, 540),
@@ -91,6 +155,7 @@ export class CardLayout {
         ySelectedOffset = -60,
         yActiveOffset = -82,
     } = {}) {
+        this.maxCardCount = maxCardCount;
         this.innerHeight = innerHeight;
         this.playAnimationY = playAnimationY;
         this.cardSize = cardSize;
@@ -102,5 +167,61 @@ export class CardLayout {
         this.yBaseOffset = yBaseOffset;
         this.ySelectedOffset = ySelectedOffset;
         this.yActiveOffset = yActiveOffset;
+    }
+
+    /**
+     * Calculates the transformation (translation, rotation, scale) of the card on screen
+     * @public
+     * @param {PlatformConfiguration} config contains the settings relevant to the current media/device
+     * @param {number} cardCount represents to the total number of cards in hand
+     * @param {number} focusIndex index of the card the player is currently looking at
+     * @param {number} centerCardIndex index of the card which is the center of the hand
+     * @param {boolean} isSelected indicates if the card is selected or not
+     * @returns {Transform}
+     */
+    calculateTransform(clientSize, cardCount, index, focusIndex, centerCardIndex, isSelected) {
+        // size of the div containing these cards
+        const parentHeight = clientSize.height * this.innerHeight;
+
+        // is the current card active (the one in the center which the user is working with) ?
+        const hasFocus = index === focusIndex;
+
+        // center of the parent x axis
+        const parentCenterX = clientSize.width / 2;
+
+        // how far is this card from the center cards ?
+        const deltaCenterIdx = index - centerCardIndex;
+
+        const maxDeltaIdx = Math.abs(deltaCenterIdx) / cardCount;
+
+        // try to scale down items further away from the center somewhat more
+        const itemScale = this.baseScale + this.dynamicScale * (1 - maxDeltaIdx);
+
+        // if the item is selected raise the y position
+        const itemSelectedOffset = isSelected ? this.ySelectedOffset : 0;
+
+        // if the item is active raise the y position
+        const itemActiveOffset = hasFocus ? this.yActiveOffset : 0;
+
+        // move the card to the bottom of the parent
+        const yOffset = parentHeight - this.cardSize.height + this.yBaseOffset;
+
+        // move the card further away, the further it is from the center card to produce a curved hand illusion
+        const yOffsetWrtFocus = hasFocus
+            ? 0
+            : Math.abs(deltaCenterIdx) * Math.abs(deltaCenterIdx) * this.yTranslation;
+
+        const cardCenterX = this.cardSize.width / 2;
+
+        return new Transform(
+            new Vector3(
+                parentCenterX - cardCenterX + deltaCenterIdx * this.xTranslation,
+                yOffset + itemSelectedOffset + itemActiveOffset + yOffsetWrtFocus,
+                // make sure the cards closer to the center overlap cards further away
+                hasFocus ? 200 : 100 - Math.abs(deltaCenterIdx)
+            ),
+            new Vector3(itemScale, itemScale),
+            hasFocus ? 0 : this.rotation * deltaCenterIdx
+        );
     }
 }
