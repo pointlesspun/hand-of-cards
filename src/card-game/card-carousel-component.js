@@ -353,7 +353,7 @@ export class CardCarouselComponent extends React.Component {
             if (cardRef) {
                 cardRef.setIndex(idx);
                 cardRef.setHasFocus(idx === focusIndex);
-                this.updateCardTransform(cardRef, idx, focusIndex, centerIndex);
+                this.updateCardTransform(cardRef, idx, focusIndex, centerIndex, cards.length);
             }
         });
     }
@@ -380,7 +380,7 @@ export class CardCarouselComponent extends React.Component {
         
         this.setState({ platformConfig });
         this.forEachCard(card => {
-            this.updateCardTransform(card, card.getIndex(), this.state.focusIndex, this.state.centerCardIndex);
+            this.updateCardTransform(card, card.getIndex(), this.state.focusIndex, this.state.centerCardIndex, this.state.cards.length);
             card.setPlatformConfig(platformConfig);
         });
     }
@@ -400,14 +400,14 @@ export class CardCarouselComponent extends React.Component {
             this.setState({ focusIndex, centerCardIndex });
             this.forEachCard(card => {
                 const cardIndex = card.getIndex();
-                this.updateCardTransform(card, cardIndex, focusIndex, centerCardIndex);
+                this.updateCardTransform(card, cardIndex, focusIndex, centerCardIndex, this.state.cards.length);
                 card.setHasFocus(cardIndex === focusIndex);
             });
         } else {
             this.setState({ focusIndex });
             this.forEachCard(card => {
                 const cardIndex = card.getIndex();
-                this.updateCardTransform(card, cardIndex, focusIndex, this.state.centerCardIndex);
+                this.updateCardTransform(card, cardIndex, focusIndex, this.state.centerCardIndex, this.state.cards.length);
                 card.setHasFocus(cardIndex === focusIndex);
             });
         }
@@ -426,7 +426,7 @@ export class CardCarouselComponent extends React.Component {
             centerCardIndex: centerIndex,
         });
 
-        this.forEachCard(card => this.updateCardTransform(card, card.getIndex(), this.state.focusIndex, centerIndex));
+        this.forEachCard(card => this.updateCardTransform(card, card.getIndex(), this.state.focusIndex, centerIndex, this.state.cards.length));
     }
 
     isLocked = () => this.state.isLocked;
@@ -437,7 +437,7 @@ export class CardCarouselComponent extends React.Component {
         // does the state change ?
         if (card.state.isSelected != isSelected) {
             card.setSelected(isSelected);
-            this.updateCardTransform(card, idx, this.state.focusIndex, this.state.centerCardIndex);
+            this.updateCardTransform(card, idx, this.state.focusIndex, this.state.centerCardIndex, this.state.cards.length);
         }
     }
 
@@ -445,11 +445,11 @@ export class CardCarouselComponent extends React.Component {
 
     // --- Utility methods  -------------------------------------------------------------------------------------------
 
-    updateCardTransform(card, idx, focusIndex, centerIndex) {
+    updateCardTransform(card, idx, focusIndex, centerIndex, cardCount) {
         card.setTransform(
             this.state.platformConfig.settings.calculateTransform(
                 this.state.platformConfig.clientSize,
-                this.state.cards.length,
+                cardCount,
                 idx,
                 focusIndex,
                 centerIndex,
@@ -475,7 +475,7 @@ export class CardCarouselComponent extends React.Component {
             } else {
                 if (immediatelyFoldCards) {
                     card.setIndex(idx);
-                    this.updateCardTransform(card, idx, focusIndex, centerIndex);
+                    this.updateCardTransform(card, idx, focusIndex, centerIndex, this.state.cards.length);
                 }
                 idx++;
             }

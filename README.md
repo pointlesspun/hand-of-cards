@@ -31,6 +31,11 @@ In the top level element one can currently set the following attributes:
 * "maxCardsReachedPolicy" can have two values "blocked" and "cycle-oldest". When _blocked_ is applied, the user cannot select more than 'maxSelectedCards' and will get a warning when selecting more. When _cycle-oldest_ is applied the first selected card will be deselected and the current focused card will be selected when the 'maxSelectedCards' is reached.
 * "foldCardsPolicy" can have two values "after-animation" or "immediateley". When _after-animation_ is selected the remaining cards in the hand will be folded after the play card animation is complete, when _immediately_ is selected the remaining cards in the hand will be folded as soon as the play animation begin.
 
+## Other features
+
+* CSS animations with runtime parameters
+* Card layouts depending on the current device, orientation and game state.
+
 Example:
 ```html
         <div
@@ -73,6 +78,7 @@ This project was created while learning React and is currently very much under d
 * Add 3d & cardbacks
 * Test multiple players
 * Mouse drag cards like Slay the Spire/ Hardstone
+* Refactor indicator to match the 'correct' react model.
 * Refactor & add documentation.
 * Minify
 * Add jsx (or htm) variation.

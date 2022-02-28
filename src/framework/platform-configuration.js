@@ -117,7 +117,7 @@ export class PlatformConfiguration {
 
         return (
             PlatformConfiguration.CONFIGURATIONS.find((config) => config.matchesSize(orientation, screenSize)) ??
-            PlatformConfiguration.CONFIGURATIONS.at(configurations.length - 1)
+            PlatformConfiguration.CONFIGURATIONS.at(-1)
         ).updateRuntimeValues(clientSize);
     }
 }

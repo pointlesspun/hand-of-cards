@@ -11,13 +11,54 @@ import { CardLayoutCollection } from "./card-game/card-layout-collection.js";
 PlatformConfiguration.CONFIGURATIONS = [
     // configuration applicable to small devices in landscape orientation
     new PlatformConfiguration("phone-landscape", ORIENTATION_NAMES.LANDSCAPE, 900, 480, new CardLayoutCollection([ 
+        // layout applied when the hand contains 3 or less cards
         new CardLayout({
+            maxCardCount: 3,
             innerHeight: 0.78,
             playAnimationY: 0.11,
-            baseScale: 0.35,
+            
+            baseScale: 0.5,
+            dynamicScale: 0.0,
+            
+            rotation: 0,
+
+            xTranslation: 180,
+            
+            yBaseOffset: 90,
+            yTranslation: 0,
+            ySelectedOffset: -50,
+            yActiveOffset: -40,
+            
+        }),
+        // layout applied when the hand contains 5 or less cards
+        new CardLayout({
+            maxCardCount: 5,
+            innerHeight: 0.78,
+            playAnimationY: 0.11,
+            
+            baseScale: 0.4,
+            dynamicScale: 0.1,
+            
+            rotation: 2,
+
             xTranslation: 160,
-            ySelectedOffset: -60,
-            yActiveOffset: -80,
+            
+            yBaseOffset: 90,
+            yTranslation: 3,
+            ySelectedOffset: -50,
+            yActiveOffset: -40,
+            
+        }),
+        // default layout applied when none of the other layouts apply
+        new CardLayout({
+            maxCardCount: -1,
+            innerHeight: 0.78,
+            playAnimationY: 0.11,
+            baseScale: 0.3,
+            xTranslation: 120,
+            ySelectedOffset: -40,
+            yActiveOffset: -30,
+            rotation: 3.5,
         })
     ])),
 
