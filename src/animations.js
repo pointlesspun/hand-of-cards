@@ -18,6 +18,7 @@ import { Transform } from "./framework/transform.js";
 import { Vector3 } from "./framework/vector3.js";
 import { updateKeyframes, createAnimationId } from "./framework/animation-utilities.js";
 import { contract } from "./framework/contract.js";
+import { PlatformConfiguration } from "./framework/platform-configuration.js";
 
 /**
  * All the animations used in the application
@@ -45,11 +46,11 @@ export const ANIMATIONS = {
 /**
  * Update the "draw card animation" initial transform to match the current
  * position of the draw pile counter.
- * @param {MediaConfiguration} config the current configuration
+ * @param {PlatformConfiguration} config the current configuration
  * @param {DOMRect} rect the start rectangle
  */
 export function updateDrawAnimationStartTransform(config, rect) {
-    contract.isDefined(config, "Animations requires a valid mediaConfig (was null or undefined).");
+    contract.isDefined(config, "Animations requires a valid config (was null or undefined).");
     contract.isDefined(config.settings, "Animations requires a valid settings (was null or undefined).");
     contract.isDefined(rect, "Animations requires a valid rect (was null or undefined).");
 
@@ -68,11 +69,11 @@ export function updateDrawAnimationStartTransform(config, rect) {
 /**
  * Update the "play card animation" final transform to match the current
  * position of the given rect.
- * @param {MediaConfiguration} config the current configuration
+ * @param {PlatformConfiguration} config the current configuration
  * @param {DOMRect} rect the start rectangle
  */
  export function updatePlayAnimationEndTransform(config, rect) {
-    contract.isDefined(config, "Animations requires a valid mediaConfig (was null or undefined).");
+    contract.isDefined(config, "Animations requires a valid config (was null or undefined).");
     contract.isDefined(config.settings, "Animations requires a valid settings (was null or undefined).");
     contract.isDefined(rect, "Animations requires a valid rect (was null or undefined).");
 

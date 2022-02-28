@@ -1,10 +1,13 @@
 "use strict";
 
-/**
+/*
  * Main application which configures a HandOfCardsComponent and renders the component.
  */
 
-import { detectBrowser, MediaConfiguration, selectPlatformConfiguration } from "./framework/media-configuration.js";
+import "./app-platform-configurations.js";
+import "./framework/math-extensions.js";
+
+import { detectBrowser } from "./framework/platform-configuration.js";
 import { allocAnimations } from "./framework/animation-utilities.js";
 import { ToastComponent, ToastMessage } from "./framework/toast-component.js";
 
@@ -13,18 +16,18 @@ import { createCardGameModel } from "./model/card-model-factory.js";
 
 import { FOLD_CARDS_POLICY, CardGameComponent } from "./card-game/card-game-component.js";
 
-import { PLATFORM_CONFIGURATIONS } from "./platform-configurations.js";
 import { ANIMATIONS } from "./animations.js";
 import { createCardsFromLibrary } from "./model/card-util.js";
 import { DEFAULT_LIBRARY } from "./model/card-library.js";
 import { shuffleArray } from "./framework/arrays.js";
-import { Size } from "./framework/size.js";
 
-const version = "0.5";
+const version = "0.51";
 
 console.log(`starting card component ${version}`);
 
 const element = document.querySelector("#card-container");
+
+// parse all properties from the html declaration
 const maxCards = element.attributes?.maxCards?.value ? parseInt(element.attributes.maxCards.value) : 7;
 const maxSelectedCards = element.attributes?.maxSelectedCards?.value ?? -1;
 const selectionCyclePolicy = element.attributes?.maxCardsReachedPolicy?.value ?? MAX_SELECTION_REACHED_POLICY.BLOCK;
@@ -33,6 +36,7 @@ const initialCardCount = element.attributes?.initialCardCount?.value
     ? parseInt(element.attributes.initialCardCount.value)
     : maxCards;
 
+// create the model used in the application
 const model = createCardGameModel({
     maxSelectedCards,
     selectionCyclePolicy,
@@ -40,21 +44,10 @@ const model = createCardGameModel({
     cardsInDeck: shuffleArray(createCardsFromLibrary(DEFAULT_LIBRARY)),
 });
 
-const properties = {
-    key: "hand-of-cards-container",
-    model,
-    initialCardCount,
-    foldCardsPolicy,
-    initialIndex: Math.floor(model.getMaxCards(0).length / 2),
-    isLocked: element.attributes?.isLocked?.value === "true" ?? false,
-    getMediaConfiguration: (elementRef) => new MediaConfiguration(
-            new Size(elementRef.current.clientWidth, elementRef.current.clientHeight),
-            selectPlatformConfiguration(PLATFORM_CONFIGURATIONS)
-        ),
-};
-
+// allocate space in the css sheet for all the card animations
 allocAnimations([ANIMATIONS.playCard.name, ANIMATIONS.drawCard.name], maxCards);
 
+// set up the initial toast messages showing up when the application starts
 const initialMessages = [];
 
 initialMessages.push(`<h2><u>Hand of cards, version ${version}</u></h2>`);
@@ -68,13 +61,21 @@ if (detectBrowser().isFirefox) {
     initialMessages.push(new ToastMessage(text, 20.0));
 }
 
+// render the main components, starting the application
 ReactDOM.render(
     React.createElement(React.StrictMode, {}, [
         React.createElement(ToastComponent, {
             key: "toast-component",
             initialMessages,
         }),
-        React.createElement(CardGameComponent, properties),
+        React.createElement(CardGameComponent, {
+            key: "hand-of-cards-container",
+            model,
+            initialCardCount,
+            foldCardsPolicy,
+            initialIndex: Math.floor(model.getMaxCards(0).length / 2),
+            isLocked: element.attributes?.isLocked?.value === "true" ?? false,
+        }),
     ]),
     element
 );

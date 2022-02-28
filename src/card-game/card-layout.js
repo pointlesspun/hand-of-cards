@@ -4,59 +4,6 @@ import { Size } from "../framework/size.js";
 import { Transform } from "../framework/transform.js";
 import { Vector3 } from "../framework/vector3.js";
 
-export class CardLayoutSet {
-    
-    constructor(layouts) {
-        /**
-         * @type {[CardLayout]}
-         */
-        this.layouts = layouts;
-
-        /**
-         * @type {CardLayout}
-         */
-        this.selectedLayout = null;
-
-        this.updateSelectedLayout(0);
-    }
-
-    getCardSize = () => this.selectedLayout.cardSize;
-
-    getPlayAnimationY = () => this.selectedLayout.playAnimationY;
-
-    getInnerHeight = () => this.selectedLayout.innerHeight;
-
-    updateSelectedLayout(cardCount) {
-
-        this.selectedLayout = null;
-
-        for (let i = 0; i < this.layouts.length; i++) {
-            const layout = this.layouts[i];
-
-            if (layout.maxCardCount < 0 || cardCount < layout.maxCardCount) {
-                if (this.selectedLayout === null || this.isMoreSpecific(layout, this.selectedLayout)) {
-                    this.selectedLayout = layout;
-                } 
-            }
-        }
-    }
-    
-    /**
-     * 
-     * @param {CardLayout} layoutA 
-     * @param {CardLayout} layoutB 
-     * @returns {boolean} true A is more specific than B, false otherwise
-     */
-
-    isMoreSpecific(layoutA, layoutB) {
-        return layoutA.maxCardCount > 0 &&  (layoutA.maxCardCount < layoutB.maxCardCount);
-    }
-
-    calculateTransform = (clientSize, cardCount, index, focusIndex, centerCardIndex, isSelected) =>
-        this.selectedLayout.calculateTransform(clientSize, cardCount, index, focusIndex, centerCardIndex, isSelected);
-    
-}
-
 
 /**
  * Values defining how layout is applied to the cards in the hands of a player.

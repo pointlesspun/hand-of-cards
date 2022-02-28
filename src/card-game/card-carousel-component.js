@@ -1,6 +1,4 @@
 import { ELEMENT_TYPES } from "../framework/element-types.js";
-import { Transform } from "../framework/transform.js";
-import { Vector3 } from "../framework/vector3.js";
 import { ANIMATIONS } from "../animations.js";
 import { SWIPE_DIRECTIONS } from "../framework/swipe-directions.js";
 import { ANIMATION_EVENT_TYPE } from "../framework/animation-utilities.js";
@@ -29,7 +27,7 @@ class CardProperties {
  * Implements a carousel with game cards. ViewState properties:
  * 
  * - Cards: an array of cards created with the CardCarousel.create card method
- * - MediaConfig: configuration of the window and client and settings as how to perform the layout given these window
+ * - PlatformConfig: configuration of the window and client and settings as how to perform the layout given these window
  *   and client settings.
  * - FocusIndex: which card currently has the focus
  * - CenterIndex: which card is currently at the center of the layout
@@ -51,7 +49,7 @@ export class CardCarouselComponent extends React.Component {
 
         this.state = {
             cards: props.cards ?? [],
-            mediaConfig: props.mediaConfig,
+            platformConfig: props.platformConfig,
             focusIndex: props.focusIndex,
             centerCardIndex,
             isLocked: props.isLocked,
@@ -61,12 +59,8 @@ export class CardCarouselComponent extends React.Component {
     // --- React overrides --------------------------------------------------------------------------------------------
 
     render() {
-        const config = this.state.mediaConfig;
+        const config = this.state.platformConfig;
         const innerHeight = config ? config.settings.getInnerHeight() : 1.0;
-
-        if (config) {
-            config.settings.updateSelectedLayout(this.state.cards.length);
-        }
 
         const carouselProperties = {
             className: "carousel",
@@ -128,7 +122,7 @@ export class CardCarouselComponent extends React.Component {
                 animation: cardReference.startAnimation,
                 eventHandler: this.cardEventHandler,
                 hasFocus: this.state.focusIndex === index,
-                mediaConfig: config,
+                platformConfig: config,
                 transform: config.settings.calculateTransform(
                     config.clientSize,
                     this.state.cards.length,
@@ -353,10 +347,6 @@ export class CardCarouselComponent extends React.Component {
             centerCardIndex: centerIndex,
         });
 
-        /*if (this.state.mediaConfig) {
-            this.state.mediaConfig.settings.updateSelectedLayout(cards.length);
-        }*/
-
         cards.forEach((card, idx) => {
             const cardRef = card.ref.current;
 
@@ -386,14 +376,12 @@ export class CardCarouselComponent extends React.Component {
         this.setCards([...this.state.cards, ...cards], focusIndex ?? this.state.focusIndex);
     }
 
-    setMediaConfig(mediaConfig) {
+    setPlatformConfig(platformConfig) {
         
-        //mediaConfig.settings.updateSelectedLayout(this.state.cards.length);
-
-        this.setState({ mediaConfig });
+        this.setState({ platformConfig });
         this.forEachCard(card => {
             this.updateCardTransform(card, card.getIndex(), this.state.focusIndex, this.state.centerCardIndex);
-            card.setMediaConfig(mediaConfig);
+            card.setPlatformConfig(platformConfig);
         });
     }
 
@@ -459,8 +447,8 @@ export class CardCarouselComponent extends React.Component {
 
     updateCardTransform(card, idx, focusIndex, centerIndex) {
         card.setTransform(
-            this.state.mediaConfig.settings.calculateTransform(
-                this.state.mediaConfig.clientSize,
+            this.state.platformConfig.settings.calculateTransform(
+                this.state.platformConfig.clientSize,
                 this.state.cards.length,
                 idx,
                 focusIndex,
