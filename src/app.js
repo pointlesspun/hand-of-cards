@@ -4,24 +4,23 @@
  * Main application which configures a HandOfCardsComponent and renders the component.
  */
 
-import "./app-platform-configurations.js";
 import "./framework/math-extensions.js";
-
+import { shuffleArray } from "./framework/arrays.js";
 import { detectBrowser } from "./framework/platform-configuration.js";
 import { allocAnimations } from "./framework/animation-utilities.js";
 import { ToastComponent, ToastMessage } from "./framework/toast-component.js";
 
 import { MAX_SELECTION_REACHED_POLICY } from "./model/card-game-model.js";
 import { createCardGameModel } from "./model/card-model-factory.js";
+import { createCardsFromLibrary } from "./model/card-util.js";
+import { DEFAULT_LIBRARY } from "./model/card-library.js";
 
 import { FOLD_CARDS_POLICY, CardGameComponent } from "./card-game/card-game-component.js";
 
 import { ANIMATIONS } from "./animations.js";
-import { createCardsFromLibrary } from "./model/card-util.js";
-import { DEFAULT_LIBRARY } from "./model/card-library.js";
-import { shuffleArray } from "./framework/arrays.js";
+import "./app-platform-configurations.js";
 
-const version = "0.51";
+const version = "0.511";
 
 console.log(`starting card component ${version}`);
 
@@ -48,9 +47,7 @@ const model = createCardGameModel({
 allocAnimations([ANIMATIONS.playCard.name, ANIMATIONS.drawCard.name], maxCards);
 
 // set up the initial toast messages showing up when the application starts
-const initialMessages = [];
-
-initialMessages.push(`<h2><u>Hand of cards, version ${version}</u></h2>`);
+const initialMessages = [`<h2><u>Hand of cards, version ${version}</u></h2>`];
 
 // firefox is having issues with transitions see readme.md
 if (detectBrowser().isFirefox) {
