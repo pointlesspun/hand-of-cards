@@ -6,6 +6,13 @@
     --button-margin: 24px;
 }
 
+@media screen and (max-height: 479px) {
+    :root {
+        --button-size: 48px;
+        --button-margin: 20px;
+    }
+}
+
 .button-panel {
     display: flex;
     justify-content: center;

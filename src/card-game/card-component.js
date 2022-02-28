@@ -1,6 +1,5 @@
 "use strict";
 
-import { Transform } from "../framework/transform.js";
 import { Vector3 } from "../framework/vector3.js";
 import { ELEMENT_TYPES } from "../framework/element-types.js";
 import { ANIMATION_EVENT_TYPE, AnimationEvent } from "../framework/animation-utilities.js";
@@ -22,7 +21,7 @@ export class CardComponent extends React.Component {
             hasFocus: props.hasFocus,
             transform: props.transform,
             isSelected: props.isSelected ?? false,
-            mediaConfig: props.mediaConfig,
+            platformConfig: props.platformConfig,
             // use an event handler rather than js events (add/remove event listener)
             // as it is slightly easier to deal with
             eventHandler: props.eventHandler,
@@ -47,8 +46,8 @@ export class CardComponent extends React.Component {
             className: this.createClassName(this.state.hasFocus),
             ref: this.ref,
             style: {
-                width: this.state.mediaConfig.values.cardWidth + "px",
-                height: this.state.mediaConfig.values.cardHeight + "px",
+                width: this.state.platformConfig.settings.getCardSize().width + "px",
+                height: this.state.platformConfig.settings.getCardSize().height + "px",
                 transformOrigin: "center bottom",
                 background: this.state.definition.toCss(),
             },
@@ -65,7 +64,7 @@ export class CardComponent extends React.Component {
         }
         // is an animation scheduled ?
         else if (this.state.animation) {
-            this.startAnimation(this.state.transform, properties, this.state.mediaConfig);
+            this.startAnimation(this.state.transform, properties, this.state.platformConfig);
         } else {
             // no animation just define the intended position, scale & rotation of the card
             properties.style.transform = this.state.transform.toCss({});
@@ -167,8 +166,8 @@ export class CardComponent extends React.Component {
         return nextState.isDeleted === false;
     }
 
-    setMediaConfig(mediaConfig) {
-        this.setState({ mediaConfig });
+    setPlatformConfig(platformConfig) {
+        this.setState({ platformConfig });
     }
 
     setHasFocus(hasFocus) {

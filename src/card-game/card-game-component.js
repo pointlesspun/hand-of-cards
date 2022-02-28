@@ -17,8 +17,10 @@ import { CardCarouselComponent } from "./card-carousel-component.js";
 import { CardGameModel } from "../model/card-game-model.js";
 import { CARD_CAROUSEL_EVENT_TYPES, CAROUSEL_EVENT_NAME } from "./card-carousel-event.js";
 import { ButtonPanelComponent } from "./button-panel-component.js";
-import { CounterComponent, INCREMENT_UNITS } from "../framework/counter-component.js";
+import { CounterComponent} from "../framework/counter-component.js";
 import { DECK_NAME } from "../model/player.js";
+import { PlatformConfiguration } from "../framework/platform-configuration.js";
+import { Size } from "../framework/size.js";
 
 export const FOLD_CARDS_POLICY = {
     /** Fold cards after the play cards animation has finished */
@@ -58,8 +60,8 @@ export class CardGameComponent extends React.Component {
         this.model = props.model;
 
         this.state = {
-            // mediaConfig unknown until after the first render and we have a ref
-            mediaConfig: null,
+            // platformConfig unknown until after the first render and we have a ref
+            platformConfig: null,
             foldCardsPolicy: props.foldCardsPolicy ?? FOLD_CARDS_POLICY.AFTER_ANIMATION,
         };
     }
@@ -79,7 +81,7 @@ export class CardGameComponent extends React.Component {
             },
             [
                 this.renderCarousel(),
-                this.renderControlBar(this.state.mediaConfig),
+                this.renderControlBar(this.state.platformConfig),
                 this.renderDeckCounter(),
                 this.renderDiscardCounter(),
             ]
@@ -130,19 +132,20 @@ export class CardGameComponent extends React.Component {
         const carouselProperties = {
             key: "card-carousel",
             ref: this.carouselRef,
-            cards: this.model.getCards(0).map((card) => CardCarouselComponent.createCard(card.definition)), //this.state.cards,
+            cards: this.model.getCards(0).map((card) => CardCarouselComponent.createCard(card.definition)), 
+            isLocked: this.props.isLocked,
             focusIndex: this.model.getFocusIndex(0),
-            mediaConfig: this.state.mediaConfig,
+            platformConfig: this.state.platformConfig,
             // if set to true the carousel will listen for events on globalThis, otherwise
             // if will listen to events on its component
             useGlobalEventScope: true,
-        };
+        };        
 
         return React.createElement(CardCarouselComponent, carouselProperties);
     }
 
     renderControlBar(config) {
-        const height = config === null ? 0 : config.values.innerHeight;
+        const height = config === null ? 0 : config.settings.getInnerHeight();
 
         const properties = {
             key: "controlbar",
@@ -169,7 +172,7 @@ export class CardGameComponent extends React.Component {
             ref: this.indicatorRef,
             dataCount,
             activeIndex: this.model.getFocusIndex(0),
-            isDataSelected: (idx) => this.model.isCardSelected(0, idx), //this.getCard(idx)?.state.isSelected,
+            isDataSelected: (idx) => this.model.isCardSelected(0, idx), 
             onClick: (idx) => this.setActiveIndex(idx),
         });
     }
@@ -281,19 +284,20 @@ export class CardGameComponent extends React.Component {
      * Callback from when the window resizes and we have to re render
      */
     handleResize() {
-        const mediaConfig = this.props.getLayoutConfiguration(this.ref);
-        const message = `${mediaConfig.name} ${mediaConfig.screenSize.width}x${mediaConfig.screenSize.height}`;
+        // find the configuration which matches the screen size, orientation and game state best
+        const platformConfig = PlatformConfiguration.selectMatch(new Size(this.ref.current.clientWidth, this.ref.current.clientHeight));
+        const message = `${platformConfig.name} ${platformConfig.screenSize.width}x${platformConfig.screenSize.height}`;
 
-        this.setState({ mediaConfig });
+        this.setState({ platformConfig });
 
         // update the media config in the carousel
         if (this.carouselRef.current) {
-            this.carouselRef.current.setMediaConfig(mediaConfig);
+            this.carouselRef.current.setPlatformConfig(platformConfig);
         }
 
         if (this.drawCounterRef.current && this.discardCounterRef.current) {
-            updateDrawAnimationStartTransform(mediaConfig, this.drawCounterRef.current.getBoundingClientRect());
-            updatePlayAnimationEndTransform(mediaConfig, this.discardCounterRef.current.getBoundingClientRect());
+            updateDrawAnimationStartTransform(platformConfig, this.drawCounterRef.current.getBoundingClientRect());
+            updatePlayAnimationEndTransform(platformConfig, this.discardCounterRef.current.getBoundingClientRect());
         }
 
         eventBus.dispatch(TOAST_TOPIC, new ToastMessage(message, 2.0, "platform-changed"));
@@ -386,7 +390,7 @@ export class CardGameComponent extends React.Component {
 
         const newCards = this.model.drawRandomCards(0, count, DECK_NAME.DECK);
 
-        if (newCards) {
+        if (newCards) {                       
             this.buttonPanelRef.current.setEnableDrawButton(this.model.getCards(0).length < this.model.getMaxCards(0));
             this.indicatorRef.current.setDataCount(this.model.getCards(0).length);
             this.carouselRef.current.addCards(

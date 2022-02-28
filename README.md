@@ -1,5 +1,5 @@
-# hand-of-cards (v0.5)
-This is React front-end carousel imitating holding and browsing through a hand of cards. To start the app, run a webserver in the directory containing the index.html file. Latest demo can be found on the [github pages](https://pointlesspun.github.io/hand-of-cards/).
+# hand-of-cards (v0.511)
+This is a React front-end imitating holding and browsing through a hand of cards. To start the app, run a webserver in the directory containing the index.html file, otherwise the latest demo can be found on the [github pages](https://pointlesspun.github.io/hand-of-cards/).
 
 For bugs and outstanding features see ['status'](#Status) below.
 
@@ -30,6 +30,11 @@ In the top level element one can currently set the following attributes:
 * "isLocked", if set to true, the cards will not scroll but stay in place.
 * "maxCardsReachedPolicy" can have two values "blocked" and "cycle-oldest". When _blocked_ is applied, the user cannot select more than 'maxSelectedCards' and will get a warning when selecting more. When _cycle-oldest_ is applied the first selected card will be deselected and the current focused card will be selected when the 'maxSelectedCards' is reached.
 * "foldCardsPolicy" can have two values "after-animation" or "immediateley". When _after-animation_ is selected the remaining cards in the hand will be folded after the play card animation is complete, when _immediately_ is selected the remaining cards in the hand will be folded as soon as the play animation begin.
+
+## Other features
+
+* CSS animations with runtime parameters
+* Card layouts depending on the current device, orientation and game state.
 
 Example:
 ```html
@@ -67,18 +72,16 @@ This project was created while learning React and is currently very much under d
 
 ### TODO 
 
-* Dynamic spacing and rotation as the number of cards increase (see hearthstone)
 * Add (example) rule to card allowing cards to be played (or not)
 * Try some optimization(s) for less powerful devices (aka phones).
 * Test custom card layout other than a sprite atlas.
 * Add 3d & cardbacks
 * Test multiple players
-* Create class for config.values.
 * Mouse drag cards like Slay the Spire/ Hardstone
+* Refactor indicator to match the 'correct' react model.
 * Refactor & add documentation.
 * Minify
 * Add jsx (or htm) variation.
-
 
 ## Credits
 
