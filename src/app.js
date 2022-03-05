@@ -5,6 +5,7 @@
  */
 
 import "./framework/math-extensions.js";
+
 import { shuffleArray } from "./framework/arrays.js";
 import { detectBrowser } from "./framework/platform-configuration.js";
 import { allocAnimations } from "./framework/animation-utilities.js";
@@ -18,7 +19,9 @@ import { DEFAULT_LIBRARY } from "./model/card-library.js";
 import { FOLD_CARDS_POLICY, CardGameComponent } from "./card-game/card-game-component.js";
 
 import { ANIMATIONS } from "./animations.js";
+
 import "./app-platform-configurations.js";
+import "./app-card-rendering.js";
 
 const version = "0.511";
 
