@@ -17,11 +17,11 @@ import { createCardsFromLibrary } from "./model/card-util.js";
 import { FOLD_CARDS_POLICY, CardGameComponent } from "./view/card-game-component.js";
 
 import { createCardGameModel } from "./app-card-model-factory.js";
-import { ANIMATIONS } from "./app-animations.js";
 import { DEFAULT_LIBRARY } from "./app-card-library.js";
 
 import "./app-platform-configurations.js";
 import "./app-card-rendering.js";
+import "./app-animations.js";
 
 const version = "0.512";
 
@@ -47,7 +47,7 @@ const model = createCardGameModel({
 });
 
 // allocate space in the css sheet for all the card animations
-allocAnimations([ANIMATIONS.playCard.name, ANIMATIONS.drawCard.name], maxCards);
+allocAnimations([CardGameComponent.ANIMATIONS.playCard.name, CardGameComponent.ANIMATIONS.drawCard.name], maxCards);
 
 // set up the initial toast messages showing up when the application starts
 const initialMessages = [`<h2><u>Hand of cards, version ${version}</u></h2>`];

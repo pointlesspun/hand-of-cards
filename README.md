@@ -72,10 +72,10 @@ This project was created while learning React and is currently very much under d
 
 ### TODO 
 
-* Add (example) rule to card allowing cards to be played (or not)
 * Try some optimization(s) for less powerful devices (aka phones).
-* Test custom card layout other than a sprite atlas.
-* Add 3d & cardbacks
+* Add 3d 
+* Add cardbacks
+* Add (example) rule to card allowing cards to be played (or not)
 * Test multiple players
 * Mouse drag cards like Slay the Spire/ Hardstone
 * Refactor indicator to match the 'correct' react model.

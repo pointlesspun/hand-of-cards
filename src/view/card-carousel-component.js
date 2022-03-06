@@ -1,5 +1,4 @@
 import { ELEMENT_TYPES } from "../framework/element-types.js";
-import { ANIMATIONS } from "../app-animations.js";
 import { SWIPE_DIRECTIONS } from "../framework/swipe-directions.js";
 import { ANIMATION_EVENT_TYPE } from "../framework/animation-utilities.js";
 
@@ -254,7 +253,7 @@ export class CardCarouselComponent extends React.Component {
         } else if (evt.type === ANIMATION_EVENT_TYPE.END) {
             this.animationCount--;
 
-            if (evt.animation.name === ANIMATIONS.playCard.name) {
+            if (evt.animation.deleteOnEnd) {
                 // mark the card as deleted, we need to do this asap and not delay until removeSelectedItems
                 // otherwise one last frame of rendering may kick in and we end up with weird glitches
                 evt.source.setDeleted();

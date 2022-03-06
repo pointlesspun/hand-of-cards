@@ -10,7 +10,6 @@ import "../framework/math-extensions.js";
 import { ELEMENT_TYPES } from "../framework/element-types.js";
 import eventBus from "../framework/event-bus.js";
 
-import { ANIMATIONS, updateDrawAnimationStartTransform, updatePlayAnimationEndTransform } from "../app-animations.js";
 import { ToastMessage, TOAST_TOPIC } from "../framework/toast-component.js";
 import { IndicatorComponent } from "../framework/indicator-component.js";
 import { CardCarouselComponent } from "./card-carousel-component.js";
@@ -21,6 +20,8 @@ import { CounterComponent} from "../framework/counter-component.js";
 import { DECK_NAME } from "../model/player.js";
 import { PlatformConfiguration } from "../framework/platform-configuration.js";
 import { Size } from "../framework/size.js";
+import { CardAnimation } from "./card-animation.js";
+import { Transform } from "../framework/transform.js";
 
 export const FOLD_CARDS_POLICY = {
     /** Fold cards after the play cards animation has finished */
@@ -30,7 +31,22 @@ export const FOLD_CARDS_POLICY = {
     IMMEDIATELY: "immediately",
 };
 
+
 export class CardGameComponent extends React.Component {
+
+    static ANIMATIONS = {    
+        playCard: new CardAnimation({
+            name: "playCard",
+            endTransform: new Transform(),
+            deleteOnEnd: true
+        }),
+        drawCard: new CardAnimation({
+            name: "drawCard",
+            startTransform: new Transform()
+        })
+    };
+
+
     /**
      *
      * @param {*} props
@@ -252,7 +268,7 @@ export class CardGameComponent extends React.Component {
                 this.playSelectedCards();
                 break;
             case CARD_CAROUSEL_EVENT_TYPES.ANIMATION_COMPLETE:
-                if (parameters.name === ANIMATIONS.playCard.name) {
+                if (parameters.deleteOnEnd) {
                     this.removeSelectedCards();
                 }
                 break;
@@ -296,8 +312,8 @@ export class CardGameComponent extends React.Component {
         }
 
         if (this.drawCounterRef.current && this.discardCounterRef.current) {
-            updateDrawAnimationStartTransform(platformConfig, this.drawCounterRef.current.getBoundingClientRect());
-            updatePlayAnimationEndTransform(platformConfig, this.discardCounterRef.current.getBoundingClientRect());
+            CardGameComponent.ANIMATIONS.drawCard.mapStartTransformToRect(platformConfig, this.drawCounterRef.current.getBoundingClientRect());
+            CardGameComponent.ANIMATIONS.playCard.mapEndTransformToRect(platformConfig, this.discardCounterRef.current.getBoundingClientRect());
         }
 
         eventBus.dispatch(TOAST_TOPIC, new ToastMessage(message, 2.0, "platform-changed"));
@@ -367,7 +383,7 @@ export class CardGameComponent extends React.Component {
 
             this.carouselRef.current.playSelectedCards(
                 focusIndex,
-                ANIMATIONS.playCard,
+                CardGameComponent.ANIMATIONS.playCard,
                 this.state.foldCardsPolicy === FOLD_CARDS_POLICY.IMMEDIATELY
             );
 
@@ -394,7 +410,7 @@ export class CardGameComponent extends React.Component {
             this.buttonPanelRef.current.setEnableDrawButton(this.model.getCards(0).length < this.model.getMaxCards(0));
             this.indicatorRef.current.setDataCount(this.model.getCards(0).length);
             this.carouselRef.current.addCards(
-                newCards.map((card) => CardCarouselComponent.createCard(card.definition, ANIMATIONS.drawCard)),
+                newCards.map((card) => CardCarouselComponent.createCard(card.definition, CardGameComponent.ANIMATIONS.drawCard)),
                 this.model.getFocusIndex(0)
             );
             this.drawCounterRef.current.setGoalValue(deck.getLength());

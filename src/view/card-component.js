@@ -213,7 +213,7 @@ export class CardComponent extends React.Component {
     }
 
     startAnimation(targetTransform, properties, config) {
-        this.currentAnimation = this.state.animation.createAnimation({
+        this.currentAnimation = this.state.animation.createAnimationStyle({
             idx: this.state.index,
             config,
             targetTransform,
