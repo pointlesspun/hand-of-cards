@@ -12,18 +12,18 @@ import { allocAnimations } from "./framework/animation-utilities.js";
 import { ToastComponent, ToastMessage } from "./framework/toast-component.js";
 
 import { MAX_SELECTION_REACHED_POLICY } from "./model/card-game-model.js";
-import { createCardGameModel } from "./app-card-model-factory.js";
 import { createCardsFromLibrary } from "./model/card-util.js";
 
-import { FOLD_CARDS_POLICY, CardGameComponent } from "./card-game/card-game-component.js";
+import { FOLD_CARDS_POLICY, CardGameComponent } from "./view/card-game-component.js";
 
+import { createCardGameModel } from "./app-card-model-factory.js";
 import { ANIMATIONS } from "./app-animations.js";
 import { DEFAULT_LIBRARY } from "./app-card-library.js";
 
 import "./app-platform-configurations.js";
 import "./app-card-rendering.js";
 
-const version = "0.511";
+const version = "0.512";
 
 console.log(`starting card component ${version}`);
 

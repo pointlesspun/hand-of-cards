@@ -4,9 +4,9 @@ import { ELEMENT_TYPES } from "./framework/element-types.js";
 import { Size } from "./framework/size.js";
 import { SpriteAtlas } from "./framework/sprite-atlas.js";
 
-import { CardRenderService } from "./card-game/card-render-service.js";
+import { CardRenderService } from "./view/card-render-service.js";
 
-import { CARD_COLOR_NAMES } from "./app-card-library.js";
+import { CARD_COLOR_NAMES, CARD_VALUE_NAMES } from "./app-card-library.js";
 
 // There's a limitation on some handheld devices like phones in what image size they will load
 // so the atlas is cut in two parts
@@ -14,17 +14,20 @@ const ATLAS_1_TO_6 = new SpriteAtlas('./data/Atlasnye-playing-cards-1-to-6.png',
 const ATLAS_7_TO_K = new SpriteAtlas('./data/Atlasnye-playing-cards-7-to-K.png', new Size(-32, -32), new Size(-(390), -(568)));
 
 /**
- * Generates css/style backgrounds for the cards based on the provided atlases 
+ * Generates css/style backgrounds for the cards based on the provided atlases.
+ * 
+ * @param {[string]} result is the array to store the background strings in
+ * @param {number} offset the first index the cards in the atlas
  * @param {SpriteAtlas} atlas 
- * @param {*} baseOffset 
+ * @param {number} atlasRowLength number of cards in one row of the atlas
  * @returns {[string]} css strings representing the background
  */
-const generateBackgrounds = (atlas, maxCardsPerName) => {
-    let result = [];
+const generateBackgrounds = (result, offset, atlas, atlasRowLength) => {
 
     for (let i = 0; i < CARD_COLOR_NAMES.length; i++) {
-        for (let j = 0; j < maxCardsPerName; j++) {
-            result.push(atlas.toCss(i, j));
+        for (let j = 0; j < atlasRowLength; j++) {
+            const index = (i * CARD_VALUE_NAMES.length) + offset + j;
+            result[index] = atlas.toCss(i, j);
         }    
     }
 
@@ -32,10 +35,10 @@ const generateBackgrounds = (atlas, maxCardsPerName) => {
 }
 
 // cache of all backgrounds css strings
-const CARD_BACKGROUNDS = [
-    ...generateBackgrounds(ATLAS_1_TO_6, 6), 
-    ...generateBackgrounds(ATLAS_7_TO_K, 7),
-]
+const CARD_BACKGROUNDS = Array(CARD_COLOR_NAMES.length * CARD_VALUE_NAMES.length);
+
+generateBackgrounds(CARD_BACKGROUNDS, 0, ATLAS_1_TO_6, 6);
+generateBackgrounds(CARD_BACKGROUNDS, 6, ATLAS_7_TO_K, 7);
 
 /**
  * Method to render the card content
