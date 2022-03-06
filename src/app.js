@@ -5,22 +5,25 @@
  */
 
 import "./framework/math-extensions.js";
+
 import { shuffleArray } from "./framework/arrays.js";
 import { detectBrowser } from "./framework/platform-configuration.js";
 import { allocAnimations } from "./framework/animation-utilities.js";
 import { ToastComponent, ToastMessage } from "./framework/toast-component.js";
 
 import { MAX_SELECTION_REACHED_POLICY } from "./model/card-game-model.js";
-import { createCardGameModel } from "./model/card-model-factory.js";
 import { createCardsFromLibrary } from "./model/card-util.js";
-import { DEFAULT_LIBRARY } from "./model/card-library.js";
 
-import { FOLD_CARDS_POLICY, CardGameComponent } from "./card-game/card-game-component.js";
+import { FOLD_CARDS_POLICY, CardGameComponent } from "./view/card-game-component.js";
 
-import { ANIMATIONS } from "./animations.js";
+import { createCardGameModel } from "./app-card-model-factory.js";
+import { DEFAULT_LIBRARY } from "./app-card-library.js";
+
 import "./app-platform-configurations.js";
+import "./app-card-rendering.js";
+import "./app-animations.js";
 
-const version = "0.511";
+const version = "0.512";
 
 console.log(`starting card component ${version}`);
 
@@ -44,7 +47,7 @@ const model = createCardGameModel({
 });
 
 // allocate space in the css sheet for all the card animations
-allocAnimations([ANIMATIONS.playCard.name, ANIMATIONS.drawCard.name], maxCards);
+allocAnimations([CardGameComponent.ANIMATIONS.playCard.name, CardGameComponent.ANIMATIONS.drawCard.name], maxCards);
 
 // set up the initial toast messages showing up when the application starts
 const initialMessages = [`<h2><u>Hand of cards, version ${version}</u></h2>`];

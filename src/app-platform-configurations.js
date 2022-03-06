@@ -2,8 +2,8 @@
 
 import { PlatformConfiguration, ORIENTATION_NAMES } from "./framework/platform-configuration.js"
 
-import { CardLayout } from "./card-game/card-layout.js";
-import { CardLayoutCollection } from "./card-game/card-layout-collection.js";
+import { CardLayout } from "./view/card-layout.js";
+import { CardLayoutCollection } from "./view/card-layout-collection.js";
 
 /*
  * Configurations used in the demo to adapt to different screen sizes and game states.

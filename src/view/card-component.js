@@ -5,6 +5,7 @@ import { ELEMENT_TYPES } from "../framework/element-types.js";
 import { ANIMATION_EVENT_TYPE, AnimationEvent } from "../framework/animation-utilities.js";
 
 import { CardEvent, CARD_EVENT_TYPES } from "./card-event.js";
+import { CardRenderService } from "./card-render-service.js";
 
 // number of pixels of movement allowed before a tap becomes a swipe
 const TAP_THRESHOLD = 10;
@@ -49,7 +50,6 @@ export class CardComponent extends React.Component {
                 width: this.state.platformConfig.settings.getCardSize().width + "px",
                 height: this.state.platformConfig.settings.getCardSize().height + "px",
                 transformOrigin: "center bottom",
-                background: this.state.definition.toCss(),
             },
         };
 
@@ -70,17 +70,10 @@ export class CardComponent extends React.Component {
             properties.style.transform = this.state.transform.toCss({});
         }
 
-        return React.createElement(ELEMENT_TYPES.DIV, properties, this.renderOverlay(this.state.hasFocus));
-    }
-
-    // --- Sub elements -----------------------------------------------------------------------------------------------
-
-    /**
-     * color overlay giving the card some shadow depending on its state
-     * @private
-     */
-    renderOverlay(hasFocus) {
-        return React.createElement(ELEMENT_TYPES.DIV, { className: `card-overlay${hasFocus ? "-focus" : ""}` });
+        return React.createElement(ELEMENT_TYPES.DIV, properties, CardRenderService.render(this.state.definition.id, {
+            definition: this.state.definition,
+            hasFocus: this.state.hasFocus
+        }));
     }
 
     // --- Event handlers ---------------------------------------------------------------------------------------------
@@ -220,7 +213,7 @@ export class CardComponent extends React.Component {
     }
 
     startAnimation(targetTransform, properties, config) {
-        this.currentAnimation = this.state.animation.createAnimation({
+        this.currentAnimation = this.state.animation.createAnimationStyle({
             idx: this.state.index,
             config,
             targetTransform,
