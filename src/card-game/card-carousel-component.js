@@ -1,5 +1,5 @@
 import { ELEMENT_TYPES } from "../framework/element-types.js";
-import { ANIMATIONS } from "../animations.js";
+import { ANIMATIONS } from "../app-animations.js";
 import { SWIPE_DIRECTIONS } from "../framework/swipe-directions.js";
 import { ANIMATION_EVENT_TYPE } from "../framework/animation-utilities.js";
 

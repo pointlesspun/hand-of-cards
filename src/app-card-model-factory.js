@@ -1,11 +1,11 @@
 "use strict";
 
-import { CardGameModel, MAX_SELECTION_REACHED_POLICY } from "./card-game-model.js";
-import { DEFAULT_LIBRARY } from "./card-library.js";
-import { pickRandomCards } from "./card-util.js";
-import { Deck } from "./deck.js";
-import { Hand } from "./hand.js";
-import { Player } from "./player.js";
+import { CardGameModel, MAX_SELECTION_REACHED_POLICY } from "./model/card-game-model.js";
+import { DEFAULT_LIBRARY } from "./app-card-library.js";
+import { pickRandomCards } from "./model/card-util.js";
+import { Deck } from "./model/deck.js";
+import { Hand } from "./model/hand.js";
+import { Player } from "./model/player.js";
 
 /**
  * @typedef {Object} CardModelFactoryParameters 

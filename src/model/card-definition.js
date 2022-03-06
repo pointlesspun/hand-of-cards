@@ -1,27 +1,16 @@
 'use strict';
 
-import { SpriteAtlas } from "../framework/sprite-atlas.js";
-
 /**
- * Defines a immutable properties of a card: the graphics and name.
+ * Defines a immutable properties of a card: name and id.
  */
 export class CardDefinition {
     /**
-     * 
+     * @param {number} id unique id of the definition
      * @param {string} name Name of the card
-     * @param {SpriteAtlas} atlas 
-     * @param {number} row 
-     * @param {number} column 
      */
-    constructor(name, atlas, row, column) {
+    constructor(id, name) {
+        this.id = id;
         this.name = name;
-        this.atlas = atlas;
-        this.row = row;
-        this.column = column;
-    }
-
-    toCss() {
-        return this.atlas.toCss(this.row, this.column);
     }
 
     toString() {

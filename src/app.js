@@ -12,13 +12,13 @@ import { allocAnimations } from "./framework/animation-utilities.js";
 import { ToastComponent, ToastMessage } from "./framework/toast-component.js";
 
 import { MAX_SELECTION_REACHED_POLICY } from "./model/card-game-model.js";
-import { createCardGameModel } from "./model/card-model-factory.js";
+import { createCardGameModel } from "./app-card-model-factory.js";
 import { createCardsFromLibrary } from "./model/card-util.js";
-import { DEFAULT_LIBRARY } from "./model/card-library.js";
 
 import { FOLD_CARDS_POLICY, CardGameComponent } from "./card-game/card-game-component.js";
 
-import { ANIMATIONS } from "./animations.js";
+import { ANIMATIONS } from "./app-animations.js";
+import { DEFAULT_LIBRARY } from "./app-card-library.js";
 
 import "./app-platform-configurations.js";
 import "./app-card-rendering.js";

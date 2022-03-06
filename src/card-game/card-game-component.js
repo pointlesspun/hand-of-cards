@@ -10,7 +10,7 @@ import "../framework/math-extensions.js";
 import { ELEMENT_TYPES } from "../framework/element-types.js";
 import eventBus from "../framework/event-bus.js";
 
-import { ANIMATIONS, updateDrawAnimationStartTransform, updatePlayAnimationEndTransform } from "../animations.js";
+import { ANIMATIONS, updateDrawAnimationStartTransform, updatePlayAnimationEndTransform } from "../app-animations.js";
 import { ToastMessage, TOAST_TOPIC } from "../framework/toast-component.js";
 import { IndicatorComponent } from "../framework/indicator-component.js";
 import { CardCarouselComponent } from "./card-carousel-component.js";
