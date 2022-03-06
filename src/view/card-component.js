@@ -70,7 +70,7 @@ export class CardComponent extends React.Component {
             properties.style.transform = this.state.transform.toCss({});
         }
 
-        return React.createElement(ELEMENT_TYPES.DIV, properties, CardRenderService.render(0, {
+        return React.createElement(ELEMENT_TYPES.DIV, properties, CardRenderService.render(this.state.definition.id, {
             definition: this.state.definition,
             hasFocus: this.state.hasFocus
         }));

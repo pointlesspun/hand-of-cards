@@ -65,4 +65,4 @@ const renderCardContent = (context) => [
 ];
 
 // register the app specific rendering method with the service
-CardRenderService.registerRenderFunction(0, renderCardContent);
+CARD_BACKGROUNDS.forEach( (background, index) => CardRenderService.registerRenderFunction(index, renderCardContent));

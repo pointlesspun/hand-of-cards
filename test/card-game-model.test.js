@@ -1,7 +1,7 @@
 import { expect, test } from "@jest/globals";
 import { CardGameModel, MAX_SELECTION_REACHED_POLICY } from "../src/model/card-game-model.js";
-import { DEFAULT_LIBRARY } from "../src/model/card-library.js";
-import { createCardGameModel } from "../src/model/card-model-factory.js";
+import { DEFAULT_LIBRARY } from "../src/app-card-library.js";
+import { createCardGameModel } from "../src/app-card-model-factory.js";
 import { pickRandomCards } from "../src/model/card-util.js";
 import { Card } from "../src/model/card.js";
 import { Deck } from "../src/model/deck.js";
