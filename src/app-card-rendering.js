@@ -40,6 +40,21 @@ const CARD_BACKGROUNDS = Array(CARD_COLOR_NAMES.length * CARD_VALUE_NAMES.length
 generateBackgrounds(CARD_BACKGROUNDS, 0, ATLAS_1_TO_6, 6);
 generateBackgrounds(CARD_BACKGROUNDS, 6, ATLAS_7_TO_K, 7);
 
+const createClassName = (hasFocus, isSelected) => {
+    let className = ``;
+
+    if (hasFocus) {
+        className += "card-item-focus ";
+    }
+
+    if (isSelected) {
+        className += "card-item-selected";
+    }
+
+    return className;
+}
+
+
 /**
  * Method to render the card content
  * @param {*} context object containing rendering specific information
@@ -48,6 +63,7 @@ generateBackgrounds(CARD_BACKGROUNDS, 6, ATLAS_7_TO_K, 7);
 const renderCardContent = (context) => [
     React.createElement(ELEMENT_TYPES.DIV, { 
         key: "card-content",
+        className: createClassName(context.hasFocus, context.isSelected),
         style: {
             background: CARD_BACKGROUNDS[context.definition.id],
             width: "100%",
@@ -55,13 +71,18 @@ const renderCardContent = (context) => [
             position: "absolute",
             left: "0px",
             top: "0px",
-            zIndex: 0
+            zIndex: 0,
+            backfaceVisibility: "hidden"
         }
     }),
     React.createElement(ELEMENT_TYPES.DIV, { 
         key: "card-overlay",
         className: `card-overlay${context.hasFocus ? "-focus" : ""}`,
-    })
+    }),
+    React.createElement(ELEMENT_TYPES.DIV, { 
+        key: "card-back",
+        className: `card-back`,
+    }),
 ];
 
 // register the app specific rendering method with the service

@@ -36,6 +36,7 @@ html, body {
      * see https://stackoverflow.com/questions/20851452/z-index-is-canceled-by-setting-transformrotatecss (comment by GYTO)
      */
     transform-style: preserve-3d;
+    backface-visibility:hidden;
 }
 
 .card-item {
@@ -43,6 +44,7 @@ html, body {
     align-items: stretch;
     transition: transform 0.25s, opacity 0.25s;
     transition-timing-function: ease-in-out;
+    transform-style: preserve-3d;
     justify-content: center;   
     color: white;
     border-radius: 32px;
@@ -62,6 +64,25 @@ html, body {
     font-size: 1250%;
     z-index: 0;
     border-radius: 32px;
+    backface-visibility:hidden;
+}
+
+.card-back {
+    color: black;
+    width: 100%;
+    height: 100%;
+    left: 0px;
+    top: 0px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1250%;
+    border-radius: 32px;
+    transform: rotateY(180deg);
+    backface-visibility:hidden;
+    position: absolute;
+    background: url('../data/card-back.png');
+    background-size: cover;
 }
 
 .card-overlay-focus {
@@ -83,28 +104,10 @@ html, body {
 
 .card-item-focus {
     filter: drop-shadow(0 0 0.75rem rgb(88, 88, 88));
-
-    /** This supposedly helps performance on phones ... not seeing it though*/
-    -webkit-transform: translateZ(0);
-    -webkit-perspective: 1000;
-    -webkit-backface-visibility: hidden;
-    transform: translateZ(0);
-    perspective: 1000;
-    backface-visibility: hidden;
-    will-change: transform;
 }
 
 .card-item-selected {
     filter: drop-shadow(0 0 0.8rem var(--selection-color));
-
-    /** This supposedly helps performance on phones ... not seeing it though*/
-    -webkit-transform: translateZ(0);
-    -webkit-perspective: 1000;
-    -webkit-backface-visibility: hidden;
-    transform: translateZ(0);
-    perspective: 1000;
-    backface-visibility: hidden;
-    will-change: transform;
 }
 
 .card-counter {

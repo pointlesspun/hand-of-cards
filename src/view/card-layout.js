@@ -165,10 +165,10 @@ export class CardLayout {
                 parentCenterX - cardCenterX + deltaCenterIdx * this.xTranslation,
                 yOffset + itemSelectedOffset + itemActiveOffset + yOffsetWrtFocus,
                 // make sure the cards closer to the center overlap cards further away
-                hasFocus ? 200 : 100 - Math.abs(deltaCenterIdx)
+                hasFocus ? 200 : 100 - index
             ),
-            new Vector3(itemScale, itemScale),
-            hasFocus ? 0 : this.rotation * deltaCenterIdx
+            new Vector3(itemScale, itemScale, itemScale),
+            hasFocus ? new Vector3() : new Vector3(0, 0, this.rotation * deltaCenterIdx)
         );
     }
 }

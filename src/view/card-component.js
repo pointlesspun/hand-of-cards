@@ -44,7 +44,7 @@ export class CardComponent extends React.Component {
 
     render() {
         const properties = {
-            className: this.createClassName(this.state.hasFocus),
+            className: `card-item`,
             ref: this.ref,
             style: {
                 width: this.state.platformConfig.settings.getCardSize().width + "px",
@@ -72,7 +72,8 @@ export class CardComponent extends React.Component {
 
         return React.createElement(ELEMENT_TYPES.DIV, properties, CardRenderService.render(this.state.definition.id, {
             definition: this.state.definition,
-            hasFocus: this.state.hasFocus
+            hasFocus: this.state.hasFocus,
+            isSelected: this.state.isSelected
         }));
     }
 
@@ -196,7 +197,7 @@ export class CardComponent extends React.Component {
 
     // --- Utility methods  -------------------------------------------------------------------------------------------
 
-    createClassName(isActive) {
+    /*createClassName(isActive) {
         let className = `card-item`;
 
         if (!this.state.animation) {
@@ -210,7 +211,7 @@ export class CardComponent extends React.Component {
         }
 
         return className;
-    }
+    }*/
 
     startAnimation(targetTransform, properties, config) {
         this.currentAnimation = this.state.animation.createAnimationStyle({

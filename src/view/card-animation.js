@@ -2,6 +2,7 @@
 
 import { contract } from "../framework/contract.js";
 import { Transform } from "../framework/transform.js";
+import { Vector3 } from "../framework/vector3.js";
 
 export class CardAnimation {
     /**
@@ -61,7 +62,8 @@ export class CardAnimation {
         newTransform.translation.y = rect.y + rect.height - cardSize.height;
         newTransform.scale.x = rect.width / cardSize.width;
         newTransform.scale.y = rect.height / cardSize.height;
-        newTransform.rotation = 0;
+        newTransform.scale.z = 1;
+        newTransform.rotation = new Vector3(0, 180, 0);
 
         this.startTransform = newTransform;
     }
@@ -84,7 +86,9 @@ export class CardAnimation {
         newTransform.translation.y = rect.y + rect.height - cardSize.height;
         newTransform.scale.x = rect.width / cardSize.width;
         newTransform.scale.y = rect.height / cardSize.height;
-        newTransform.rotation = -45;
+        newTransform.scale.z = 1;
+        newTransform.rotation.z = -15;
+        newTransform.rotation.y = 180;
 
         this.endTransform = newTransform;
     }
