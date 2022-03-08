@@ -1,4 +1,4 @@
-# hand-of-cards (v0.511)
+# hand-of-cards (v0.52)
 This is a React front-end imitating holding and browsing through a hand of cards. To start the app, run a webserver in the directory containing the index.html file, otherwise the latest demo can be found on the [github pages](https://pointlesspun.github.io/hand-of-cards/).
 
 For bugs and outstanding features see ['status'](#Status) below.
@@ -69,18 +69,19 @@ This project was created while learning React and is currently very much under d
 * There's a 'wobble' in the animation when browsing and selecting at the same time. The wobble occurs because the transition time is reset when a new transform is set in
   the card. However this only occurs in some cases. When moving left to right in quick succession the transition is NOT reset. However moving to left/right and selecting/deselecting causes a transition reset. Why this happens is not immediately clear to me at this point. This can be addressed somewhat by calculating the remaining transition time and then updating the transition duration accordingly when the card is selected. Sadly this still causes issues with the animation as the card seems to pause and then move again causing a different 'wobble' (regardless of the transition function). The additional complexity in the code is not worth this minor improvement imho so we'll have to live with this bug. 
 * There is an issue with firefox and CSS transitions see [this bug report](https://bugzilla.mozilla.org/show_bug.cgi?id=1757164).
+* Any filters mess with back-face visibility and mostly the preserve-3d styles. This includes the opacity value in animations. Bummer because this makes smooth transitions harder than they should be  [see this link](https://dev.to/skymax/backface-visibility-doesn-t-work-when-used-together-with-an-animation-11hf)
 
-### TODO 
+### PLANNED IMPROVEMENTS (in no particular order) 
 
 * Try some optimization(s) for less powerful devices (aka phones).
-* Add 3d 
-* Add cardbacks
 * Add (example) rule to card allowing cards to be played (or not)
 * Test multiple players
+  * Minify
+  * Create separate demos. Current app being 'classic-single-player'
+  * Create one 'inner' per player
 * Mouse drag cards like Slay the Spire/ Hardstone
 * Refactor indicator to match the 'correct' react model.
 * Refactor & add documentation.
-* Minify
 * Add jsx (or htm) variation.
 
 ## Credits
@@ -90,6 +91,7 @@ Carousel Demonstration based on [this example](https://medium.com/tinyso/how-to-
 Swiping provided by [john-doherty/swiped-events](https://github.com/john-doherty/swiped-events).
 
 Deck of cards [by Дмитрий Фомин (Dmitry Fomin) on Wiki](https://en.wikipedia.org/wiki/File:Atlasnye_playing_cards_deck.svg.) 
+Card back [wiki](https://commons.wikimedia.org/wiki/File:%D0%90%D1%82%D0%BB%D0%B0%D1%81%D0%BD%D0%B0%D1%8F_%D0%BA%D0%BE%D0%BB%D0%BE%D0%B4%D0%B0_%D1%8D%D0%BA%D1%81%D1%82%D1%80%D0%B0_%D1%80%D1%83%D0%B1%D0%B0%D1%88%D0%BA%D0%B0.jpg)
 
 Keycode constants [Kabir Baidhya, Saugat Acharya](https://github.com/kabirbaidhya/keycode-js#usage)
 

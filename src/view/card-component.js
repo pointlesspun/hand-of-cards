@@ -6,9 +6,38 @@ import { ANIMATION_EVENT_TYPE, AnimationEvent } from "../framework/animation-uti
 
 import { CardEvent, CARD_EVENT_TYPES } from "./card-event.js";
 import { CardRenderService } from "./card-render-service.js";
+import { CardDefinition } from "../model/card-definition.js";
 
 // number of pixels of movement allowed before a tap becomes a swipe
 const TAP_THRESHOLD = 10;
+
+/**
+ * Context provided as parameter to the card rendering service
+ */
+export class CardRenderContext {
+    /**
+     * @type {CardDefinition}
+     */
+    definition = null;
+
+    /**
+     * @type {boolean}
+     */
+    hasFocus = false;
+
+    /**
+     * @type {boolean}
+     */
+    isSelected = false;
+
+    constructor(definition, hasFocus, isSelected) {
+        this.definition = definition;
+        this.hasFocus = hasFocus;
+        this.isSelected = isSelected;
+    }
+
+    static fromCardState = (state) => new CardRenderContext(state.definition, state.hasFocus, state.isSelected);
+}
 
 /**
  * Component representing a 'card' in a card game.
@@ -44,7 +73,7 @@ export class CardComponent extends React.Component {
 
     render() {
         const properties = {
-            className: this.createClassName(this.state.hasFocus),
+            className: `card-item`,
             ref: this.ref,
             style: {
                 width: this.state.platformConfig.settings.getCardSize().width + "px",
@@ -70,10 +99,11 @@ export class CardComponent extends React.Component {
             properties.style.transform = this.state.transform.toCss({});
         }
 
-        return React.createElement(ELEMENT_TYPES.DIV, properties, CardRenderService.render(this.state.definition.id, {
-            definition: this.state.definition,
-            hasFocus: this.state.hasFocus
-        }));
+        return React.createElement(
+            ELEMENT_TYPES.DIV,
+            properties,
+            CardRenderService.render(this.state.definition.id, CardRenderContext.fromCardState(this.state))
+        );
     }
 
     // --- Event handlers ---------------------------------------------------------------------------------------------
@@ -195,22 +225,6 @@ export class CardComponent extends React.Component {
     isSelected = () => this.state.isSelected;
 
     // --- Utility methods  -------------------------------------------------------------------------------------------
-
-    createClassName(isActive) {
-        let className = `card-item`;
-
-        if (!this.state.animation) {
-            if (isActive) {
-                className += " card-item-focus";
-            }
-
-            if (this.state.isSelected) {
-                className += " card-item-selected";
-            }
-        }
-
-        return className;
-    }
 
     startAnimation(targetTransform, properties, config) {
         this.currentAnimation = this.state.animation.createAnimationStyle({
