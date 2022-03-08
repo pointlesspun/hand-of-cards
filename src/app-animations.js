@@ -38,9 +38,9 @@ import { CardGameComponent } from "./view/card-game-component.js";
 
     const text = `
         0% {transform: ${targetTransform.toCss()}; }
-        15% {transform: ${transform1.toCss()}; }
+        25% {transform: ${transform1.toCss()}; }
         40% {transform: ${transform2.toCss()}; }
-        70% {transform: ${transform2.toCss()}; }
+        60% {transform: ${transform2.toCss()}; }
         100% {transform: ${CardGameComponent.ANIMATIONS.playCard.endTransform.toCss()}; }
     `;
 
@@ -81,11 +81,11 @@ CardGameComponent.ANIMATIONS.drawCard.createAnimationStyle = function({ idx, con
     // see https://dev.to/skymax/backface-visibility-doesn-t-work-when-used-together-with-an-animation-11hf
     const text = `
         0% {transform: ${transform0.toCss()}}
-        20% {transform: ${transform1.toCss()}}
         30% {transform: ${transform1.toCss()}}
-        50% {transform: ${transform2.toCss()}}
+        35% {transform: ${transform1.toCss()}}
         60% {transform: ${transform2.toCss()}}
-        80% {transform: ${transform3.toCss()}}
+        80% {transform: ${transform2.toCss()}}
+        90% {transform: ${transform3.toCss()}}
         100% {transform: ${targetTransform.toCss()}
     `;
 
@@ -94,7 +94,7 @@ CardGameComponent.ANIMATIONS.drawCard.createAnimationStyle = function({ idx, con
     const animationId = createAnimationId(CardGameComponent.ANIMATIONS.drawCard.name, idx);
 
     style.animationName = animationId;
-    style.animationDuration = `${Math.random() * 0.2 + 0.8}s`;
+    style.animationDuration = `${Math.random() * 0.2 + 0.9}s`;
     style.animationDelay = `${Math.random() * 0.1}s`;
 
     // set the initial transform to be off screen otherwise we will have one frame

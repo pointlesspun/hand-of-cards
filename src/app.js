@@ -23,7 +23,7 @@ import "./app-platform-configurations.js";
 import "./app-card-rendering.js";
 import "./app-animations.js";
 
-const version = "0.512";
+const version = "0.52";
 
 console.log(`starting card component ${version}`);
 

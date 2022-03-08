@@ -1,4 +1,16 @@
-@import url('hand-of-cards.css');
+@import url('card-view.css');
 @import url('icon-button-panel.css');
 @import url('indicators.css');
 @import url('toast.css');
+@import url('app-cards.css');
+
+/*
+ * Shared variables
+ */
+:root {
+    --selection-color: #BBFFBB;
+    --button-color: white;
+    --disabled-color: rgba(255, 255, 255, 0.5);
+    --button-size: 64px;
+    --button-margin: 24px;
+}
