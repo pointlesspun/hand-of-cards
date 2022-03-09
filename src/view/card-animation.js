@@ -56,7 +56,7 @@ export class CardAnimation {
         contract.isDefined(rect, "Animations requires a valid rect (was null or undefined).");
 
         const newTransform = this.startTransform.clone();
-        const cardSize = config.settings.getCardSize();
+        const cardSize = config.settings.layoutCollection.getCardSize();
 
         newTransform.translation.x = rect.x + rect.width / 2 - cardSize.width / 2;
         newTransform.translation.y = rect.y + rect.height - cardSize.height;
@@ -80,7 +80,7 @@ export class CardAnimation {
         contract.isDefined(rect, "Animations requires a valid rect (was null or undefined).");
 
         const newTransform = this.endTransform.clone();
-        const cardSize = config.settings.getCardSize();
+        const cardSize = config.settings.layoutCollection.getCardSize();
 
         newTransform.translation.x = rect.x + rect.width / 2 - cardSize.width / 2;
         newTransform.translation.y = rect.y + rect.height - cardSize.height;

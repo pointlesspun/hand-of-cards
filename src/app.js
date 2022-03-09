@@ -40,6 +40,7 @@ const initialCardCount = element.attributes?.initialCardCount?.value
 
 // create the model used in the application
 const model = createCardGameModel({
+    playerCount: 2,
     maxSelectedCards,
     selectionCyclePolicy,
     initialCardCount: 0,

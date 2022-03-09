@@ -76,8 +76,8 @@ export class CardComponent extends React.Component {
             className: `card-item`,
             ref: this.ref,
             style: {
-                width: this.state.platformConfig.settings.getCardSize().width + "px",
-                height: this.state.platformConfig.settings.getCardSize().height + "px",
+                width: this.state.platformConfig.settings.layoutCollection.getCardSize().width + "px",
+                height: this.state.platformConfig.settings.layoutCollection.getCardSize().height + "px",
                 transformOrigin: "center bottom",
             },
         };

@@ -98,7 +98,7 @@ export class CardLayout {
         rotation = 4,
         xTranslation = 180,
         yTranslation = 4,
-        yBaseOffset = 80,
+        yBaseOffset = 0,
         ySelectedOffset = -60,
         yActiveOffset = -82,
     } = {}) {
@@ -128,7 +128,7 @@ export class CardLayout {
      */
     calculateTransform(clientSize, cardCount, index, focusIndex, centerCardIndex, isSelected) {
         // size of the div containing these cards
-        const parentHeight = clientSize.height * this.innerHeight;
+        const parentHeight = clientSize.height /** this.innerHeight*/;
 
         // is the current card active (the one in the center which the user is working with) ?
         const hasFocus = index === focusIndex;

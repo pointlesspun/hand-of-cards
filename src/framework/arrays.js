@@ -42,3 +42,19 @@ export function shuffleArray(array) {
 
     return array;
 }
+
+/**
+ * Create a new array and fill it with the factoryFunction's result
+ * @param {number} length 
+ * @param {*} factoryFunction 
+ * @returns a new array of the given length 
+ */
+export function newArray(length, factoryFunction) {
+    const result = new Array(length);
+
+    for (let i = 0; i < length; i++) {
+        result[i] = factoryFunction();
+    }
+
+    return result;
+}

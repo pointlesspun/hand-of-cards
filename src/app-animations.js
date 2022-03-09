@@ -33,7 +33,7 @@ import { CardGameComponent } from "./view/card-game-component.js";
     transform1.translation.y += 30 + Math.random() * 15;
     transform1.scale.x += 0.09;
     transform1.scale.y -= 0.09;
-    transform2.translation.y -= config.settings.getPlayAnimationY() * config.settings.getCardSize().height;
+    transform2.translation.y -= config.settings.layoutCollection.getPlayAnimationY() * config.settings.layoutCollection.getCardSize().height;
     transform2.rotation.y = 180;
 
     const text = `
@@ -67,7 +67,7 @@ CardGameComponent.ANIMATIONS.drawCard.createAnimationStyle = function({ idx, con
     const transform3 = targetTransform.clone();
     const style = {};
 
-    transform1.translation.y -= config.settings.getPlayAnimationY() * config.settings.getCardSize().height;
+    transform1.translation.y -= config.settings.layoutCollection.getPlayAnimationY() * config.settings.layoutCollection.getCardSize().height;
     transform1.rotation.y = 180;
 
     const transform2 = transform1.clone();

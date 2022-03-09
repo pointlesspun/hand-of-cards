@@ -11,6 +11,8 @@ import { Vector3 } from "./vector3.js";
  */
 export class Transform {
 
+    static IDENTITY = Object.freeze(new Transform());
+
     constructor(translation = new Vector3(), scale = new Vector3(1, 1, 1), rotation = new Vector3()) {
         /**
          * @type {Vector3}
@@ -28,6 +30,7 @@ export class Transform {
         this.rotation = rotation;
     }
 
+   
     clone() {
         return new Transform(this.translation.clone(), this.scale.clone(), this.rotation.clone());
     }
@@ -40,3 +43,4 @@ export class Transform {
             ` rotateZ(${this.rotation.z}deg)`;
     }
 }
+

@@ -24,7 +24,7 @@ class CardProperties {
 
 /**
  * Implements a carousel with game cards. ViewState properties:
- * 
+ *
  * - Cards: an array of cards created with the CardCarousel.create card method
  * - PlatformConfig: configuration of the window and client and settings as how to perform the layout given these window
  *   and client settings.
@@ -41,8 +41,8 @@ export class CardCarouselComponent extends React.Component {
         const centerCardIndex = props.isLocked ? this.calculateCenterCard(props.cards.length) : props.focusIndex;
 
         this.ref = React.createRef();
-        this.keyHandler = evt => this.handleKeyEvent(evt);
-        this.cardEventHandler = evt => this.handleCardEvent(evt);
+        this.keyHandler = (evt) => this.handleKeyEvent(evt);
+        this.cardEventHandler = (evt) => this.handleCardEvent(evt);
 
         this.animationCount = 0;
 
@@ -52,6 +52,7 @@ export class CardCarouselComponent extends React.Component {
             focusIndex: props.focusIndex,
             centerCardIndex,
             isLocked: props.isLocked,
+            style: props.style,
         };
     }
 
@@ -59,7 +60,7 @@ export class CardCarouselComponent extends React.Component {
 
     render() {
         const config = this.state.platformConfig;
-        const innerHeight = config ? config.settings.getInnerHeight() : 1.0;
+        const innerHeight = config ? config.settings.layoutCollection.getInnerHeight() : 1.0;
 
         const carouselProperties = {
             className: "carousel",
@@ -67,26 +68,16 @@ export class CardCarouselComponent extends React.Component {
             // Use the tabIndex to listen for key events from the div in case the scope is not useGlobalEventScope
             tabIndex: this.props.useGlobalEventScope ? undefined : 0,
             style: {
+                ...this.state.style,
                 // take the height from the platform specific settings
-                height: `${innerHeight * 100}%`,
+                //height: `${innerHeight * 100}%`,
             },
         };
-
-        // need the inner part to clip the cards at the bottom
-        // otherwise the cards may overlay the buttons in the control panel
-        const childProperties = {
-            className: "inner",
-            key: `${carouselProperties.key}-inner`,
-        };
-
-        // only when a media configuration is known create the card elements
-        // otherwise we have no information to base the transforms on
-        const cardElements = config === null ? [] : this.renderCards(config);
 
         return React.createElement(
             ELEMENT_TYPES.DIV,
             carouselProperties,
-            React.createElement(ELEMENT_TYPES.DIV, childProperties, cardElements)
+            config === null ? [] : this.renderCards(config)
         );
     }
 
@@ -111,7 +102,7 @@ export class CardCarouselComponent extends React.Component {
 
     // --- Subcomponent rendering -------------------------------------------------------------------------------------
 
-    renderCards = config =>
+    renderCards = (config) =>
         this.state.cards.map((cardReference, index) =>
             React.createElement(CardComponent, {
                 ref: cardReference.ref,
@@ -122,7 +113,7 @@ export class CardCarouselComponent extends React.Component {
                 eventHandler: this.cardEventHandler,
                 hasFocus: this.state.focusIndex === index,
                 platformConfig: config,
-                transform: config.settings.calculateTransform(
+                transform: config.settings.layoutCollection.calculateTransform(
                     config.clientSize,
                     this.state.cards.length,
                     index,
@@ -358,17 +349,20 @@ export class CardCarouselComponent extends React.Component {
     }
 
     /**
-     * 
+     *
      * @param {[number]} cardIndices is an array of indices mapping to card.state.index
      * @param {number} focusIndex new focus index after the cards have been removed
      */
     removeCards(cardIndices, focusIndex) {
-        this.setCards( this.state.cards.filter( card => !cardIndices.includes(card.ref.current.state.index)), focusIndex);
+        this.setCards(
+            this.state.cards.filter((card) => !cardIndices.includes(card.ref.current.state.index)),
+            focusIndex
+        );
     }
 
     /**
      * Add the given cards to this carousel
-     * @param {[CardProperties]} cards 
+     * @param {[CardProperties]} cards
      * @param {number} [focusIndex = this.state.focusIndex]
      */
     addCards(cards, focusIndex) {
@@ -376,19 +370,24 @@ export class CardCarouselComponent extends React.Component {
     }
 
     setPlatformConfig(platformConfig) {
-        
         this.setState({ platformConfig });
-        this.forEachCard(card => {
-            this.updateCardTransform(card, card.getIndex(), this.state.focusIndex, this.state.centerCardIndex, this.state.cards.length);
+        this.forEachCard((card) => {
+            this.updateCardTransform(
+                card,
+                card.getIndex(),
+                this.state.focusIndex,
+                this.state.centerCardIndex,
+                this.state.cards.length
+            );
             card.setPlatformConfig(platformConfig);
         });
     }
 
     /**
-     * 
+     *
      * @param {number} focusIndex  which card should get focus
      * @param {boolean} updateCenterCard if true (default) also recalculates the center card. False makes sense
-     * for cases like mouse over. 
+     * for cases like mouse over.
      */
     setFocusIndex(focusIndex, updateCenterCard = true) {
         if (updateCenterCard) {
@@ -397,27 +396,33 @@ export class CardCarouselComponent extends React.Component {
                 : focusIndex;
 
             this.setState({ focusIndex, centerCardIndex });
-            this.forEachCard(card => {
+            this.forEachCard((card) => {
                 const cardIndex = card.getIndex();
                 this.updateCardTransform(card, cardIndex, focusIndex, centerCardIndex, this.state.cards.length);
                 card.setHasFocus(cardIndex === focusIndex);
             });
         } else {
             this.setState({ focusIndex });
-            this.forEachCard(card => {
+            this.forEachCard((card) => {
                 const cardIndex = card.getIndex();
-                this.updateCardTransform(card, cardIndex, focusIndex, this.state.centerCardIndex, this.state.cards.length);
+                this.updateCardTransform(
+                    card,
+                    cardIndex,
+                    focusIndex,
+                    this.state.centerCardIndex,
+                    this.state.cards.length
+                );
                 card.setHasFocus(cardIndex === focusIndex);
             });
         }
     }
 
-    getCard = idx => (idx >= 0 && idx < this.state.cards.length ? this.state.cards[idx].ref?.current : null);
+    getCard = (idx) => (idx >= 0 && idx < this.state.cards.length ? this.state.cards[idx].ref?.current : null);
 
     /**
      * Toggle the lock mode
      */
-     setIsLocked(isLocked) {
+    setIsLocked(isLocked) {
         const centerIndex = isLocked ? this.calculateCenterCard(this.state.cards.length) : this.state.focusIndex;
 
         this.setState({
@@ -425,7 +430,9 @@ export class CardCarouselComponent extends React.Component {
             centerCardIndex: centerIndex,
         });
 
-        this.forEachCard(card => this.updateCardTransform(card, card.getIndex(), this.state.focusIndex, centerIndex, this.state.cards.length));
+        this.forEachCard((card) =>
+            this.updateCardTransform(card, card.getIndex(), this.state.focusIndex, centerIndex, this.state.cards.length)
+        );
     }
 
     isLocked = () => this.state.isLocked;
@@ -436,17 +443,29 @@ export class CardCarouselComponent extends React.Component {
         // does the state change ?
         if (card.state.isSelected != isSelected) {
             card.setSelected(isSelected);
-            this.updateCardTransform(card, idx, this.state.focusIndex, this.state.centerCardIndex, this.state.cards.length);
+            this.updateCardTransform(
+                card,
+                idx,
+                this.state.focusIndex,
+                this.state.centerCardIndex,
+                this.state.cards.length
+            );
         }
     }
 
-    isCardSelected = idx => this.getCard(idx).state.isSelected;
+    isCardSelected = (idx) => this.getCard(idx).state.isSelected;
+
+    setStyle(style) {
+        this.setState({
+            style,
+        });
+    }
 
     // --- Utility methods  -------------------------------------------------------------------------------------------
 
     updateCardTransform(card, idx, focusIndex, centerIndex, cardCount) {
         card.setTransform(
-            this.state.platformConfig.settings.calculateTransform(
+            this.state.platformConfig.settings.layoutCollection.calculateTransform(
                 this.state.platformConfig.clientSize,
                 cardCount,
                 idx,
@@ -468,7 +487,7 @@ export class CardCarouselComponent extends React.Component {
         const cardsLeft = this.state.cards.length - this.countSelectedCards();
         const centerIndex = this.state.isLocked ? this.calculateCenterCard(cardsLeft) : focusIndex;
 
-        this.forEachCard(card => {
+        this.forEachCard((card) => {
             if (card.state.isSelected) {
                 card.setAnimation(animation);
             } else {
@@ -481,10 +500,9 @@ export class CardCarouselComponent extends React.Component {
         });
 
         if (immediatelyFoldCards) {
-            this.setState({focusIndex});
+            this.setState({ focusIndex });
         }
     }
-   
 
     /**
      * Count the number of cards that have been selected.
@@ -512,5 +530,5 @@ export class CardCarouselComponent extends React.Component {
         });
     }
 
-    calculateCenterCard = cardCount => (cardCount % 2 == 0 ? cardCount / 2 - 0.5 : Math.floor(cardCount / 2));
+    calculateCenterCard = (cardCount) => (cardCount % 2 == 0 ? cardCount / 2 - 0.5 : Math.floor(cardCount / 2));
 }

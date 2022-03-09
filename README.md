@@ -76,9 +76,15 @@ This project was created while learning React and is currently very much under d
 * Try some optimization(s) for less powerful devices (aka phones).
 * Add (example) rule to card allowing cards to be played (or not)
 * Test multiple players
+  * [done] Carousel transforms
+  * add carousel container
+  * fix event handlers to only take input from active player
+  * fix play animations
+  * hide other players cards (if set to do so)
+  * test with more players (up to 4)
   * Minify
   * Create separate demos. Current app being 'classic-single-player'
-  * Create one 'inner' per player
+  
 * Mouse drag cards like Slay the Spire/ Hardstone
 * Refactor indicator to match the 'correct' react model.
 * Refactor & add documentation.
