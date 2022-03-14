@@ -77,9 +77,11 @@ This project was created while learning React and is currently very much under d
 * Add (example) rule to card allowing cards to be played (or not)
 * Test multiple players
   * [done] Carousel transforms
-  * add carousel container
-  * fix event handlers to only take input from active player
-  * fix play animations
+  * [done] add carousel container
+  * [done] fix event handlers to only take input from active player
+  * move active player to model
+  * add button to change active player
+  * fix play animations so play & draw go the right position
   * hide other players cards (if set to do so)
   * test with more players (up to 4)
   * Minify
@@ -89,6 +91,13 @@ This project was created while learning React and is currently very much under d
 * Refactor indicator to match the 'correct' react model.
 * Refactor & add documentation.
 * Add jsx (or htm) variation.
+
+#### Longer term goals
+
+* Create solitaire demo
+* Create Uno like demo
+* Create minimal Slay the Spire like Demo
+* Create minimal Hearthstone like demo
 
 ## Credits
 

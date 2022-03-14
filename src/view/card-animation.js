@@ -4,6 +4,9 @@ import { contract } from "../framework/contract.js";
 import { Transform } from "../framework/transform.js";
 import { Vector3 } from "../framework/vector3.js";
 
+/**
+ * Class implementing the details around an animation of a card.
+ */
 export class CardAnimation {
     /**
      * @type  {string}
@@ -11,21 +14,26 @@ export class CardAnimation {
     name = "";
 
     /**
+     * A function which returns a css style describing the animation
      * @type
      */
     createAnimationStyle = null;
 
     /**
+     * Starting transform of the animation (key 0)
      * @type {Transform}
      */
     startTransform = null;
 
     /**
+     * Last transform of the animation (key length  -1)
      * @type {Transform}
      */
     endTransform = null;
 
     /**
+     * Flag indicating if the target object (ie a card) should be deleted at the end 
+     * of the animation
      * @type {boolean}
      */
     deleteOnEnd = false;

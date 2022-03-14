@@ -16,6 +16,14 @@ html, body {
     height: 100%;
 }
 
+.carousel-container {
+    width: 100%;
+    height: 85%;
+    overflow: hidden;
+    position: relative;
+}
+
+
 .carousel {
     overflow: hidden;
     /*transform: rotateZ(0deg) scale3d(0.8, 0.8, 0.8) translate3d(0px, 0px, 0px);*/
@@ -58,6 +66,7 @@ html, body {
     border-radius: 32px;
     backface-visibility:hidden;
 }
+
 
 
 .card-counter {

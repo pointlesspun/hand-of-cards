@@ -53,6 +53,7 @@ export class CardCarouselComponent extends React.Component {
             centerCardIndex,
             isLocked: props.isLocked,
             style: props.style,
+            playerIndex: props.playerIndex
         };
     }
 
@@ -141,7 +142,7 @@ export class CardCarouselComponent extends React.Component {
     dispatchEvent(detailName, detailParameters) {
         this.ref.current.dispatchEvent(
             new CustomEvent(CAROUSEL_EVENT_NAME, {
-                detail: new CardCarouselDetails(detailName, detailParameters),
+                detail: new CardCarouselDetails(detailName, this.state.playerIndex, detailParameters),
                 bubbles: true,
                 cancelable: true,
                 composed: false,

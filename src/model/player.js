@@ -159,14 +159,16 @@ export class Player {
     /**
      * Draw random cards and put them in the hand of the players
      *
-     * @param {number} cardCount
+     * @param {number} cardCount number of cards to draw, if undefined or negative will draw as many cards as possible
      * @param {string} drawPile
      * @returns {[Card]|null}
      */
     drawRandomCards(cardCount, drawPile = DECK_NAME.LIBRARY) {
         contract.isString(drawPile);
 
-        const newCardCount = cardCount === undefined ? this.getMaxCards() - this.getCards().length : cardCount;
+        const newCardCount = cardCount === undefined || cardCount < 0 
+            ? this.getMaxCards() - this.getCards().length 
+            : cardCount;
 
         if (newCardCount > 0) {
             const newCards = this.getCardsFrom(newCardCount, drawPile);

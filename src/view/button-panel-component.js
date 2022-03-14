@@ -1,5 +1,8 @@
 import { IconButton, IconButtonPanelComponent } from "../framework/icon-button-panel-component.js";
 
+/**
+ * Component which contains all action buttons for a given card game.
+ */
 export class ButtonPanelComponent extends React.Component {
 
     constructor(props) {

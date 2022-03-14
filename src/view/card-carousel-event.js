@@ -32,8 +32,9 @@ export const CARD_CAROUSEL_EVENT_TYPES = {
 };
 
 export class CardCarouselDetails {
-    constructor(type, parameters) {
+    constructor(type, playerIndex, parameters) {
         this.type = type;
+        this.playerIndex = playerIndex;
         this.parameters = parameters;
     }
 }

@@ -233,7 +233,7 @@ export class CardGameModel {
     /**
      * Draw a number of random cards and add them to the hand of the player with the given index
      * @param {number} playerIndex id of the player
-     * @param {number} [cardCount] number of cards to draw, if undefined cards until the hand is full
+     * @param {number} [cardCount] number of cards to draw, if undefined or negative cards until the hand is full
      * @param {string} drawpile pile to draw cards from
      * @returns {[Card]} the cards drawn or null when no cards can be drawn
      */
