@@ -79,11 +79,17 @@ This project was created while learning React and is currently very much under d
   * [done] Carousel transforms
   * [done] add carousel container
   * [done] fix event handlers to only take input from active player
-  * move active player to model
+  * [done] move active player to model
   * add button to change active player
+  * Turn off focus card on anything but the active player
+  * Change carousel scale based on whether or not the player is active
+  
+  * Move card & deck counter to carousel-container
   * fix play animations so play & draw go the right position
-  * hide other players cards (if set to do so)
+
   * test with more players (up to 4)
+  * hide other players cards (if set to do so)
+  
   * Minify
   * Create separate demos. Current app being 'classic-single-player'
   

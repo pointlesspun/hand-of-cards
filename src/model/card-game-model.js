@@ -22,13 +22,19 @@ export const MAX_SELECTION_REACHED_POLICY = {
  * Main model capturing all information regarding a multiplayer card game.
  */
 export class CardGameModel {
-    constructor(players, maxCardsPolicy = MAX_SELECTION_REACHED_POLICY.BLOCK) {
+    constructor(players, activePlayer = 0, maxCardsPolicy = MAX_SELECTION_REACHED_POLICY.BLOCK) {
+        contract.isArray(players, "CardGameModel.constructor, players parameter is not an array.");
+        contract.isInRange(activePlayer, 0, players.length, `CardGameModel.constructor, activePlayer (${activePlayer}) is outside the range 0-${players.length}.`);
+        contract.isString(maxCardsPolicy);
+
         /**
          * Players participating in this game
          * @type {[Player]}
          * @public
          */
         this.players = players;
+
+        this.activePlayerIndex = activePlayer;
 
         this.players.forEach((player, index) => (player.index = index));
 
@@ -40,6 +46,21 @@ export class CardGameModel {
          */
         this.maxCardsReachedPolicy = maxCardsPolicy;
     }
+
+    /**
+     * Sets the player which is currently active
+     * @param {number} index 
+     */
+    setActivePlayer(index) {
+        contract.isInRange(playerIndex, 0, this.players.length);
+        this.activePlayerIndex = index;
+    }
+
+    /**
+     * 
+     * @returns {number} the index of the current active player
+     */
+    getActivePlayer = () => this.activePlayerIndex;
 
     /**
      * Sets the maximum number of cards the player can select.

@@ -84,7 +84,6 @@ export class CardGameComponent extends React.Component {
         this.state = {
             // platformConfig unknown until after the first render and we have a ref
             platformConfig: null,
-            activePlayer: 0,
             foldCardsPolicy: props.foldCardsPolicy ?? FOLD_CARDS_POLICY.AFTER_ANIMATION,
         };
     }
@@ -132,9 +131,9 @@ export class CardGameComponent extends React.Component {
         this.handleResize();
 
         // fill the hand with cards, 'showing off' the initial animation
-        if (this.props.initialCardCount === 0 || this.model.getCards(this.state.activePlayer).length < this.props.initialCardCount) {           
+        if (this.props.initialCardCount === 0 || this.model.getCards(this.model.getActivePlayer()).length < this.props.initialCardCount) {           
             this.drawCardsForAllPlayers(this.props.initialCardCount);
-            this.buttonPanelRef.current.setEnableDrawButton(this.props.initialCardCount < this.model.getMaxCards(this.state.activePlayer));
+            this.buttonPanelRef.current.setEnableDrawButton(this.props.initialCardCount < this.model.getMaxCards(this.model.getActivePlayer()));
         }
     }
 
@@ -203,7 +202,7 @@ export class CardGameComponent extends React.Component {
         };
 
         return React.createElement(ELEMENT_TYPES.DIV, properties, [
-            this.renderIndicators(this.model.getCards(this.state.activePlayer).length),
+            this.renderIndicators(this.model.getCards(this.model.getActivePlayer()).length),
             this.renderButtons(),
         ]);
     }
@@ -217,9 +216,9 @@ export class CardGameComponent extends React.Component {
             key: "indicators",
             ref: this.indicatorRef,
             dataCount,
-            activeIndex: this.model.getFocusIndex(this.state.activePlayer),
-            isDataSelected: (idx) => this.model.isCardSelected(this.state.activePlayer, idx), 
-            onClick: (idx) => this.setActiveIndex(idx, true, this.state.activePlayer),
+            activeIndex: this.model.getFocusIndex(this.model.getActivePlayer()),
+            isDataSelected: (idx) => this.model.isCardSelected(this.model.getActivePlayer(), idx), 
+            onClick: (idx) => this.setActiveIndex(idx, true, this.model.getActivePlayer()),
         });
     }
 
@@ -234,8 +233,8 @@ export class CardGameComponent extends React.Component {
             isLocked: this.props.isLocked,
             playButtonEnabled: false,
             drawButtonEnabled: false,
-            playHandler: () => this.playSelectedCards(this.state.activePlayer),
-            drawCardsHandler: () => this.drawCards(-1, this.state.activePlayer),
+            playHandler: () => this.playSelectedCards(this.model.getActivePlayer()),
+            drawCardsHandler: () => this.drawCards(-1, this.model.getActivePlayer()),
             toggleLockHandler: () => this.toggleLock(),
         });
     }
@@ -246,7 +245,7 @@ export class CardGameComponent extends React.Component {
             key: "deck-counter",
             className: "card-counter deck",
             startValue: 0,
-            goalValue: this.model.getDeck(this.state.activePlayer).getLength(),
+            goalValue: this.model.getDeck(this.model.getActivePlayer()).getLength(),
             minIncrement: 1.0,
             increment: 0.15,
             digits: 0,
@@ -259,7 +258,7 @@ export class CardGameComponent extends React.Component {
             key: "discard-pile-counter",
             className: "card-counter discard-pile",
             startValue: 0,
-            goalValue: this.model.getDiscardPile(this.state.activePlayer).getLength(),
+            goalValue: this.model.getDiscardPile(this.model.getActivePlayer()).getLength(),
             minIncrement: 1.0,
             increment: 0.15,
             digits: 0,
@@ -276,7 +275,7 @@ export class CardGameComponent extends React.Component {
         
         // (In the current implementation) we'll only accept events from the active player.
         // but this would be the place to select what events to let through for which player
-        if (evt.detail.playerIndex === this.state.activePlayer) {
+        if (evt.detail.playerIndex === this.model.getActivePlayer()) {
             this.handlePlayerCarouselEvent(evt, evt.detail.playerIndex);
         }
     }
@@ -376,7 +375,7 @@ export class CardGameComponent extends React.Component {
         this.model.setFocusIndex(playerIndex, idx);
 
         // indicators only apply (in the current implementation) to the active player
-        if (playerIndex === this.state.activePlayer) {
+        if (playerIndex === this.model.getActivePlayer()) {
             this.indicatorRef.current.setActiveIndex(this.model.getFocusIndex(playerIndex));
         }
 
@@ -462,22 +461,21 @@ export class CardGameComponent extends React.Component {
      * @param {number} playerIndex the player to draw cards for
      */
     drawCards(count, playerIndex) {
-        const playerId = playerIndex ?? this.state.activePlayer;
-        const deck = this.model.getDeck(playerId);
+        const deck = this.model.getDeck(playerIndex);
 
         if (deck.getLength() === 0) {
-            this.model.shuffleDiscardPile(playerId);
-            this.discardCounterRef.current.setGoalValue(this.model.getDiscardPile(playerId).getLength());
+            this.model.shuffleDiscardPile(playerIndex);
+            this.discardCounterRef.current.setGoalValue(this.model.getDiscardPile(playerIndex).getLength());
         }
 
-        const newCards = this.model.drawRandomCards(playerId, count, DECK_NAME.DECK);
+        const newCards = this.model.drawRandomCards(playerIndex, count, DECK_NAME.DECK);
 
         if (newCards) {                       
-            this.buttonPanelRef.current.setEnableDrawButton(this.model.getCards(playerId).length < this.model.getMaxCards(playerId));
-            this.indicatorRef.current.setDataCount(this.model.getCards(playerId).length);
-            this.carouselRefs[playerId].current.addCards(
+            this.buttonPanelRef.current.setEnableDrawButton(this.model.getCards(playerIndex).length < this.model.getMaxCards(playerIndex));
+            this.indicatorRef.current.setDataCount(this.model.getCards(playerIndex).length);
+            this.carouselRefs[playerIndex].current.addCards(
                 newCards.map((card) => CardCarouselComponent.createCard(card.definition, CardGameComponent.ANIMATIONS.drawCard)),
-                this.model.getFocusIndex(playerId)
+                this.model.getFocusIndex(playerIndex)
             );
             this.drawCounterRef.current.setGoalValue(deck.getLength());
         }
@@ -485,7 +483,7 @@ export class CardGameComponent extends React.Component {
 
     toggleLock() {
         const isLocked = !this.buttonPanelRef.current.isLocked();
-        this.carouselRefs[this.state.activePlayer].current.setIsLocked(isLocked);
+        this.carouselRefs[this.model.getActivePlayer()].current.setIsLocked(isLocked);
         this.buttonPanelRef.current.setIsLocked(isLocked);
     }
 

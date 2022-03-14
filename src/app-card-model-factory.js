@@ -57,5 +57,5 @@ export function createCardGameModel({
         );
     }
 
-    return new CardGameModel(players, selectionCyclePolicy);
+    return new CardGameModel(players, 0, selectionCyclePolicy);
 }
