@@ -13,7 +13,8 @@ export class ButtonPanelComponent extends React.Component {
             isDrawButtonEnabled: props.drawButtonEnabled,
             playHandler: props.playHandler,
             drawCardsHandler: props.drawCardsHandler,
-            toggleLockHandler: props.toggleLockHandler
+            toggleLockHandler: props.toggleLockHandler,
+            nextPlayerHandler: props.nextPlayerHandler,
         }
     }
 
@@ -36,6 +37,10 @@ export class ButtonPanelComponent extends React.Component {
                 ),
                 new IconButton(`button-panel-button ${this.state.isLocked ? "lock-button" : "lock-button-open"}`, () =>
                     this.state.toggleLockHandler()
+                ),
+                new IconButton(`md-64 defaultColor material-panel-button`, () =>
+                    this.state.nextPlayerHandler(),
+                    "next_plan"
                 ),
             ],
         });

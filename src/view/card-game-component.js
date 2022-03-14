@@ -236,6 +236,7 @@ export class CardGameComponent extends React.Component {
             playHandler: () => this.playSelectedCards(this.model.getActivePlayer()),
             drawCardsHandler: () => this.drawCards(-1, this.model.getActivePlayer()),
             toggleLockHandler: () => this.toggleLock(),
+            nextPlayerHandler: () => this.setActivePlayer((this.model.getActivePlayer() + 1) % this.model.getPlayerCount())
         });
     }
 
@@ -485,6 +486,10 @@ export class CardGameComponent extends React.Component {
         const isLocked = !this.buttonPanelRef.current.isLocked();
         this.carouselRefs[this.model.getActivePlayer()].current.setIsLocked(isLocked);
         this.buttonPanelRef.current.setIsLocked(isLocked);
+    }
+
+    setActivePlayer(index) {
+        this.model.setActivePlayer(index);
     }
 
     // --- Utility methods  -------------------------------------------------------------------------------------------

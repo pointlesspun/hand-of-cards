@@ -37,6 +37,10 @@
     margin-right: var(--button-margin);
 }
 
+.button-panel-button:hover {
+    cursor:pointer;
+}
+
 .button-panel-button.refill-button {
     -webkit-mask-image: url('../data/draw-cards.svg');
     mask-image: url('../data/draw-cards.svg');  
@@ -80,5 +84,31 @@
 
 .play-button:active {
     background-color: var(--selection-color);
+    transform: scale(0.9, 0.9);
+}
+
+.material-panel-button {
+    transition: transform color 0.05s;
+    transform: scale(1.0, 1.0);
+
+    width: var(--button-size);
+    height: var(--button-size);
+    margin-left: var(--button-margin);
+    margin-right: var(--button-margin);
+    font-size: 64px;
+
+    user-select: none;
+}
+
+.material-panel-button:hover {
+    cursor:pointer;
+}
+
+.material-icons.defaultColor {
+    color: var(--button-color);
+}
+
+.material-icons.defaultColor:active {
+    color: var(--selection-color);
     transform: scale(0.9, 0.9);
 }

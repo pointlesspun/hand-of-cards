@@ -52,7 +52,7 @@ export class CardGameModel {
      * @param {number} index 
      */
     setActivePlayer(index) {
-        contract.isInRange(playerIndex, 0, this.players.length);
+        contract.isInRange(index, 0, this.players.length);
         this.activePlayerIndex = index;
     }
 

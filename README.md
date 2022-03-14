@@ -80,20 +80,24 @@ This project was created while learning React and is currently very much under d
   * [done] add carousel container
   * [done] fix event handlers to only take input from active player
   * [done] move active player to model
-  * add button to change active player
+  * [done] add button to change active player
+
   * Turn off focus card on anything but the active player
+  * Update indicators & button state based on active player
   * Change carousel scale based on whether or not the player is active
   
   * Move card & deck counter to carousel-container
   * fix play animations so play & draw go the right position
 
-  * test with more players (up to 4)
-  * hide other players cards (if set to do so)
-  
-  * Minify
-  * Create separate demos. Current app being 'classic-single-player'
-  
+  * hide other players cards (if set to do so)  
+  * test with more players (up to 4)   
+  * add tooltips
+
 * Mouse drag cards like Slay the Spire/ Hardstone
+
+* Minify
+* Create separate demos. Current app being 'classic-single-player'
+  
 * Refactor indicator to match the 'correct' react model.
 * Refactor & add documentation.
 * Add jsx (or htm) variation.
