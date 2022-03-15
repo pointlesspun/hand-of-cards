@@ -23,6 +23,7 @@ import { Size } from "../framework/size.js";
 import { CardAnimation } from "./card-animation.js";
 import { Transform } from "../framework/transform.js";
 import { newArray } from "../framework/arrays.js";
+import { contract } from "../framework/contract.js";
 
 export const FOLD_CARDS_POLICY = {
     /** Fold cards after the play cards animation has finished */
@@ -183,7 +184,8 @@ export class CardGameComponent extends React.Component {
             // if will listen to events on its component
             useGlobalEventScope: true,
             transform: style,
-            playerIndex
+            playerIndex,
+            isActive: playerIndex === this.model.getActivePlayer()
         };        
 
         return React.createElement(CardCarouselComponent, carouselProperties);
@@ -276,7 +278,9 @@ export class CardGameComponent extends React.Component {
         
         // (In the current implementation) we'll only accept events from the active player.
         // but this would be the place to select what events to let through for which player
-        if (evt.detail.playerIndex === this.model.getActivePlayer()) {
+        if (evt.detail.playerIndex === this.model.getActivePlayer() 
+            // animation events still need to be handled otherwise animations may freeze mid activity
+            || evt.detail.type === CARD_CAROUSEL_EVENT_TYPES.ANIMATION_COMPLETE) {
             this.handlePlayerCarouselEvent(evt, evt.detail.playerIndex);
         }
     }
@@ -383,8 +387,16 @@ export class CardGameComponent extends React.Component {
         this.carouselRefs[playerIndex].current.setFocusIndex(this.model.getFocusIndex(playerIndex), updateCenterCard);
     }
 
-    selectCard(idx, isSelected, playerIndex) {
-        const updatedCards = this.model.updateCardSelection(playerIndex, idx, isSelected);
+    /**
+     * Selects or deselects a card. When the user performs the 'play' action, the selected cards
+     * will be removed from the hand and moved to the discard pile.
+     * 
+     * @param {number} index of the card to change the isSelected state
+     * @param {boolean} isSelected flag indicating whether or not the card is selected
+     * @param {number} playerIndex index of the player 
+     */
+    selectCard(index, isSelected, playerIndex) {
+        const updatedCards = this.model.updateCardSelection(playerIndex, index, isSelected);
 
         // did any of the cards change state ?
         if (updatedCards !== null) {
@@ -448,6 +460,11 @@ export class CardGameComponent extends React.Component {
         }
     }
 
+    /**
+     * For all players in this game draw 'count' cards. If count is undefined or negative
+     * the max number of cards will be drawn.
+     * @param {number} count 
+     */
     drawCardsForAllPlayers(count) {
         const playerCount = this.model.getPlayerCount();
 
@@ -482,14 +499,33 @@ export class CardGameComponent extends React.Component {
         }
     }
 
+    /**
+     * Inverses the lock state of the current active player. When locked the cards do not move when the player browses
+     * through them. When unlocked the center of the cards move with the current focused card.
+     */
     toggleLock() {
         const isLocked = !this.buttonPanelRef.current.isLocked();
         this.carouselRefs[this.model.getActivePlayer()].current.setIsLocked(isLocked);
         this.buttonPanelRef.current.setIsLocked(isLocked);
     }
 
+    /**
+     * Set the active player
+     * @param {number} index the index of the player to change to
+     */
     setActivePlayer(index) {
-        this.model.setActivePlayer(index);
+        contract.isInRange(index, 0, this.model.getPlayerCount());
+
+        if (index !== this.model.getActivePlayer()) {
+            this.model.setActivePlayer(index);
+
+            this.forEachCarousel((carousel, carouselIndex) => carousel.setIsActive(carouselIndex === index));
+            
+            this.indicatorRef.current.setDataCount(this.model.getCards(index).length);
+            this.buttonPanelRef.current.setEnableDrawButton(this.model.getCards(index).length < this.model.getMaxCards(index));
+            this.buttonPanelRef.current.setEnablePlayButton(this.model.countSelectedCards(index) > 0);
+            this.buttonPanelRef.current.setIsLocked(this.carouselRefs[index].current.isLocked());
+        }
     }
 
     // --- Utility methods  -------------------------------------------------------------------------------------------

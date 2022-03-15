@@ -98,13 +98,17 @@ const baseScale1 = 0.6;
 const CAROUSEL_STYLES = [
     {
         height: "100%",
+        width: `100%`,
         bottom: `${-(1-baseScale0) * 50}%`,
+        left: "0px",
         transformOrigin: "center center",
         transform: new Transform(new Vector3(0, 0, 0), Vector3.ONE.multiply(baseScale0), Vector3.ZERO).toCss(),
     },
     {
         height: "100%",
+        width: `100%`,
         top: `${-(1-baseScale1) * 50}%`,
+        left: "0px",
         transformOrigin: "center center",
         transform: new Transform(new Vector3(0, 0, 0), Vector3.ONE.multiply(baseScale1), new Vector3(180, 0, 0)).toCss(),
     }

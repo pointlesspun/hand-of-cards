@@ -82,9 +82,11 @@ This project was created while learning React and is currently very much under d
   * [done] move active player to model
   * [done] add button to change active player
 
-  * Turn off focus card on anything but the active player
-  * Update indicators & button state based on active player
+  * [done] Turn off focus card on anything but the active player
+    * [done] Fix bug with indicators when switching players
+  * [done] Update indicators & button state based on active player
   * Change carousel scale based on whether or not the player is active
+  * Fix width of carousel
   
   * Move card & deck counter to carousel-container
   * fix play animations so play & draw go the right position

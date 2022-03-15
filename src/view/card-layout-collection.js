@@ -63,7 +63,7 @@ export class CardLayoutCollection {
      * @param {boolean} isSelected indicates if the card is selected or not
      * @returns {Transform}
      */
-    calculateTransform(clientSize, cardCount, index, focusIndex, centerCardIndex, isSelected) {
+    calculateTransform(clientSize, cardCount, index, focusIndex, centerCardIndex, isSelected, isPlayerActive) {
         if (cardCount !== this.cardCount) {
             this.selectLayout(cardCount);
         }
@@ -74,7 +74,8 @@ export class CardLayoutCollection {
             index,
             focusIndex,
             centerCardIndex,
-            isSelected
+            isSelected,
+            isPlayerActive
         );
     }
 

@@ -23,18 +23,16 @@ html, body {
     position: relative;
 }
 
-
 .carousel {
     overflow: hidden;
     white-space: nowrap;    
-    width: 100%;
-    height: 100%;
+    /*width: 100%;
+    height: 100%;*/
     /** 
      * used to make sure the z index is preserved 
      * see https://stackoverflow.com/questions/20851452/z-index-is-canceled-by-setting-transformrotatecss (comment by GYTO)
      */
     transform-style: preserve-3d;
-    /*backface-visibility:hidden;*/
     position: absolute;
 }
 

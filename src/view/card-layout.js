@@ -126,12 +126,12 @@ export class CardLayout {
      * @param {boolean} isSelected indicates if the card is selected or not
      * @returns {Transform}
      */
-    calculateTransform(clientSize, cardCount, index, focusIndex, centerCardIndex, isSelected) {
+    calculateTransform(clientSize, cardCount, index, focusIndex, centerCardIndex, isSelected, isPlayerActive) {
         // size of the div containing these cards
         const parentHeight = clientSize.height /** this.innerHeight*/;
 
         // is the current card active (the one in the center which the user is working with) ?
-        const hasFocus = index === focusIndex;
+        const hasFocus = isPlayerActive && index === focusIndex;
 
         // center of the parent x axis
         const parentCenterX = clientSize.width / 2;
