@@ -73,23 +73,28 @@ const LARGE_DEVICE_CARD_LAYOUT = [
     // layout applied when the hand contains 3 or less cards
     new CardLayout({
         maxCardCount: 3,
-        baseScale: 1,
+        baseScale: 0.5,
         dynamicScale: 0,
         rotation: 0,
-        xTranslation: 362,
+        xTranslation: 181,
     }),
 
     // layout applied when the hand contains 5 or less cards
     new CardLayout({
         maxCardCount: 5,
-        baseScale: 0.9,
-        dynamicScale: 0.1,
+        baseScale: 0.3,
+        dynamicScale: 0.2,
         rotation: 2,
-        xTranslation: 260,
+        xTranslation: 130,
     }),
 
     // default layout applied when none of the other layouts apply
-    new CardLayout(),
+    new CardLayout({
+        baseScale: 0.25,
+        dynamicScale: 0.175,
+        rotation: 4,
+        xTranslation: 120,
+    }),
 ];
 
 const baseScale0 = 0.8;
@@ -98,9 +103,9 @@ const baseScale1 = 0.6;
 const CAROUSEL_STYLES = [
     {
         height: "100%",
-        width: `100%`,
+        width: `125%`,
         bottom: `${-(1-baseScale0) * 50}%`,
-        left: "0px",
+        left: "-12.5%",
         transformOrigin: "center center",
         transform: new Transform(new Vector3(0, 0, 0), Vector3.ONE.multiply(baseScale0), Vector3.ZERO).toCss(),
     },

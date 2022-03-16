@@ -183,7 +183,8 @@ export class CardGameComponent extends React.Component {
             // if set to true the carousel will listen for events on globalThis, otherwise
             // if will listen to events on its component
             useGlobalEventScope: true,
-            transform: style,
+            //style,
+            //transform: style,
             playerIndex,
             isActive: playerIndex === this.model.getActivePlayer()
         };        
@@ -362,7 +363,6 @@ export class CardGameComponent extends React.Component {
         // update the media config for each carousel 
         this.forEachCarousel((carousel, index) => {
             carousel.setPlatformConfig(platformConfig);
-            carousel.setStyle(platformConfig.settings.carouselStyles[index]);
         });
 
         if (this.drawCounterRef.current && this.discardCounterRef.current) {

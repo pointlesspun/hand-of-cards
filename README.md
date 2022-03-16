@@ -85,8 +85,9 @@ This project was created while learning React and is currently very much under d
   * [done] Turn off focus card on anything but the active player
     * [done] Fix bug with indicators when switching players
   * [done] Update indicators & button state based on active player
-  * Change carousel scale based on whether or not the player is active
   * Fix width of carousel
+    * Clean up left overs, make note of how to deal with width and scale (also fix test)
+  * Change carousel scale based on whether or not the player is active
   
   * Move card & deck counter to carousel-container
   * fix play animations so play & draw go the right position
@@ -96,6 +97,7 @@ This project was created while learning React and is currently very much under d
   * add tooltips
 
 * Mouse drag cards like Slay the Spire/ Hardstone
+* Shared draw/discard pile
 
 * Minify
 * Create separate demos. Current app being 'classic-single-player'

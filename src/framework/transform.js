@@ -30,7 +30,8 @@ export class Transform {
         this.rotation = rotation;
     }
 
-   
+    translate = (x, y, z) => new Transform(this.translation.add(x, y, z), this.scale, this.rotation);
+        
     clone() {
         return new Transform(this.translation.clone(), this.scale.clone(), this.rotation.clone());
     }

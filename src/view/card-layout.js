@@ -90,10 +90,10 @@ export class CardLayout {
 
     constructor({
         maxCardCount = -1,
-        innerHeight = 0.845,
+        innerHeight = 0.85,
         playAnimationY = 0.4,
         cardSize = new Size(360, 540),
-        baseScale = 0.75,
+        baseScale = 0.5,
         dynamicScale = 0.25,
         rotation = 4,
         xTranslation = 180,

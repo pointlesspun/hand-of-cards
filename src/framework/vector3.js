@@ -24,4 +24,6 @@ export class Vector3 {
     }
 
     multiply = (scalar) => new Vector3(this.x * scalar, this.y * scalar, this.z * scalar);
+
+    add = (x, y, z) => new Vector3(this.x + x, this.y + y, this.z + z);
 }

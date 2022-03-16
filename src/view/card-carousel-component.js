@@ -5,6 +5,7 @@ import { ANIMATION_EVENT_TYPE } from "../framework/animation-utilities.js";
 import { CardComponent } from "./card-component.js";
 import { CARD_EVENT_TYPES } from "./card-event.js";
 import { CardCarouselDetails, CARD_CAROUSEL_EVENT_TYPES, CAROUSEL_EVENT_NAME } from "./card-carousel-event.js";
+import { Size } from "../framework/size.js";
 
 /**
  * Internal class keeping track of the card references and initial properties
@@ -52,7 +53,7 @@ export class CardCarouselComponent extends React.Component {
             focusIndex: props.focusIndex,
             centerCardIndex,
             isLocked: props.isLocked,
-            style: props.style,
+            //style: props.style,
             playerIndex: props.playerIndex,
             isActive: props.isActive,
         };
@@ -62,13 +63,14 @@ export class CardCarouselComponent extends React.Component {
 
     render() {
         const config = this.state.platformConfig;
+        const directions = ["south", "north"];
+        const className = `carousel ${directions[this.state.playerIndex]} ${this.state.isActive ? "focus" : ""}`;
 
         const carouselProperties = {
-            className: "carousel",
+            className,
             ref: this.ref,
             // Use the tabIndex to listen for key events from the div in case the scope is not useGlobalEventScope
             tabIndex: this.props.useGlobalEventScope ? undefined : 0,
-            style: this.state.style,
         };
 
         return React.createElement(
@@ -79,6 +81,7 @@ export class CardCarouselComponent extends React.Component {
     }
 
     componentDidMount() {
+
         if (this.props.useGlobalEventScope) {
             globalThis.addEventListener("keyup", this.keyHandler);
         } else {
@@ -99,9 +102,13 @@ export class CardCarouselComponent extends React.Component {
 
     // --- Subcomponent rendering -------------------------------------------------------------------------------------
 
-    renderCards = (config) =>
-        this.state.cards.map((cardReference, index) =>
-            React.createElement(CardComponent, {
+    getSize = () => new Size(this.ref.current.clientWidth, this.ref.current.clientHeight);
+
+    renderCards = (config) => {
+        const size = this.getSize();
+
+        return this.state.cards.map((cardReference, index) => {
+            return React.createElement(CardComponent, {
                 ref: cardReference.ref,
                 key: cardReference.key,
                 index,
@@ -111,7 +118,7 @@ export class CardCarouselComponent extends React.Component {
                 hasFocus: this.state.isActive && this.state.focusIndex === index,
                 platformConfig: config,
                 transform: config.settings.layoutCollection.calculateTransform(
-                    config.clientSize,
+                    size,
                     this.state.cards.length,
                     index,
                     this.state.focusIndex,
@@ -119,8 +126,9 @@ export class CardCarouselComponent extends React.Component {
                     false,
                     this.state.isActive
                 ),
-            })
-        );
+            });
+        });
+    };
 
     // --- Event handlers ---------------------------------------------------------------------------------------------
 
@@ -376,7 +384,8 @@ export class CardCarouselComponent extends React.Component {
                 this.state.focusIndex,
                 this.state.centerCardIndex,
                 this.state.cards.length,
-                this.state.isActive
+                this.state.isActive,
+                platformConfig
             );
             card.setPlatformConfig(platformConfig);
         });
@@ -397,7 +406,14 @@ export class CardCarouselComponent extends React.Component {
             this.setState({ focusIndex, centerCardIndex });
             this.forEachCard((card) => {
                 const cardIndex = card.getIndex();
-                this.updateCardTransform(card, cardIndex, focusIndex, centerCardIndex, this.state.cards.length, this.state.isActive);
+                this.updateCardTransform(
+                    card,
+                    cardIndex,
+                    focusIndex,
+                    centerCardIndex,
+                    this.state.cards.length,
+                    this.state.isActive
+                );
                 card.setHasFocus(cardIndex === focusIndex);
             });
         } else {
@@ -431,7 +447,14 @@ export class CardCarouselComponent extends React.Component {
         });
 
         this.forEachCard((card) =>
-            this.updateCardTransform(card, card.getIndex(), this.state.focusIndex, centerIndex, this.state.cards.length, this.state.isActive)
+            this.updateCardTransform(
+                card,
+                card.getIndex(),
+                this.state.focusIndex,
+                centerIndex,
+                this.state.cards.length,
+                this.state.isActive
+            )
         );
     }
 
@@ -456,11 +479,22 @@ export class CardCarouselComponent extends React.Component {
 
     isCardSelected = (idx) => this.getCard(idx).state.isSelected;
 
-    setStyle(style) {
+    /*setStyle(style) {
         this.setState({
             style,
         });
-    }
+
+        this.forEachCard((card) => {
+            this.updateCardTransform(
+                card,
+                card.getIndex(),
+                this.state.focusIndex,
+                this.state.centerCardIndex,
+                this.state.cards.length,
+                this.state.isActive
+            );
+        });
+    }*/
 
     setIsActive(isActive) {
         if (isActive !== this.state.isActive) {
@@ -476,17 +510,27 @@ export class CardCarouselComponent extends React.Component {
                     isActive
                 );
 
-                card.setHasFocus(isActive && card.getIndex() === this.state.focusIndex);     
+                card.setHasFocus(isActive && card.getIndex() === this.state.focusIndex);
             });
         }
     }
 
     // --- Utility methods  -------------------------------------------------------------------------------------------
 
-    updateCardTransform(card, idx, focusIndex, centerIndex, cardCount, isActive) {
+    updateCardTransform(
+        card,
+        idx,
+        focusIndex,
+        centerIndex,
+        cardCount,
+        isActive,
+        platformConfig = this.state.platformConfig
+    ) {
+        const clientSize = new Size(this.ref.current.clientWidth, this.ref.current.clientHeight);
+
         card.setTransform(
-            this.state.platformConfig.settings.layoutCollection.calculateTransform(
-                this.state.platformConfig.clientSize,
+            platformConfig.settings.layoutCollection.calculateTransform(
+                clientSize,
                 cardCount,
                 idx,
                 focusIndex,
@@ -514,7 +558,14 @@ export class CardCarouselComponent extends React.Component {
             } else {
                 if (immediatelyFoldCards) {
                     card.setIndex(idx);
-                    this.updateCardTransform(card, idx, focusIndex, centerIndex, this.state.cards.length, this.state.isActive);
+                    this.updateCardTransform(
+                        card,
+                        idx,
+                        focusIndex,
+                        centerIndex,
+                        this.state.cards.length,
+                        this.state.isActive
+                    );
                 }
                 idx++;
             }
