@@ -53,7 +53,6 @@ export class CardCarouselComponent extends React.Component {
             focusIndex: props.focusIndex,
             centerCardIndex,
             isLocked: props.isLocked,
-            //style: props.style,
             playerIndex: props.playerIndex,
             isActive: props.isActive,
         };
@@ -63,25 +62,28 @@ export class CardCarouselComponent extends React.Component {
 
     render() {
         const config = this.state.platformConfig;
-        const directions = ["south", "north"];
-        const className = `carousel ${directions[this.state.playerIndex]} ${this.state.isActive ? "focus" : ""}`;
 
-        const carouselProperties = {
-            className,
-            ref: this.ref,
-            // Use the tabIndex to listen for key events from the div in case the scope is not useGlobalEventScope
-            tabIndex: this.props.useGlobalEventScope ? undefined : 0,
-        };
+        if (config) {
+            const classNames = config.settings.carouselClassNames;
+            const className = `carousel ${classNames[this.state.playerIndex]} ${this.state.isActive ? "focus" : ""}`;
 
-        return React.createElement(
-            ELEMENT_TYPES.DIV,
-            carouselProperties,
-            config === null ? [] : this.renderCards(config)
-        );
+            const carouselProperties = {
+                className,
+                ref: this.ref,
+                // Use the tabIndex to listen for key events from the div in case the scope is not useGlobalEventScope
+                tabIndex: this.props.useGlobalEventScope ? undefined : 0,
+            };
+
+            return React.createElement(ELEMENT_TYPES.DIV, carouselProperties, this.renderCards(config));
+        } else {
+            return React.createElement(ELEMENT_TYPES.DIV, {
+                ref:this.ref,
+                className: 'carousel',
+            }, []);
+        }
     }
 
     componentDidMount() {
-
         if (this.props.useGlobalEventScope) {
             globalThis.addEventListener("keyup", this.keyHandler);
         } else {
@@ -102,10 +104,8 @@ export class CardCarouselComponent extends React.Component {
 
     // --- Subcomponent rendering -------------------------------------------------------------------------------------
 
-    getSize = () => new Size(this.ref.current.clientWidth, this.ref.current.clientHeight);
-
     renderCards = (config) => {
-        const size = this.getSize();
+        const size = this.getClientSize();
 
         return this.state.cards.map((cardReference, index) => {
             return React.createElement(CardComponent, {
@@ -477,25 +477,17 @@ export class CardCarouselComponent extends React.Component {
         }
     }
 
-    isCardSelected = (idx) => this.getCard(idx).state.isSelected;
+    /**
+     * Checks if the card at the given index is selected
+     * @param {number} index 
+     * @returns {boolean} true the card is selected, false otherwise.
+     */
+    isCardSelected = (index) => this.getCard(index).state.isSelected;
 
-    /*setStyle(style) {
-        this.setState({
-            style,
-        });
-
-        this.forEachCard((card) => {
-            this.updateCardTransform(
-                card,
-                card.getIndex(),
-                this.state.focusIndex,
-                this.state.centerCardIndex,
-                this.state.cards.length,
-                this.state.isActive
-            );
-        });
-    }*/
-
+    /**
+     * Sets this carousel as active, which will change the class name and affects the state of the cards.
+     * @param {boolean} isActive 
+     */
     setIsActive(isActive) {
         if (isActive !== this.state.isActive) {
             this.setState({ isActive });
@@ -602,5 +594,16 @@ export class CardCarouselComponent extends React.Component {
         });
     }
 
+    /**
+     * 
+     * @param {number} cardCount 
+     * @returns {number} the index of the card which sits at the center.
+     */
     calculateCenterCard = (cardCount) => (cardCount % 2 == 0 ? cardCount / 2 - 0.5 : Math.floor(cardCount / 2));
+
+    /**
+     * 
+     * @returns {Size} the clientWidth/Height 
+     */
+    getClientSize = () => new Size(this.ref.current.clientWidth, this.ref.current.clientHeight);
 }

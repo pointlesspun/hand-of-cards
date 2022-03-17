@@ -85,12 +85,14 @@ This project was created while learning React and is currently very much under d
   * [done] Turn off focus card on anything but the active player
     * [done] Fix bug with indicators when switching players
   * [done] Update indicators & button state based on active player
-  * Fix width of carousel
-    * Clean up left overs, make note of how to deal with width and scale (also fix test)
-  * Change carousel scale based on whether or not the player is active
+  * [done] Fix width of carousel
+    * [done] Clean up left overs, make note of how to deal with width and scale (also fix test)
+  * [done] Change carousel scale based on whether or not the player is active
   
   * Move card & deck counter to carousel-container
   * fix play animations so play & draw go the right position
+  * update for small devices
+  * add player count to html properties 
 
   * hide other players cards (if set to do so)  
   * test with more players (up to 4)   

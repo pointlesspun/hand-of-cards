@@ -97,31 +97,11 @@ const LARGE_DEVICE_CARD_LAYOUT = [
     }),
 ];
 
-const baseScale0 = 0.8;
-const baseScale1 = 0.6;
+const CAROUSEL_CLASSNAMES = ["south", "north"];
 
-const CAROUSEL_STYLES = [
-    {
-        height: "100%",
-        width: `125%`,
-        bottom: `${-(1-baseScale0) * 50}%`,
-        left: "-12.5%",
-        transformOrigin: "center center",
-        transform: new Transform(new Vector3(0, 0, 0), Vector3.ONE.multiply(baseScale0), Vector3.ZERO).toCss(),
-    },
-    {
-        height: "100%",
-        width: `100%`,
-        top: `${-(1-baseScale1) * 50}%`,
-        left: "0px",
-        transformOrigin: "center center",
-        transform: new Transform(new Vector3(0, 0, 0), Vector3.ONE.multiply(baseScale1), new Vector3(180, 0, 0)).toCss(),
-    }
-]
-
-const SMALL_DEVICE_LANDSCAPE_LAYOUT_SETTINGS = new LayoutSettings(new CardLayoutCollection(SMALL_DEVICE_LANDSCAPE_CARD_LAYOUT), CAROUSEL_STYLES);
-const SMALL_DEVICE_PORTRAIT_LAYOUT_SETTINGS = new LayoutSettings(new CardLayoutCollection(SMALL_DEVICE_PORTRAIT_CARD_LAYOUT), CAROUSEL_STYLES);
-const LARGE_DEVICE_LAYOUT_SETTINGS = new LayoutSettings(new CardLayoutCollection(LARGE_DEVICE_CARD_LAYOUT), CAROUSEL_STYLES);
+const SMALL_DEVICE_LANDSCAPE_LAYOUT_SETTINGS = new LayoutSettings(new CardLayoutCollection(SMALL_DEVICE_LANDSCAPE_CARD_LAYOUT), CAROUSEL_CLASSNAMES);
+const SMALL_DEVICE_PORTRAIT_LAYOUT_SETTINGS = new LayoutSettings(new CardLayoutCollection(SMALL_DEVICE_PORTRAIT_CARD_LAYOUT), CAROUSEL_CLASSNAMES);
+const LARGE_DEVICE_LAYOUT_SETTINGS = new LayoutSettings(new CardLayoutCollection(LARGE_DEVICE_CARD_LAYOUT), CAROUSEL_CLASSNAMES);
 
 /*
  * Configurations used in the demo to adapt to different screen sizes and game states.

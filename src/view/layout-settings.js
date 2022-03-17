@@ -1,8 +1,10 @@
 "use strict";
 
-import { Transform } from "../framework/transform.js";
 import { CardLayoutCollection } from "./card-layout-collection.js";
 
+/**
+ * Collection of data determining the overall layout of cards and carousels
+ */
 export class LayoutSettings {
 
     /**
@@ -11,12 +13,12 @@ export class LayoutSettings {
     layoutCollection = null;
 
     /**
-     * @type {[Transform]}
+     * @type {[string]}
      */
-    carouselStyles = null;
+    carouselClassNames = null;
 
-    constructor(layoutCollection, carouselStyle) {
+    constructor(layoutCollection, carouselClassNames) {
         this.layoutCollection = layoutCollection;
-        this.carouselStyles = carouselStyle;
+        this.carouselClassNames = carouselClassNames;
     }
 }

@@ -155,11 +155,7 @@ export class CardGameComponent extends React.Component {
         const carousels = [];
 
         for (let i = 0; i < playerCount; i++) {
-            const style = this.state.platformConfig 
-                ? this.state.platformConfig.settings.carouselStyles[i]
-                : {};
-
-                carousels.push(this.renderCarousel(i, style));
+            carousels.push(this.renderCarousel(i));
         }
 
         return React.createElement(ELEMENT_TYPES.DIV, {
@@ -172,7 +168,7 @@ export class CardGameComponent extends React.Component {
      *
      * @returns
      */
-    renderCarousel(playerIndex, style) {
+    renderCarousel(playerIndex) {
         const carouselProperties = {
             key: `card-carousel-${playerIndex}`,
             ref: this.carouselRefs[playerIndex],

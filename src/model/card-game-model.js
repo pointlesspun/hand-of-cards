@@ -24,7 +24,10 @@ export const MAX_SELECTION_REACHED_POLICY = {
 export class CardGameModel {
     constructor(players, activePlayer = 0, maxCardsPolicy = MAX_SELECTION_REACHED_POLICY.BLOCK) {
         contract.isArray(players, "CardGameModel.constructor, players parameter is not an array.");
-        contract.isInRange(activePlayer, 0, players.length, `CardGameModel.constructor, activePlayer (${activePlayer}) is outside the range 0-${players.length}.`);
+        contract.requires(
+            players.length === 0 || (activePlayer >= 0 && activePlayer < players.length),
+            `CardGameModel.constructor, activePlayer (${activePlayer}) is outside the range 0-${players.length}.`
+        );
         contract.isString(maxCardsPolicy);
 
         /**
@@ -49,7 +52,7 @@ export class CardGameModel {
 
     /**
      * Sets the player which is currently active
-     * @param {number} index 
+     * @param {number} index
      */
     setActivePlayer(index) {
         contract.isInRange(index, 0, this.players.length);
@@ -57,7 +60,7 @@ export class CardGameModel {
     }
 
     /**
-     * 
+     *
      * @returns {number} the index of the current active player
      */
     getActivePlayer = () => this.activePlayerIndex;
