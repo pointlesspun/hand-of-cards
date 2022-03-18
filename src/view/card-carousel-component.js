@@ -74,13 +74,28 @@ export class CardCarouselComponent extends React.Component {
                 tabIndex: this.props.useGlobalEventScope ? undefined : 0,
             };
 
-            return React.createElement(ELEMENT_TYPES.DIV, carouselProperties, this.renderCards(config));
+            return React.createElement(ELEMENT_TYPES.DIV, carouselProperties, [
+                ...this.resolveChildren(),
+                ...this.renderCards(config)
+            ]);
         } else {
             return React.createElement(ELEMENT_TYPES.DIV, {
                 ref:this.ref,
                 className: 'carousel',
-            }, []);
+            }, this.resolveChildren());
         }
+    }
+
+    resolveChildren = () => {
+        if (this.props.children) {
+            if (Array.isArray(this.props.children)) {
+                return this.props.children;
+            }
+
+            return [this.props.children];
+        }
+
+        return [];
     }
 
     componentDidMount() {
@@ -606,4 +621,10 @@ export class CardCarouselComponent extends React.Component {
      * @returns {Size} the clientWidth/Height 
      */
     getClientSize = () => new Size(this.ref.current.clientWidth, this.ref.current.clientHeight);
+
+    /**
+     * 
+     * @returns {number}
+     */
+    getActivePlayer = () => this.model.getActivePlayer();
 }

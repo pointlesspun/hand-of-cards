@@ -90,7 +90,11 @@ This project was created while learning React and is currently very much under d
   * [done] Change carousel scale based on whether or not the player is active
   
   * Move card & deck counter to carousel-container
-  * fix play animations so play & draw go the right position
+    * Extract counters and control buttons from card game component and make them semi decorators / composites
+    * Move orientation from layout config as it's not dependent on the first render
+    * (bug) both players seem to share the same draw pile ?
+    * north and south counters seem reversed
+    * fix play animations so play & draw go the right position
   * update for small devices
   * add player count to html properties 
 
