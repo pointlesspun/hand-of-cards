@@ -16,7 +16,7 @@ import { CardCarouselComponent } from "./card-carousel-component.js";
 import { CardGameModel } from "../model/card-game-model.js";
 import { CARD_CAROUSEL_EVENT_TYPES, CAROUSEL_EVENT_NAME } from "./card-carousel-event.js";
 import { ButtonPanelComponent } from "./button-panel-component.js";
-import { CounterComponent} from "../framework/counter-component.js";
+import { CounterComponent } from "../framework/counter-component.js";
 import { DECK_NAME } from "../model/player.js";
 import { PlatformConfiguration } from "../framework/platform-configuration.js";
 import { Size } from "../framework/size.js";
@@ -34,21 +34,20 @@ export const FOLD_CARDS_POLICY = {
 };
 
 export class CardGameComponent extends React.Component {
-
     /**
-     * Animations used in this component. It's up to the application to 
+     * Animations used in this component. It's up to the application to
      * define the 'createAnimationStyle' method for both animations.
      */
-    static ANIMATIONS = {    
+    static ANIMATIONS = {
         playCard: new CardAnimation({
             name: "playCard",
             endTransform: new Transform(),
-            deleteOnEnd: true
+            deleteOnEnd: true,
         }),
         drawCard: new CardAnimation({
             name: "drawCard",
-            startTransform: new Transform()
-        })
+            startTransform: new Transform(),
+        }),
     };
 
     /**
@@ -66,12 +65,12 @@ export class CardGameComponent extends React.Component {
 
         // transient properties
         this.ref = React.createRef();
-        
+
         this.carouselRefs = newArray(props.model.getPlayerCount(), () => React.createRef());
 
-        this.buttonPanelRef = React.createRef();
+        //this.buttonPanelRef = React.createRef();
         this.indicatorRef = React.createRef();
-        
+
         this.drawCounterRef = React.createRef();
         this.discardCounterRef = React.createRef();
 
@@ -102,7 +101,7 @@ export class CardGameComponent extends React.Component {
             this.renderDeckCounter(),
             this.renderDiscardCounter(),
         ];
-    
+
         return React.createElement(
             ELEMENT_TYPES.DIV,
             {
@@ -111,7 +110,7 @@ export class CardGameComponent extends React.Component {
             },
             children
         );
-    }
+    };
 
     /**
      * Callback after the component was added to the dom. Use this opportunity to hook up the listeners.
@@ -123,8 +122,8 @@ export class CardGameComponent extends React.Component {
             passive: false,
         };
 
-        this.forEachCarousel( carousel => carousel.addEventListener(CAROUSEL_EVENT_NAME, this.carouselEventHandler));
-        
+        this.forEachCarousel((carousel) => carousel.addEventListener(CAROUSEL_EVENT_NAME, this.carouselEventHandler));
+
         window.addEventListener("keydown", this.keyHandler, keyhandlerOptions);
         window.addEventListener("resize", this.resizeHandler);
 
@@ -132,9 +131,12 @@ export class CardGameComponent extends React.Component {
         this.handleResize();
 
         // fill the hand with cards, 'showing off' the initial animation
-        if (this.props.initialCardCount === 0 || this.model.getCards(this.model.getActivePlayer()).length < this.props.initialCardCount) {           
+        if (
+            this.props.initialCardCount === 0 ||
+            this.model.getCards(this.model.getActivePlayer()).length < this.props.initialCardCount
+        ) {
             this.drawCardsForAllPlayers(this.props.initialCardCount);
-            this.buttonPanelRef.current.setEnableDrawButton(this.props.initialCardCount < this.model.getMaxCards(this.model.getActivePlayer()));
+            //this.buttonPanelRef.current.setEnableDrawButton(this.props.initialCardCount < this.model.getMaxCards(this.model.getActivePlayer()));
         }
     }
 
@@ -142,7 +144,9 @@ export class CardGameComponent extends React.Component {
      * Callback for when the componet is about to be removed from the dom. Remove the listeners.
      */
     componentWillUnmount() {
-        this.forEachCarousel(carousel => carousel.removeEventListener(CAROUSEL_EVENT_NAME, this.carouselEventHandler));
+        this.forEachCarousel((carousel) =>
+            carousel.removeEventListener(CAROUSEL_EVENT_NAME, this.carouselEventHandler)
+        );
 
         window.removeEventListener("keydown", this.keyHandler);
         window.removeEventListener("resize", this.resizeHandler);
@@ -158,10 +162,14 @@ export class CardGameComponent extends React.Component {
             carousels.push(this.renderCarousel(i));
         }
 
-        return React.createElement(ELEMENT_TYPES.DIV, {
-            className: "carousel-container",
-            key: "carousel-container"
-        }, carousels);
+        return React.createElement(
+            ELEMENT_TYPES.DIV,
+            {
+                className: "carousel-container",
+                key: "carousel-container",
+            },
+            carousels
+        );
     }
 
     /**
@@ -172,7 +180,7 @@ export class CardGameComponent extends React.Component {
         const carouselProperties = {
             key: `card-carousel-${playerIndex}`,
             ref: this.carouselRefs[playerIndex],
-            cards: this.model.getCards(playerIndex).map((card) => CardCarouselComponent.createCard(card.definition)), 
+            cards: this.model.getCards(playerIndex).map((card) => CardCarouselComponent.createCard(card.definition)),
             isLocked: this.props.isLocked,
             focusIndex: this.model.getFocusIndex(playerIndex),
             platformConfig: this.state.platformConfig,
@@ -182,8 +190,8 @@ export class CardGameComponent extends React.Component {
             //style,
             //transform: style,
             playerIndex,
-            isActive: playerIndex === this.model.getActivePlayer()
-        };        
+            isActive: playerIndex === this.model.getActivePlayer(),
+        };
 
         return React.createElement(CardCarouselComponent, carouselProperties);
     }
@@ -202,7 +210,7 @@ export class CardGameComponent extends React.Component {
 
         return React.createElement(ELEMENT_TYPES.DIV, properties, [
             this.renderIndicators(this.model.getCards(this.model.getActivePlayer()).length),
-            this.renderButtons(),
+            //this.renderButtons(),
         ]);
     }
 
@@ -216,8 +224,9 @@ export class CardGameComponent extends React.Component {
             ref: this.indicatorRef,
             dataCount,
             activeIndex: this.model.getFocusIndex(this.model.getActivePlayer()),
-            isDataSelected: (idx) => this.model.isCardSelected(this.model.getActivePlayer(), idx), 
-            onClick: (idx) => this.setActiveIndex(idx, true, this.model.getActivePlayer()),
+            isDataSelected: (idx) => this.model.isCardSelected(this.model.getActivePlayer(), idx),
+            onClick: (idx) => this.focusChangedHandler?.(this.model.getActivePlayer(), idx, false),
+            //this.setActiveIndex(idx, true, this.model.getActivePlayer()),
         });
     }
 
@@ -225,7 +234,7 @@ export class CardGameComponent extends React.Component {
      * @private
      * @returns
      */
-    renderButtons() {
+    /* renderButtons() {
         return React.createElement(ButtonPanelComponent, {
             key: "cards-button-panel",
             ref: this.buttonPanelRef,
@@ -237,7 +246,7 @@ export class CardGameComponent extends React.Component {
             toggleLockHandler: () => this.toggleLock(),
             nextPlayerHandler: () => this.setActivePlayer((this.model.getActivePlayer() + 1) % this.model.getPlayerCount())
         });
-    }
+    }*/
 
     renderDeckCounter() {
         return React.createElement(CounterComponent, {
@@ -272,19 +281,20 @@ export class CardGameComponent extends React.Component {
      * @param {Event} evt is an event of which the .details are implement by a card-carousel-event.
      */
     handleCarouselEvent(evt) {
-        
         // (In the current implementation) we'll only accept events from the active player.
         // but this would be the place to select what events to let through for which player
-        if (evt.detail.playerIndex === this.model.getActivePlayer() 
+        if (
+            evt.detail.playerIndex === this.model.getActivePlayer() ||
             // animation events still need to be handled otherwise animations may freeze mid activity
-            || evt.detail.type === CARD_CAROUSEL_EVENT_TYPES.ANIMATION_COMPLETE) {
+            evt.detail.type === CARD_CAROUSEL_EVENT_TYPES.ANIMATION_COMPLETE
+        ) {
             this.handlePlayerCarouselEvent(evt, evt.detail.playerIndex);
         }
     }
 
     /**
      * Handle an event from the carousel and apply it to the given player.
-     * 
+     *
      * @param {Event} evt is an event of which the .details are implement by a card-carousel-event.
      * @param {number} playerIndex the index of the player in the model
      */
@@ -293,33 +303,44 @@ export class CardGameComponent extends React.Component {
 
         switch (evt.detail.type) {
             case CARD_CAROUSEL_EVENT_TYPES.FOCUS:
-                this.setActiveIndex(parameters, true, playerIndex);
+                //this.setActiveIndex(parameters, true, playerIndex);
+                this.focusChangedHandler?.(playerIndex, parameters, false);
                 break;
             case CARD_CAROUSEL_EVENT_TYPES.SELECT:
-                this.selectCard(parameters, true, playerIndex);
+                //this.selectCard(parameters, true, playerIndex);
+                this.cardSelectedHandler?.(playerIndex, parameters, true);
                 break;
+
             case CARD_CAROUSEL_EVENT_TYPES.FOCUS_AND_SELECT:
-                this.setActiveIndex(parameters, true, playerIndex);
-                this.selectCard(parameters, true, playerIndex);
+                //this.setActiveIndex(parameters, true, playerIndex);
+                //this.selectCard(parameters, true, playerIndex);
+                this.focusChangedHandler?.(playerIndex, parameters, false);
+                this.cardSelectedHandler?.(playerIndex, parameters, true);
+
                 break;
             case CARD_CAROUSEL_EVENT_TYPES.HOVER:
-                this.setActiveIndex(parameters, false, playerIndex);
+                //this.setActiveIndex(parameters, false, playerIndex);
+                this.focusChangedHandler?.(playerIndex, parameters, true);
                 break;
             case CARD_CAROUSEL_EVENT_TYPES.DESELECT:
-                this.selectCard(parameters, false, playerIndex);
+                //this.selectCard(parameters, false, playerIndex);
+                this.cardSelectedHandler?.(playerIndex, parameters, false);
                 break;
             case CARD_CAROUSEL_EVENT_TYPES.DRAW_CARDS:
                 this.drawCards(-1, playerIndex);
                 break;
             case CARD_CAROUSEL_EVENT_TYPES.REMOVE_SELECTED_CARDS:
-                this.removeSelectedCards(playerIndex);
+                //this.removeSelectedCards(playerIndex);
+                this.removeSelectedCardsHandler?.(playerIndex);
                 break;
             case CARD_CAROUSEL_EVENT_TYPES.PLAY_SELECTED_CARDS:
-                this.playSelectedCards(playerIndex);
+                ///this.playSelectedCards(playerIndex);
+                this.playSelectedCardsHandler?.(playerIndex);
                 break;
             case CARD_CAROUSEL_EVENT_TYPES.ANIMATION_COMPLETE:
                 if (parameters.deleteOnEnd) {
-                    this.removeSelectedCards(playerIndex);
+                    //this.removeSelectedCards(playerIndex);
+                    this.removeSelectedCardsHandler?.(playerIndex);
                 }
                 break;
         }
@@ -351,19 +372,27 @@ export class CardGameComponent extends React.Component {
      */
     handleResize() {
         // find the configuration which matches the screen size, orientation and game state best
-        const platformConfig = PlatformConfiguration.selectMatch(new Size(this.ref.current.clientWidth, this.ref.current.clientHeight));
+        const platformConfig = PlatformConfiguration.selectMatch(
+            new Size(this.ref.current.clientWidth, this.ref.current.clientHeight)
+        );
         const message = `${platformConfig.name} ${platformConfig.screenSize.width}x${platformConfig.screenSize.height}`;
 
         this.setState({ platformConfig });
 
-        // update the media config for each carousel 
+        // update the media config for each carousel
         this.forEachCarousel((carousel, index) => {
             carousel.setPlatformConfig(platformConfig);
         });
 
         if (this.drawCounterRef.current && this.discardCounterRef.current) {
-            CardGameComponent.ANIMATIONS.drawCard.mapStartTransformToRect(platformConfig, this.drawCounterRef.current.getBoundingClientRect());
-            CardGameComponent.ANIMATIONS.playCard.mapEndTransformToRect(platformConfig, this.discardCounterRef.current.getBoundingClientRect());
+            CardGameComponent.ANIMATIONS.drawCard.mapStartTransformToRect(
+                platformConfig,
+                this.drawCounterRef.current.getBoundingClientRect()
+            );
+            CardGameComponent.ANIMATIONS.playCard.mapEndTransformToRect(
+                platformConfig,
+                this.discardCounterRef.current.getBoundingClientRect()
+            );
         }
 
         eventBus.dispatch(TOAST_TOPIC, new ToastMessage(message, 2.0, "platform-changed"));
@@ -371,28 +400,32 @@ export class CardGameComponent extends React.Component {
 
     // --- State mutations & queries ----------------------------------------------------------------------------------
 
-    setActiveIndex(idx, updateCenterCard, playerIndex) {
+    setActiveIndex(playerIndex, index, updateCenterCard) {
+        contract.isInRange(playerIndex, 0, this.carouselRefs.length);
+        contract.isInRange(index, 0, this.getCarousel(playerIndex).getCardCount());
+        contract.isBoolean(updateCenterCard);
 
-        this.model.setFocusIndex(playerIndex, idx);
+        //this.model.setFocusIndex(playerIndex, idx);
 
         // indicators only apply (in the current implementation) to the active player
         if (playerIndex === this.model.getActivePlayer()) {
-            this.indicatorRef.current.setActiveIndex(this.model.getFocusIndex(playerIndex));
+            this.indicatorRef.current.setActiveIndex(index);
         }
 
-        this.carouselRefs[playerIndex].current.setFocusIndex(this.model.getFocusIndex(playerIndex), updateCenterCard);
+        this.getCarousel(playerIndex).setFocusIndex(index, updateCenterCard);
     }
 
     /**
      * Selects or deselects a card. When the user performs the 'play' action, the selected cards
      * will be removed from the hand and moved to the discard pile.
-     * 
+     *
      * @param {number} index of the card to change the isSelected state
      * @param {boolean} isSelected flag indicating whether or not the card is selected
-     * @param {number} playerIndex index of the player 
+     * @param {number} playerIndex index of the player
      */
-    selectCard(index, isSelected, playerIndex) {
-        const updatedCards = this.model.updateCardSelection(playerIndex, index, isSelected);
+    //selectCard(index, isSelected, playerIndex) {
+    selectCards(playerIndex, updatedCards) {
+        //const updatedCards = this.model.updateCardSelection(playerIndex, index, isSelected);
 
         // did any of the cards change state ?
         if (updatedCards !== null) {
@@ -401,7 +434,7 @@ export class CardGameComponent extends React.Component {
                     this.carouselRefs[playerIndex].current.setCardSelected(card.getIndex(), card.isCardSelected());
                 });
 
-                this.buttonPanelRef.current.setEnablePlayButton(this.model.countSelectedCards(playerIndex) > 0);
+                //this.buttonPanelRef.current.setEnablePlayButton(this.model.countSelectedCards(playerIndex) > 0);
                 this.indicatorRef.current.forceUpdate();
             }
         } else {
@@ -413,18 +446,19 @@ export class CardGameComponent extends React.Component {
     /**
      * Removes all selected cards from this component.
      */
-    removeSelectedCards(playerIndex) {
-        const removedCards = this.model.removeSelectedCards(playerIndex, DECK_NAME.DISCARD_PILE);
+    //removeSelectedCards(playerIndex) {
+    removeCards(playerIndex, cards) {
+        //const removedCards = this.model.removeSelectedCards(playerIndex, DECK_NAME.DISCARD_PILE);
 
-        if (removedCards.length > 0) {
+        if (cards.length > 0) {
             this.indicatorRef.current.setDataCount(this.model.getCards(playerIndex).length);
             this.indicatorRef.current.setActiveIndex(this.model.getFocusIndex(playerIndex));
 
             this.carouselRefs[playerIndex].current.removeCards(
-                removedCards.map((card) => card.index),
+                cards.map((card) => card.index),
                 this.model.getFocusIndex(playerIndex)
             );
-            this.buttonPanelRef.current.setEnableDrawButton(true);
+            //this.buttonPanelRef.current.setEnableDrawButton(true);
             this.discardCounterRef.current.setGoalValue(this.model.getDiscardPile(playerIndex).getLength());
         }
     }
@@ -433,33 +467,37 @@ export class CardGameComponent extends React.Component {
      * Play all cards currently selected. The cards will be removed from the internal array after the play-card
      * animation has been finished.
      */
-    playSelectedCards(playerIndex) {
-        const selectedCardCount = this.model.countSelectedCards(playerIndex);
+    //playSelectedCards(playerIndex) {
+    playCards(playerIndex, cardIndices, newFocusIndex) {        
+        //const selectedCardCount = this.model.countSelectedCards(playerIndex);
 
-        if (selectedCardCount > 0) {
-            const currentFocus = this.model.getFocusIndex(playerIndex);
+        //if (selectedCardCount > 0) {
+            /*const currentFocus = this.model.getFocusIndex(playerIndex);
             const focusIndex = Math.clamp(
                 currentFocus - this.model.countSelectedCards(playerIndex, currentFocus),
                 0,
                 this.model.getCards(playerIndex).length
-            );
+            );*/
 
-            this.carouselRefs[playerIndex].current.playSelectedCards(
-                focusIndex,
+            //this.carouselRefs[playerIndex].current.playSelectedCards(
+            const currentCarousel = this.getCarousel(playerIndex);
+            currentCarousel.playCards(
+                cardIndices,
+                newFocusIndex,
                 CardGameComponent.ANIMATIONS.playCard,
                 this.state.foldCardsPolicy === FOLD_CARDS_POLICY.IMMEDIATELY
             );
 
-            this.buttonPanelRef.current.setEnablePlayButton(false);
+            //this.buttonPanelRef.current.setEnablePlayButton(false);
 
-            this.model.setFocusIndex(playerIndex, focusIndex);
-        }
+            //this.model.setFocusIndex(playerIndex, focusIndex);
+        //}
     }
 
     /**
      * For all players in this game draw 'count' cards. If count is undefined or negative
      * the max number of cards will be drawn.
-     * @param {number} count 
+     * @param {number} count
      */
     drawCardsForAllPlayers(count) {
         const playerCount = this.model.getPlayerCount();
@@ -484,11 +522,13 @@ export class CardGameComponent extends React.Component {
 
         const newCards = this.model.drawRandomCards(playerIndex, count, DECK_NAME.DECK);
 
-        if (newCards) {                       
-            this.buttonPanelRef.current.setEnableDrawButton(this.model.getCards(playerIndex).length < this.model.getMaxCards(playerIndex));
+        if (newCards) {
+            //this.buttonPanelRef.current.setEnableDrawButton(this.model.getCards(playerIndex).length < this.model.getMaxCards(playerIndex));
             this.indicatorRef.current.setDataCount(this.model.getCards(playerIndex).length);
             this.carouselRefs[playerIndex].current.addCards(
-                newCards.map((card) => CardCarouselComponent.createCard(card.definition, CardGameComponent.ANIMATIONS.drawCard)),
+                newCards.map((card) =>
+                    CardCarouselComponent.createCard(card.definition, CardGameComponent.ANIMATIONS.drawCard)
+                ),
                 this.model.getFocusIndex(playerIndex)
             );
             this.drawCounterRef.current.setGoalValue(deck.getLength());
@@ -500,9 +540,12 @@ export class CardGameComponent extends React.Component {
      * through them. When unlocked the center of the cards move with the current focused card.
      */
     toggleLock() {
-        const isLocked = !this.buttonPanelRef.current.isLocked();
-        this.carouselRefs[this.model.getActivePlayer()].current.setIsLocked(isLocked);
-        this.buttonPanelRef.current.setIsLocked(isLocked);
+        const currentCarousel = this.carouselRefs[this.model.getActivePlayer()].current;
+        const isLocked = !currentCarousel.isLocked();
+        currentCarousel.setIsLocked(isLocked);
+        //this.buttonPanelRef.current.setIsLocked(isLocked);
+
+        return isLocked;
     }
 
     /**
@@ -516,12 +559,37 @@ export class CardGameComponent extends React.Component {
             this.model.setActivePlayer(index);
 
             this.forEachCarousel((carousel, carouselIndex) => carousel.setIsActive(carouselIndex === index));
-            
+
             this.indicatorRef.current.setDataCount(this.model.getCards(index).length);
-            this.buttonPanelRef.current.setEnableDrawButton(this.model.getCards(index).length < this.model.getMaxCards(index));
-            this.buttonPanelRef.current.setEnablePlayButton(this.model.countSelectedCards(index) > 0);
-            this.buttonPanelRef.current.setIsLocked(this.carouselRefs[index].current.isLocked());
+            //this.buttonPanelRef.current.setEnableDrawButton(this.model.getCards(index).length < this.model.getMaxCards(index));
+            //this.buttonPanelRef.current.setEnablePlayButton(this.model.countSelectedCards(index) > 0);
+            //this.buttonPanelRef.current.setIsLocked(this.carouselRefs[index].current.isLocked());
         }
+    }
+
+    /**
+     *
+     * @param {number} index of the carousel
+     * @returns {CardCarouselComponent}
+     */
+    getCarousel = (index) => this.carouselRefs[index].current;
+
+    // --- Callbacks ---------------------------------------------------------------------------------------------
+
+    onCardSelected(callback) {
+        this.cardSelectedHandler = callback;
+    }
+
+    onFocusChanged(callback) {
+        this.focusChangedHandler = callback;
+    }
+
+    onRemoveSelectedCards(callback) {
+        this.removeSelectedCardsHandler = callback;
+    }
+
+    onPlaySelectedCards(callback) {
+        this.playSelectedCardsHandler = callback;
     }
 
     // --- Utility methods  -------------------------------------------------------------------------------------------
@@ -538,7 +606,7 @@ export class CardGameComponent extends React.Component {
         );
     }
 
-    forEachCarousel( f ) {
+    forEachCarousel(f) {
         for (let i = 0; i < this.carouselRefs.length; i++) {
             if (this.carouselRefs[i].current) {
                 f(this.carouselRefs[i].current, i);

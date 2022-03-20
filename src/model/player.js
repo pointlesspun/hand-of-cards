@@ -146,7 +146,7 @@ export class Player {
             const currentFocus = this.getFocusIndex();
             const cardCountInFrontOfFocus = countInArray(partition[selected], (card) => card.getIndex() < currentFocus);
 
-            this.setCards(deselectedCards, Math.clamp(currentFocus - cardCountInFrontOfFocus, 0, deselected.length));
+            this.setCards(deselectedCards, Math.clamp(currentFocus - cardCountInFrontOfFocus, 0, deselectedCards.length));
 
             this.moveCardsTo(partition[selected], destinationPile);
 

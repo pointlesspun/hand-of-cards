@@ -1,5 +1,6 @@
 "use strict";
 
+import { contract } from "../framework/contract.js";
 import "../framework/math-extensions.js";
 import { Card } from "./card.js";
 
@@ -26,14 +27,16 @@ export class Hand {
 
     getFocusIndex = () => this.focusIndex;
 
-    setFocusIndex(idx) {
+    setFocusIndex(index) {
+        contract.requires(index === -1 || (index >= 0 && index < this.cards.length));
+
         // check if the current focus is still in the hand
         if (this.focusIndex >= 0 && this.cards.length > this.focusIndex) {
             this.cards[this.focusIndex].setHasFocus(false);
         }
 
         if (this.cards.length > 0) {
-            this.focusIndex = Math.clamp(idx, 0, this.cards.length);
+            this.focusIndex = Math.clamp(index, 0, this.cards.length);
             this.cards[this.focusIndex].setHasFocus(true);
         } else {
             this.focusIndex = -1;

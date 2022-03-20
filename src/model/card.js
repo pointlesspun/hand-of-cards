@@ -22,6 +22,10 @@ export class Card {
 
     hasCardFocus = () => this.hasFocus;
 
+    /**
+     * 
+     * @returns {number}
+     */
     getIndex = () => this.index;
 
     setIndex(idx) {

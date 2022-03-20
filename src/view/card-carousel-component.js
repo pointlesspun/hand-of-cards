@@ -448,7 +448,12 @@ export class CardCarouselComponent extends React.Component {
         }
     }
 
-    getCard = (idx) => (idx >= 0 && idx < this.state.cards.length ? this.state.cards[idx].ref?.current : null);
+    /**
+     * 
+     * @param {number} index 
+     * @returns {CardComponent}
+     */
+    getCard = (index) => (index >= 0 && index < this.state.cards.length ? this.state.cards[index].ref?.current : null);
 
     /**
      * Toggle the lock mode
@@ -522,6 +527,12 @@ export class CardCarouselComponent extends React.Component {
         }
     }
 
+    /**
+     * Returns the number of cards in this carousel
+     * @returns {number}
+     */
+    getCardCount = () => this.state.cards.length;
+
     // --- Utility methods  -------------------------------------------------------------------------------------------
 
     updateCardTransform(
@@ -580,6 +591,38 @@ export class CardCarouselComponent extends React.Component {
 
         if (immediatelyFoldCards) {
             this.setState({ focusIndex });
+        }
+    }
+
+    playCards(cardIndices, newFocusIndex, animation, immediatelyFoldCards) {
+        let idx = 0;
+        const cardsLeft = this.state.cards.length - cardIndices.length;
+        const centerIndex = this.state.isLocked ? this.calculateCenterCard(cardsLeft) : newFocusIndex;
+
+        cardIndices.forEach((cardIndex) => {
+            const card = this.getCard(cardIndex);
+            card.setAnimation(animation);
+        });
+
+        this.forEachCard((card) => {
+           if (!card.state.animation) {
+                if (immediatelyFoldCards) {
+                    card.setIndex(idx);
+                    this.updateCardTransform(
+                        card,
+                        idx,
+                        newFocusIndex,
+                        centerIndex,
+                        this.state.cards.length,
+                        this.state.isActive
+                    );
+                }
+                idx++;
+            }
+        });
+
+        if (immediatelyFoldCards) {
+            this.setState({ newFocusIndex });
         }
     }
 

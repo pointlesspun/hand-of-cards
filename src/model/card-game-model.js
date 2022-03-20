@@ -152,7 +152,7 @@ export class CardGameModel {
     };
 
     /**
-     * Returns the cards belonging to the given player.
+     * Returns the number cards in the hand of  the given player.
      *
      * @param {number} playerIndex
      * @returns {[Card]}

@@ -22,6 +22,8 @@ import { DEFAULT_LIBRARY } from "./app-card-library.js";
 import "./app-platform-configurations.js";
 import "./app-card-rendering.js";
 import "./app-animations.js";
+import { CardGameController } from "./view/card-game-controller.js";
+import { ButtonPanelComponent } from "./view/button-panel-component.js";
 
 const version = "0.52";
 
@@ -62,21 +64,39 @@ if (detectBrowser().isFirefox) {
     initialMessages.push(new ToastMessage(text, 20.0));
 }
 
+const toast = React.createElement(ToastComponent, {
+    key: "toast-component",
+    initialMessages,
+});
+
+const carouselsRef = React.createRef();
+const carouselsElement = React.createElement(CardGameComponent, {
+    key: "hand-of-cards-container",
+    ref: carouselsRef,
+    model,
+    initialCardCount,
+    foldCardsPolicy,
+    initialIndex: Math.floor(model.getMaxCards(0).length / 2),
+    isLocked: element.attributes?.isLocked?.value === "true" ?? false,
+});
+
+const buttonPanelRef = React.createRef();
+const buttonPanelElement = React.createElement(ButtonPanelComponent, {
+    key: "cards-button-panel",
+    ref: buttonPanelRef,
+    isLocked: element.attributes?.isLocked?.value === "true" ?? false,
+    playButtonEnabled: false,
+    drawButtonEnabled: false,
+});
+
 // render the main components, starting the application
 ReactDOM.render(
     React.createElement(React.StrictMode, {}, [
-        React.createElement(ToastComponent, {
-            key: "toast-component",
-            initialMessages,
-        }),
-        React.createElement(CardGameComponent, {
-            key: "hand-of-cards-container",
-            model,
-            initialCardCount,
-            foldCardsPolicy,
-            initialIndex: Math.floor(model.getMaxCards(0).length / 2),
-            isLocked: element.attributes?.isLocked?.value === "true" ?? false,
-        }),
+        toast,
+        carouselsElement, 
+        buttonPanelElement
     ]),
     element
 );
+
+const controller = new CardGameController(model, carouselsRef, buttonPanelRef);
