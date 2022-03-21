@@ -151,6 +151,8 @@ export class CardGameModel {
         return this.players[playerIndex];
     };
 
+    getPlayerCollection = () => this.players;
+
     /**
      * Returns the number cards in the hand of  the given player.
      *

@@ -30,7 +30,7 @@ html, body {
     transform-style: preserve-3d;
     position: absolute;
     /*border: 12px solid red;*/
-    transition: transform 0.25s;
+    transition: transform 0.25s, opacity 0.25s;
     
     z-index: 100;
     pointer-events: none;
@@ -42,6 +42,7 @@ html, body {
     
     transform: rotateX(var(--x-rotation)) scale3d(var(--scale), var(--scale), var(--scale)) translateY(-100%);
     transform-origin: top;
+    filter: brightness(80%);
 }
 
 .carousel.north.focus {
@@ -50,6 +51,7 @@ html, body {
     
     transform: rotateX(var(--x-rotation)) scale3d(var(--scale), var(--scale), var(--scale)) translateY(-100%);    
     transform-origin: top;
+    filter: brightness(100%);
 }
 
 .carousel.south {
@@ -58,6 +60,7 @@ html, body {
     
     transform: rotateX(var(--x-rotation)) scale3d(var(--scale), var(--scale), var(--scale));  
     transform-origin:  bottom;
+    filter: brightness(80%);
 }
 
 .carousel.south.focus {
@@ -66,6 +69,7 @@ html, body {
     
     transform: rotateX(var(--x-rotation)) scale3d(var(--scale), var(--scale), var(--scale));
     transform-origin: bottom;
+    filter: brightness(100%);
 }
 
 .card-item {

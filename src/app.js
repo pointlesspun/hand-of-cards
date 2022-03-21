@@ -99,4 +99,4 @@ ReactDOM.render(
     element
 );
 
-const controller = new CardGameController(model, carouselsRef, buttonPanelRef);
+const controller = new CardGameController(model, carouselsRef, buttonPanelRef, {initialCardCount});

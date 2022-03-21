@@ -131,13 +131,16 @@ export class CardGameComponent extends React.Component {
         this.handleResize();
 
         // fill the hand with cards, 'showing off' the initial animation
-        if (
+        /*if (
             this.props.initialCardCount === 0 ||
             this.model.getCards(this.model.getActivePlayer()).length < this.props.initialCardCount
         ) {
             this.drawCardsForAllPlayers(this.props.initialCardCount);
             //this.buttonPanelRef.current.setEnableDrawButton(this.props.initialCardCount < this.model.getMaxCards(this.model.getActivePlayer()));
-        }
+        }*/
+
+
+        this.onComponentMountedHandler?.();
     }
 
     /**
@@ -327,7 +330,8 @@ export class CardGameComponent extends React.Component {
                 this.cardSelectedHandler?.(playerIndex, parameters, false);
                 break;
             case CARD_CAROUSEL_EVENT_TYPES.DRAW_CARDS:
-                this.drawCards(-1, playerIndex);
+                //this.drawCards(-1, playerIndex);
+                this.drawCardsHandler?.(playerIndex, -1);
                 break;
             case CARD_CAROUSEL_EVENT_TYPES.REMOVE_SELECTED_CARDS:
                 //this.removeSelectedCards(playerIndex);
@@ -424,7 +428,7 @@ export class CardGameComponent extends React.Component {
      * @param {number} playerIndex index of the player
      */
     //selectCard(index, isSelected, playerIndex) {
-    selectCards(playerIndex, updatedCards) {
+    updateCardSelection(playerIndex, updatedCards) {
         //const updatedCards = this.model.updateCardSelection(playerIndex, index, isSelected);
 
         // did any of the cards change state ?
@@ -499,39 +503,43 @@ export class CardGameComponent extends React.Component {
      * the max number of cards will be drawn.
      * @param {number} count
      */
-    drawCardsForAllPlayers(count) {
+    /*drawCardsForAllPlayers(count) {
         const playerCount = this.model.getPlayerCount();
 
         for (let i = 0; i < playerCount; ++i) {
             this.drawCards(count, i);
         }
-    }
+    }*/
 
     /**
      * Refill the hand with new cards until the max number of cards has been reached.
      * @param {number} count number of cards to draw, if undefined or negative will draw cards until the hand is full
      * @param {number} playerIndex the player to draw cards for
      */
-    drawCards(count, playerIndex) {
-        const deck = this.model.getDeck(playerIndex);
+    drawCards(/*count,*/ playerIndex, newCards, newFocusIndex) {
+        //const deck = this.model.getDeck(playerIndex);
 
-        if (deck.getLength() === 0) {
-            this.model.shuffleDiscardPile(playerIndex);
-            this.discardCounterRef.current.setGoalValue(this.model.getDiscardPile(playerIndex).getLength());
-        }
+        //if (deck.getLength() === 0) {
+            //this.model.shuffleDiscardPile(playerIndex);
+            //this.discardCounterRef.current.setGoalValue(this.model.getDiscardPile(playerIndex).getLength());
+        //}
 
-        const newCards = this.model.drawRandomCards(playerIndex, count, DECK_NAME.DECK);
+        //const newCards = this.model.drawRandomCards(playerIndex, count, DECK_NAME.DECK);
 
-        if (newCards) {
+        if (newCards && newCards.length) {
             //this.buttonPanelRef.current.setEnableDrawButton(this.model.getCards(playerIndex).length < this.model.getMaxCards(playerIndex));
-            this.indicatorRef.current.setDataCount(this.model.getCards(playerIndex).length);
-            this.carouselRefs[playerIndex].current.addCards(
+            const carousel = this.getCarousel(playerIndex);
+
+            this.indicatorRef.current.setDataCount(carousel.getCardCount() + newCards.length);
+            
+            carousel.addCards(
                 newCards.map((card) =>
                     CardCarouselComponent.createCard(card.definition, CardGameComponent.ANIMATIONS.drawCard)
                 ),
-                this.model.getFocusIndex(playerIndex)
+                newFocusIndex
+                //this.model.getFocusIndex(playerIndex)
             );
-            this.drawCounterRef.current.setGoalValue(deck.getLength());
+            //this.drawCounterRef.current.setGoalValue(deck.getLength());
         }
     }
 
@@ -590,6 +598,14 @@ export class CardGameComponent extends React.Component {
 
     onPlaySelectedCards(callback) {
         this.playSelectedCardsHandler = callback;
+    }
+
+    onDrawCards(callback) {
+        this.drawCardsHandler = callback;
+    }
+
+    onComponentMounted(callback) {
+        this.onComponentMountedHandler = callback;
     }
 
     // --- Utility methods  -------------------------------------------------------------------------------------------

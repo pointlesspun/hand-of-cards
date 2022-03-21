@@ -21,17 +21,17 @@ export class CardGameController {
      */
     buttons = null;
 
-    constructor(model, carousels, buttons) {
+    constructor(model, carousels, buttons, gameConfig) {
         /**
          * @type {CardGameComponent}
          */
         const currentCarousels = carousels.current;
         const currentButtons = buttons.current;
-        const activePlayer = model.getActivePlayer();
 
         this.model = model;
         this.carousels = carousels;
         this.buttons = buttons;
+        this.gameConfig = gameConfig;
 
         currentCarousels.onCardSelected((playerIndex, cardIndex, isSelected) =>
             this.setCardSelected(playerIndex, cardIndex, isSelected)
@@ -40,15 +40,34 @@ export class CardGameController {
             this.setFocusedCard(playerIndex, cardIndex, isHover)
         );
         currentCarousels.onRemoveSelectedCards((playerIndex) => this.removeSelectedCards(playerIndex));
-        currentCarousels.onPlaySelectedCards( (playerIndex) => this.playCards(playerIndex));
+        currentCarousels.onPlaySelectedCards((playerIndex) => this.playCards(playerIndex));
+        currentCarousels.onDrawCards((playerIndex, count) => this.drawCards(playerIndex, count));
+        //currentCarousels.onComponentMounted(() => this.startGame());
 
         currentButtons.onPlay(() => this.playCards());
-        currentButtons.onDrawCards(() => this.drawCards());
+        currentButtons.onDrawCards(() => this.drawCards(this.model.getActivePlayer(), -1));
         currentButtons.onToggleLock(() => this.toggleLock());
         currentButtons.onNextPlayer(() => this.nextPlayer());
 
-        currentButtons.setEnablePlayButton(model.countSelectedCards(model.getActivePlayer()) > 0);
-        currentButtons.setEnableDrawButton(model.getCards(activePlayer).length < model.getMaxCards(activePlayer));
+        this.startGame();
+    }
+
+    startGame() {
+        if (
+            this.gameConfig.initialCardCount <= 0 ||
+            this.model.getCards(this.model.getActivePlayer()).length < this.gameConfig.initialCardCount
+        ) {
+            this.model
+                .getPlayerCollection()
+                .forEach((player, index) => this.drawCards(index, this.gameConfig.initialCardCount));
+        }
+
+        const activePlayer = this.model.getActivePlayer();
+
+        this.getButtons().setEnablePlayButton(this.model.countSelectedCards(activePlayer) > 0);
+        this.getButtons().setEnableDrawButton(
+            this.model.getCards(activePlayer).length < this.model.getMaxCards(activePlayer)
+        );
     }
 
     playCards() {
@@ -61,7 +80,7 @@ export class CardGameController {
             .map((card) => card.getIndex());
 
         this.getCarousels().playCards(activePlayer, selectedCardIndices, newFocusIndex);
-        
+
         this.getButtons().setEnablePlayButton(false);
         this.model.setFocusIndex(activePlayer, newFocusIndex);
     }
@@ -75,7 +94,7 @@ export class CardGameController {
         );
     }
 
-    drawCards() {
+    /*drawCards() {
         const activePlayer = this.model.getActivePlayer();
 
         this.carousels.current.drawCards(-1, activePlayer);
@@ -83,7 +102,7 @@ export class CardGameController {
         this.getButtons().setEnableDrawButton(
             this.model.getCards(activePlayer).length < this.model.getMaxCards(activePlayer)
         );
-    }
+    }*/
 
     toggleLock() {
         this.getButtons().setIsLocked(this.getCarousels().toggleLock());
@@ -97,7 +116,7 @@ export class CardGameController {
         const updatedCards = this.model.updateCardSelection(playerIndex, cardIndex, isSelected);
 
         if (updatedCards) {
-            this.carousels.current.selectCards(playerIndex, updatedCards);
+            this.carousels.current.updateCardSelection(playerIndex, updatedCards);
             this.getButtons().setEnablePlayButton(this.model.countSelectedCards(playerIndex) > 0);
         }
     }
@@ -117,6 +136,23 @@ export class CardGameController {
             this.getCarousels().removeCards(playerIndex, removedCards);
             this.getButtons().setEnableDrawButton(true);
             this.getButtons().setEnablePlayButton(this.model.countSelectedCards(playerIndex) > 0);
+        }
+    }
+
+    drawCards(playerIndex, count) {
+        const deck = this.model.getDeck(playerIndex);
+
+        if (deck.getLength() === 0) {
+            this.model.shuffleDiscardPile(playerIndex);
+        }
+
+        const newCards = this.model.drawRandomCards(playerIndex, count, DECK_NAME.DECK);
+
+        if (newCards) {
+            this.getCarousels().drawCards(playerIndex, newCards, this.model.getFocusIndex(playerIndex));
+            this.getButtons().setEnableDrawButton(
+                this.model.getCards(playerIndex).length < this.model.getMaxCards(playerIndex)
+            );
         }
     }
 
