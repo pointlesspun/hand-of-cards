@@ -6,6 +6,7 @@ import { pickRandomCards } from "./model/card-util.js";
 import { Deck } from "./model/deck.js";
 import { Hand } from "./model/hand.js";
 import { Player } from "./model/player.js";
+import { ModelEventProxy } from "./model/model-event-proxy.js";
 
 /**
  * @typedef {Object} CardModelFactoryParameters 
@@ -23,7 +24,7 @@ import { Player } from "./model/player.js";
  * Create a cardGameModel with the given parameters.
  * 
  * @param {CardModelFactoryParameters} parameters used to create a game model
- * @returns 
+ * @returns {ModelEventProxy}
  */
 export function createCardGameModel({
     playerCount = 1,
@@ -57,5 +58,5 @@ export function createCardGameModel({
         );
     }
 
-    return new CardGameModel(players, 0, selectionCyclePolicy);
+    return new ModelEventProxy(players, 0, selectionCyclePolicy);
 }

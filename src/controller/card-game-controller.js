@@ -2,8 +2,8 @@
 
 import { CardGameModel } from "../model/card-game-model.js";
 import { DECK_NAME } from "../model/player.js";
-import { ButtonPanelComponent } from "./button-panel-component.js";
-import { CardGameComponent } from "./card-game-component.js";
+import { ButtonPanelComponent } from "../view/button-panel-component.js";
+import { CardGameComponent } from "../view/card-game-component.js";
 
 export class CardGameController {
     /**

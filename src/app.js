@@ -15,15 +15,15 @@ import { MAX_SELECTION_REACHED_POLICY } from "./model/card-game-model.js";
 import { createCardsFromLibrary } from "./model/card-util.js";
 
 import { FOLD_CARDS_POLICY, CardGameComponent } from "./view/card-game-component.js";
+import { CardGameController } from "./controller/card-game-controller.js";
 
 import { createCardGameModel } from "./app-card-model-factory.js";
 import { DEFAULT_LIBRARY } from "./app-card-library.js";
+import { ButtonPanelComponent } from "./view/button-panel-component.js";
 
 import "./app-platform-configurations.js";
 import "./app-card-rendering.js";
 import "./app-animations.js";
-import { CardGameController } from "./view/card-game-controller.js";
-import { ButtonPanelComponent } from "./view/button-panel-component.js";
 
 const version = "0.52";
 

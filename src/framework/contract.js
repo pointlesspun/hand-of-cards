@@ -46,4 +46,28 @@ export const contract = {
             throw new Error(message ?? "failed contract.isArray");
         }
     },
+
+    /**
+     * 
+     * @param {[*]} array 
+     * @param {*} value 
+     * @param {string} message 
+     */
+    contains: function (array, value, message) {
+        if (array.findIndex(v => v === value) < 0) {
+            throw new Error(message ?? "failed contract.contains");
+        }
+    },
+
+    /**
+     * 
+     * @param {[*]} array 
+     * @param {*} value 
+     * @param {string} message 
+     */
+     doesNotContain: function (array, value, message) {
+        if (array.findIndex(v => v === value) >= 0) {
+            throw new Error(message ?? "failed contract.doesNotContain");
+        }
+    }
 };
