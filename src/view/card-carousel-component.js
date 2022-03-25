@@ -46,6 +46,7 @@ export class CardCarouselComponent extends React.Component {
         this.cardEventHandler = (evt) => this.handleCardEvent(evt);
 
         this.animationCount = 0;
+        this.mouseOverIndex = -1;
 
         this.state = {
             cards: props.cards ?? [],
@@ -250,8 +251,15 @@ export class CardCarouselComponent extends React.Component {
                 this.handleSwipe(evt.parameters.detail.dir, evt.card.state.index);
                 break;
             case CARD_EVENT_TYPES.FOCUS:
+                this.mouseOverIndex = evt.card.state.index;
                 this.dispatchEvent(CARD_CAROUSEL_EVENT_TYPES.HOVER, evt.card.state.index);
                 break;
+            case CARD_EVENT_TYPES.LOST_FOCUS:
+                if (this.mouseOverIndex === evt.card.state.index) {
+                    this.mouseOverIndex = -1;
+                }
+                break;
+
         }
     }
 
@@ -412,8 +420,10 @@ export class CardCarouselComponent extends React.Component {
      * @param {boolean} updateCenterCard if true (default) also recalculates the center card. False makes sense
      * for cases like mouse over.
      */
-    setFocusIndex(focusIndex, updateCenterCard = true) {
-        if (updateCenterCard) {
+    setFocusIndex(focusIndex) {
+        // when hovering over a card don't readjust the center
+        // card when in unlocked mode. 
+        if (focusIndex !== this.mouseOverIndex) {
             const centerCardIndex = this.state.isLocked
                 ? this.calculateCenterCard(this.state.cards.length)
                 : focusIndex;

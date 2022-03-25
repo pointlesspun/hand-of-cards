@@ -2,8 +2,10 @@ export const CARD_EVENT_TYPES = {
     ANIMATION : "animation",
     TAP: "tapped",
     SWIPE: "swipe",
-    // mouse over or otherwise
-    FOCUS: "focus"
+    // mouse enter 
+    FOCUS: "focus",
+    // mouse leave
+    LOST_FOCUS: "lost focus"
 }
 
 export class CardEvent {

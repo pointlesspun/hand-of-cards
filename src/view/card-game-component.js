@@ -68,7 +68,6 @@ export class CardGameComponent extends React.Component {
 
         this.carouselRefs = newArray(props.model.getPlayerCount(), () => React.createRef());
 
-        //this.buttonPanelRef = React.createRef();
         this.indicatorRef = React.createRef();
 
         this.drawCounterRef = React.createRef();
@@ -130,16 +129,6 @@ export class CardGameComponent extends React.Component {
         // after the initial mount we've got a ref and media config
         this.handleResize();
 
-        // fill the hand with cards, 'showing off' the initial animation
-        /*if (
-            this.props.initialCardCount === 0 ||
-            this.model.getCards(this.model.getActivePlayer()).length < this.props.initialCardCount
-        ) {
-            this.drawCardsForAllPlayers(this.props.initialCardCount);
-            //this.buttonPanelRef.current.setEnableDrawButton(this.props.initialCardCount < this.model.getMaxCards(this.model.getActivePlayer()));
-        }*/
-
-
         this.onComponentMountedHandler?.();
     }
 
@@ -190,8 +179,6 @@ export class CardGameComponent extends React.Component {
             // if set to true the carousel will listen for events on globalThis, otherwise
             // if will listen to events on its component
             useGlobalEventScope: true,
-            //style,
-            //transform: style,
             playerIndex,
             isActive: playerIndex === this.model.getActivePlayer(),
         };
@@ -213,7 +200,6 @@ export class CardGameComponent extends React.Component {
 
         return React.createElement(ELEMENT_TYPES.DIV, properties, [
             this.renderIndicators(this.model.getCards(this.model.getActivePlayer()).length),
-            //this.renderButtons(),
         ]);
     }
 
@@ -228,28 +214,9 @@ export class CardGameComponent extends React.Component {
             dataCount,
             activeIndex: this.model.getFocusIndex(this.model.getActivePlayer()),
             isDataSelected: (idx) => this.model.isCardSelected(this.model.getActivePlayer(), idx),
-            onClick: (idx) => this.focusChangedHandler?.(this.model.getActivePlayer(), idx, false),
-            //this.setActiveIndex(idx, true, this.model.getActivePlayer()),
+            onClick: (idx) => this.focusChangedHandler?.(this.model.getActivePlayer(), idx),
         });
     }
-
-    /**
-     * @private
-     * @returns
-     */
-    /* renderButtons() {
-        return React.createElement(ButtonPanelComponent, {
-            key: "cards-button-panel",
-            ref: this.buttonPanelRef,
-            isLocked: this.props.isLocked,
-            playButtonEnabled: false,
-            drawButtonEnabled: false,
-            playHandler: () => this.playSelectedCards(this.model.getActivePlayer()),
-            drawCardsHandler: () => this.drawCards(-1, this.model.getActivePlayer()),
-            toggleLockHandler: () => this.toggleLock(),
-            nextPlayerHandler: () => this.setActivePlayer((this.model.getActivePlayer() + 1) % this.model.getPlayerCount())
-        });
-    }*/
 
     renderDeckCounter() {
         return React.createElement(CounterComponent, {
@@ -306,44 +273,40 @@ export class CardGameComponent extends React.Component {
 
         switch (evt.detail.type) {
             case CARD_CAROUSEL_EVENT_TYPES.FOCUS:
-                //this.setActiveIndex(parameters, true, playerIndex);
-                this.focusChangedHandler?.(playerIndex, parameters, false);
+                this.focusChangedHandler?.(playerIndex, parameters);
                 break;
+
             case CARD_CAROUSEL_EVENT_TYPES.SELECT:
-                //this.selectCard(parameters, true, playerIndex);
                 this.cardSelectedHandler?.(playerIndex, parameters, true);
                 break;
 
             case CARD_CAROUSEL_EVENT_TYPES.FOCUS_AND_SELECT:
-                //this.setActiveIndex(parameters, true, playerIndex);
-                //this.selectCard(parameters, true, playerIndex);
-                this.focusChangedHandler?.(playerIndex, parameters, false);
+                this.focusChangedHandler?.(playerIndex, parameters);
                 this.cardSelectedHandler?.(playerIndex, parameters, true);
+                break;
 
-                break;
             case CARD_CAROUSEL_EVENT_TYPES.HOVER:
-                //this.setActiveIndex(parameters, false, playerIndex);
-                this.focusChangedHandler?.(playerIndex, parameters, true);
+                this.focusChangedHandler?.(playerIndex, parameters);
                 break;
+
             case CARD_CAROUSEL_EVENT_TYPES.DESELECT:
-                //this.selectCard(parameters, false, playerIndex);
                 this.cardSelectedHandler?.(playerIndex, parameters, false);
                 break;
+
             case CARD_CAROUSEL_EVENT_TYPES.DRAW_CARDS:
-                //this.drawCards(-1, playerIndex);
                 this.drawCardsHandler?.(playerIndex, -1);
                 break;
+
             case CARD_CAROUSEL_EVENT_TYPES.REMOVE_SELECTED_CARDS:
-                //this.removeSelectedCards(playerIndex);
                 this.removeSelectedCardsHandler?.(playerIndex);
                 break;
+
             case CARD_CAROUSEL_EVENT_TYPES.PLAY_SELECTED_CARDS:
-                ///this.playSelectedCards(playerIndex);
                 this.playSelectedCardsHandler?.(playerIndex);
                 break;
+
             case CARD_CAROUSEL_EVENT_TYPES.ANIMATION_COMPLETE:
                 if (parameters.deleteOnEnd) {
-                    //this.removeSelectedCards(playerIndex);
                     this.removeSelectedCardsHandler?.(playerIndex);
                 }
                 break;
@@ -404,19 +367,16 @@ export class CardGameComponent extends React.Component {
 
     // --- State mutations & queries ----------------------------------------------------------------------------------
 
-    setActiveIndex(playerIndex, index, updateCenterCard) {
+    setFocusIndex(playerIndex, index) {
         contract.isInRange(playerIndex, 0, this.carouselRefs.length);
         contract.isInRange(index, 0, this.getCarousel(playerIndex).getCardCount());
-        contract.isBoolean(updateCenterCard);
-
-        //this.model.setFocusIndex(playerIndex, idx);
 
         // indicators only apply (in the current implementation) to the active player
         if (playerIndex === this.model.getActivePlayer()) {
             this.indicatorRef.current.setActiveIndex(index);
         }
 
-        this.getCarousel(playerIndex).setFocusIndex(index, updateCenterCard);
+        this.getCarousel(playerIndex).setFocusIndex(index);
     }
 
     /**
@@ -427,10 +387,7 @@ export class CardGameComponent extends React.Component {
      * @param {boolean} isSelected flag indicating whether or not the card is selected
      * @param {number} playerIndex index of the player
      */
-    //selectCard(index, isSelected, playerIndex) {
     updateCardSelection(playerIndex, updatedCards) {
-        //const updatedCards = this.model.updateCardSelection(playerIndex, index, isSelected);
-
         // did any of the cards change state ?
         if (updatedCards !== null) {
             if (updatedCards.length > 0) {
@@ -438,7 +395,6 @@ export class CardGameComponent extends React.Component {
                     this.carouselRefs[playerIndex].current.setCardSelected(card.getIndex(), card.isCardSelected());
                 });
 
-                //this.buttonPanelRef.current.setEnablePlayButton(this.model.countSelectedCards(playerIndex) > 0);
                 this.indicatorRef.current.forceUpdate();
             }
         } else {
@@ -450,10 +406,7 @@ export class CardGameComponent extends React.Component {
     /**
      * Removes all selected cards from this component.
      */
-    //removeSelectedCards(playerIndex) {
     removeCards(playerIndex, cards) {
-        //const removedCards = this.model.removeSelectedCards(playerIndex, DECK_NAME.DISCARD_PILE);
-
         if (cards.length > 0) {
             this.indicatorRef.current.setDataCount(this.model.getCards(playerIndex).length);
             this.indicatorRef.current.setActiveIndex(this.model.getFocusIndex(playerIndex));
@@ -462,7 +415,6 @@ export class CardGameComponent extends React.Component {
                 cards.map((card) => card.index),
                 this.model.getFocusIndex(playerIndex)
             );
-            //this.buttonPanelRef.current.setEnableDrawButton(true);
             this.discardCounterRef.current.setGoalValue(this.model.getDiscardPile(playerIndex).getLength());
         }
     }
@@ -471,75 +423,33 @@ export class CardGameComponent extends React.Component {
      * Play all cards currently selected. The cards will be removed from the internal array after the play-card
      * animation has been finished.
      */
-    //playSelectedCards(playerIndex) {
-    playCards(playerIndex, cardIndices, newFocusIndex) {        
-        //const selectedCardCount = this.model.countSelectedCards(playerIndex);
-
-        //if (selectedCardCount > 0) {
-            /*const currentFocus = this.model.getFocusIndex(playerIndex);
-            const focusIndex = Math.clamp(
-                currentFocus - this.model.countSelectedCards(playerIndex, currentFocus),
-                0,
-                this.model.getCards(playerIndex).length
-            );*/
-
-            //this.carouselRefs[playerIndex].current.playSelectedCards(
-            const currentCarousel = this.getCarousel(playerIndex);
-            currentCarousel.playCards(
-                cardIndices,
-                newFocusIndex,
-                CardGameComponent.ANIMATIONS.playCard,
-                this.state.foldCardsPolicy === FOLD_CARDS_POLICY.IMMEDIATELY
-            );
-
-            //this.buttonPanelRef.current.setEnablePlayButton(false);
-
-            //this.model.setFocusIndex(playerIndex, focusIndex);
-        //}
+    playCards(playerIndex, cardIndices, newFocusIndex) {
+        const currentCarousel = this.getCarousel(playerIndex);
+        currentCarousel.playCards(
+            cardIndices,
+            newFocusIndex,
+            CardGameComponent.ANIMATIONS.playCard,
+            this.state.foldCardsPolicy === FOLD_CARDS_POLICY.IMMEDIATELY
+        );
     }
-
-    /**
-     * For all players in this game draw 'count' cards. If count is undefined or negative
-     * the max number of cards will be drawn.
-     * @param {number} count
-     */
-    /*drawCardsForAllPlayers(count) {
-        const playerCount = this.model.getPlayerCount();
-
-        for (let i = 0; i < playerCount; ++i) {
-            this.drawCards(count, i);
-        }
-    }*/
 
     /**
      * Refill the hand with new cards until the max number of cards has been reached.
      * @param {number} count number of cards to draw, if undefined or negative will draw cards until the hand is full
      * @param {number} playerIndex the player to draw cards for
      */
-    drawCards(/*count,*/ playerIndex, newCards, newFocusIndex) {
-        //const deck = this.model.getDeck(playerIndex);
-
-        //if (deck.getLength() === 0) {
-            //this.model.shuffleDiscardPile(playerIndex);
-            //this.discardCounterRef.current.setGoalValue(this.model.getDiscardPile(playerIndex).getLength());
-        //}
-
-        //const newCards = this.model.drawRandomCards(playerIndex, count, DECK_NAME.DECK);
-
+    drawCards(playerIndex, newCards, newFocusIndex) {
         if (newCards && newCards.length) {
-            //this.buttonPanelRef.current.setEnableDrawButton(this.model.getCards(playerIndex).length < this.model.getMaxCards(playerIndex));
             const carousel = this.getCarousel(playerIndex);
 
             this.indicatorRef.current.setDataCount(carousel.getCardCount() + newCards.length);
-            
+
             carousel.addCards(
                 newCards.map((card) =>
                     CardCarouselComponent.createCard(card.definition, CardGameComponent.ANIMATIONS.drawCard)
                 ),
                 newFocusIndex
-                //this.model.getFocusIndex(playerIndex)
             );
-            //this.drawCounterRef.current.setGoalValue(deck.getLength());
         }
     }
 
@@ -551,7 +461,6 @@ export class CardGameComponent extends React.Component {
         const currentCarousel = this.carouselRefs[this.model.getActivePlayer()].current;
         const isLocked = !currentCarousel.isLocked();
         currentCarousel.setIsLocked(isLocked);
-        //this.buttonPanelRef.current.setIsLocked(isLocked);
 
         return isLocked;
     }
@@ -563,16 +472,9 @@ export class CardGameComponent extends React.Component {
     setActivePlayer(index) {
         contract.isInRange(index, 0, this.model.getPlayerCount());
 
-        if (index !== this.model.getActivePlayer()) {
-            this.model.setActivePlayer(index);
+        this.forEachCarousel((carousel, carouselIndex) => carousel.setIsActive(carouselIndex === index));
 
-            this.forEachCarousel((carousel, carouselIndex) => carousel.setIsActive(carouselIndex === index));
-
-            this.indicatorRef.current.setDataCount(this.model.getCards(index).length);
-            //this.buttonPanelRef.current.setEnableDrawButton(this.model.getCards(index).length < this.model.getMaxCards(index));
-            //this.buttonPanelRef.current.setEnablePlayButton(this.model.countSelectedCards(index) > 0);
-            //this.buttonPanelRef.current.setIsLocked(this.carouselRefs[index].current.isLocked());
-        }
+        this.indicatorRef.current.setDataCount(this.model.getCards(index).length);
     }
 
     /**

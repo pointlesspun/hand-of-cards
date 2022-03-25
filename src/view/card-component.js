@@ -112,7 +112,8 @@ export class CardComponent extends React.Component {
         const parameters = { passive: false };
 
         this.ref.current.addEventListener("swiped", this.swipeListener);
-        this.ref.current.addEventListener("mouseover", this.mouseListener, parameters);
+        this.ref.current.addEventListener("mouseenter", this.mouseListener, parameters);
+        this.ref.current.addEventListener("mouseleave", this.mouseListener, parameters);
         this.ref.current.addEventListener("mouseup", this.mouseListener, parameters);
         this.ref.current.addEventListener("touchstart", this.touchListener, parameters);
         this.ref.current.addEventListener("touchend", this.touchListener, parameters);
@@ -121,7 +122,8 @@ export class CardComponent extends React.Component {
 
     componentWillUnmount() {
         this.ref.current.removeEventListener("swiped", this.swipeListener);
-        this.ref.current.removeEventListener("mouseover", this.mouseListener);
+        this.ref.current.removeEventListener("mouseenter", this.mouseListener);
+        this.ref.current.removeEventListener("mouseleave", this.mouseListener);
         this.ref.current.removeEventListener("mouseup", this.mouseListener);
         this.ref.current.removeEventListener("touchstart", this.touchListener);
         this.ref.current.removeEventListener("touchend", this.touchListener);
@@ -156,12 +158,18 @@ export class CardComponent extends React.Component {
     }
 
     handleMouseEvent(evt) {
-        if (evt.type === "mouseover") {
-            if (this.state.eventHandler) {
-                this.state.eventHandler(new CardEvent(this, CARD_EVENT_TYPES.FOCUS));
-            }
-        } else if (evt.type === "mouseup") {
-            this.state.eventHandler(new CardEvent(this, CARD_EVENT_TYPES.TAP));
+        switch (evt.type) {
+            case "mouseenter":
+                this.state.eventHandler?.(new CardEvent(this, CARD_EVENT_TYPES.FOCUS));
+                break;
+            case "mouseleave":
+                this.state.eventHandler?.(new CardEvent(this, CARD_EVENT_TYPES.LOST_FOCUS));
+                break;
+            case "mouseup":
+                this.state.eventHandler?.(new CardEvent(this, CARD_EVENT_TYPES.TAP));
+                break;
+            default:
+                break;
         }
 
         evt.preventDefault();
